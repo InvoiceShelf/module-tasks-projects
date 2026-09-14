@@ -18,11 +18,6 @@ const pending = new Set<number>()
 /** How many name lookups may be in flight at once. */
 const BATCH_SIZE = 5
 
-/** The cached name of a task, or null while it is still unknown. */
-export function taskName(id: number | null): string | null {
-  return id === null ? null : (names[id] ?? null)
-}
-
 /** The cached name, or a stable `#id` placeholder to render meanwhile. */
 export function taskLabel(id: number | null): string {
   if (id === null) {

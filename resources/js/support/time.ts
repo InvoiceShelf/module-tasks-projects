@@ -107,11 +107,6 @@ export function addMinutes(instant: string, minutes: number): string {
   return date.toISOString()
 }
 
-/** Local midnight of the `Y-m-d` given, or of today when it is unreadable. */
-export function dayOf(date: string): Date {
-  return parseDateString(date) ?? startOfDay(new Date())
-}
-
 /**
  * The first day of the week `date` falls in.
  *
