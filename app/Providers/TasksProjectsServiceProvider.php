@@ -4,10 +4,13 @@ declare(strict_types=1);
 
 namespace Modules\TasksProjects\Providers;
 
+use Illuminate\Contracts\Debug\ExceptionHandler;
 use Illuminate\Contracts\Foundation\Application;
+use Illuminate\Foundation\Exceptions\Handler;
 use InvoiceShelf\Modules\Contracts\DataCleanup;
 use InvoiceShelf\Modules\Contracts\Host\SettingsStore;
 use InvoiceShelf\Modules\Support\ModuleServiceProvider;
+use Modules\TasksProjects\Http\DomainExceptionRenderer;
 use Modules\TasksProjects\Lifecycle\DataCleanup as TasksProjectsDataCleanup;
 use Modules\TasksProjects\Support\ModuleRegistration;
 
@@ -37,6 +40,23 @@ class TasksProjectsServiceProvider extends ModuleServiceProvider
 
         ModuleRegistration::register($modulePath);
 
+        $this->registerExceptionRendering();
+
         $this->loadRoutesFrom($modulePath.'/routes/api.php');
+    }
+
+    /**
+     * Map every broken domain rule to its HTTP response in one place.
+     *
+     * The services throw a TasksProjectsException rather than returning an
+     * error, so a single renderable keeps the controllers free of try/catch.
+     */
+    private function registerExceptionRendering(): void
+    {
+        $handler = $this->app->make(ExceptionHandler::class);
+
+        if ($handler instanceof Handler) {
+            DomainExceptionRenderer::register($handler);
+        }
     }
 }
