@@ -4,12 +4,18 @@ declare(strict_types=1);
 
 namespace Modules\TasksProjects\Tests;
 
+use Illuminate\Auth\GenericUser;
+use Illuminate\Contracts\Debug\ExceptionHandler;
+use Illuminate\Foundation\Exceptions\Handler;
+use Illuminate\Routing\Router;
 use Illuminate\Support\Carbon;
+use Illuminate\Support\Facades\Auth;
 use InvoiceShelf\Modules\Contracts\Host\CompanyDataReader;
 use InvoiceShelf\Modules\Contracts\Host\ModuleAuthorization;
 use InvoiceShelf\Modules\Contracts\Host\SettingsStore;
 use InvoiceShelf\Modules\InvoiceShelfModulesServiceProvider;
 use InvoiceShelf\Modules\Registry;
+use Modules\TasksProjects\Http\DomainExceptionRenderer;
 use Modules\TasksProjects\Models\Project;
 use Modules\TasksProjects\Models\ProjectMember;
 use Modules\TasksProjects\Models\Task;
@@ -23,6 +29,9 @@ use Orchestra\Testbench\TestCase as Orchestra;
 
 abstract class TestCase extends Orchestra
 {
+    /** The user every request acts as until a test says otherwise. */
+    public const DEFAULT_USER = 7;
+
     protected MemorySettingsStore $settings;
 
     protected MemoryCompanyDataReader $companyData;
@@ -40,6 +49,17 @@ abstract class TestCase extends Orchestra
         $this->app->instance(SettingsStore::class, $this->settings);
         $this->app->instance(CompanyDataReader::class, $this->companyData);
         $this->app->instance(ModuleAuthorization::class, $this->authorization);
+
+        $handler = $this->app->make(ExceptionHandler::class);
+        if ($handler instanceof Handler) {
+            DomainExceptionRenderer::register($handler);
+        }
+
+        // `auth:sanctum`, `company` and `bouncer` are host middleware and do not
+        // exist here, so the harness stands in for all three: it authenticates
+        // the caller itself and puts the company on the request as a header.
+        $this->withoutMiddleware();
+        $this->actingAsUser(self::DEFAULT_USER);
     }
 
     protected function tearDown(): void
@@ -76,6 +96,30 @@ abstract class TestCase extends Orchestra
     protected function moduleSettings(): ModuleSettings
     {
         return new ModuleSettings($this->settings);
+    }
+
+    /**
+     * Load the module's own route file, the way the provider does in the host.
+     *
+     * @param  Router  $router
+     */
+    protected function defineRoutes($router): void
+    {
+        require dirname(__DIR__).'/routes/api.php';
+    }
+
+    /** Authenticate the caller without a host user model. */
+    protected function actingAsUser(int $userId): static
+    {
+        Auth::setUser(new GenericUser(['id' => $userId]));
+
+        return $this;
+    }
+
+    /** Send the `company` header the host middleware would have set. */
+    protected function asCompany(int $companyId): static
+    {
+        return $this->withHeader('company', (string) $companyId);
     }
 
     /** @param array<string, mixed> $attributes */
