@@ -35,7 +35,7 @@ final class TaskService
     ) {}
 
     /**
-     * @param  array{project_id?: int, assignee_id?: int, task_status_id?: int, customer_id?: int, search?: string}  $filters
+     * @param  array{project_id?: int, assignee_id?: int, task_status_id?: int, customer_id?: int, due_before?: string, due_after?: string, search?: string}  $filters
      * @return Collection<int, Task>
      */
     public function listFor(int $companyId, array $filters = []): Collection
@@ -46,6 +46,14 @@ final class TaskService
             if (array_key_exists($field, $filters)) {
                 $query->where($field, $filters[$field]);
             }
+        }
+
+        if (isset($filters['due_after'])) {
+            $query->where('due_date', '>=', Carbon::parse($filters['due_after'])->toDateString());
+        }
+
+        if (isset($filters['due_before'])) {
+            $query->where('due_date', '<=', Carbon::parse($filters['due_before'])->toDateString());
         }
 
         if (isset($filters['search']) && $filters['search'] !== '') {

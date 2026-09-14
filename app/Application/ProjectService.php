@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Modules\TasksProjects\Application;
 
+use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Database\Eloquent\ModelNotFoundException;
 use Illuminate\Support\Facades\DB;
@@ -23,7 +24,7 @@ final class ProjectService
     ];
 
     /**
-     * @param  array{status?: string, customer_id?: int, user_id?: int}  $filters
+     * @param  array{status?: string, customer_id?: int, user_id?: int, search?: string}  $filters
      * @return Collection<int, Project>
      */
     public function listFor(int $companyId, array $filters = []): Collection
@@ -43,6 +44,14 @@ final class ProjectService
                 ->forCompany($companyId)
                 ->where('user_id', $filters['user_id'])
                 ->select('project_id'));
+        }
+
+        if (isset($filters['search']) && $filters['search'] !== '') {
+            $search = '%'.$filters['search'].'%';
+
+            $query->where(static function (Builder $inner) use ($search): void {
+                $inner->where('name', 'like', $search)->orWhere('identifier', 'like', $search);
+            });
         }
 
         return $query->orderBy('name')->orderBy('id')->get();
