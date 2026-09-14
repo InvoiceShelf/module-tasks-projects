@@ -4,6 +4,7 @@ import type { InvoiceShelfExtensionApi } from '@invoiceshelf/modules/frontend'
 import '../css/module.css'
 import { messages } from './messages'
 import ProjectsIndexPage from './pages/ProjectsIndexPage.vue'
+import { registerBoardPages } from './registrations/board'
 
 const MODULE = 'tasks-projects'
 
@@ -20,6 +21,8 @@ window.InvoiceShelf.booting((_app, _router, extensions) => {
       title: 'tasks_projects.projects.title',
     },
   })
+
+  registerBoardPages(extensions)
 })
 
 /**

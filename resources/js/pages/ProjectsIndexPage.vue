@@ -32,7 +32,7 @@ interface TableResult {
 const props = defineProps<{
   client: AxiosInstance
   notify: (type: NotifyType, message: string) => void
-  /** The host router, for the project detail page a later slice adds. */
+  /** The host router. Links here go through `<router-link>`, which uses it. */
   router: Router
 }>()
 
@@ -240,6 +240,15 @@ function statusLabel(status: ProjectStatus): string {
 
       <template #actions>
         <div class="flex items-center justify-end space-x-5">
+          <router-link to="/admin/modules/tasks-projects/board">
+            <BaseButton variant="white">
+              <template #left="slotProps">
+                <BaseIcon name="ViewColumnsIcon" :class="slotProps.class" />
+              </template>
+              {{ t('tasks_projects.board.title') }}
+            </BaseButton>
+          </router-link>
+
           <BaseButton variant="primary-outline" @click="toggleFilter">
             {{ t('tasks_projects.general.filter') }}
             <template #right="slotProps">
@@ -301,7 +310,15 @@ function statusLabel(status: ProjectStatus): string {
               :style="row.data.colour ? { backgroundColor: row.data.colour } : undefined"
             />
             <span>
-              {{ row.data.name }}
+              <router-link
+                class="hover:text-primary-500"
+                :to="{
+                  name: 'extension.page.tasks-projects.project',
+                  params: { id: row.data.id },
+                }"
+              >
+                {{ row.data.name }}
+              </router-link>
               <span v-if="row.data.identifier" class="block text-xs font-normal text-muted">
                 {{ row.data.identifier }}
               </span>
