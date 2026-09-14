@@ -69,9 +69,46 @@ final class ModuleRegistration
             ],
         ]);
 
-        // TODO(sdk-3.4): register abilities via Registry::registerAbility once the
-        // host ability catalogue is open to modules. Until then the module gates
-        // through Contracts\Host\ModuleAuthorization against existing host
-        // abilities; see Modules\TasksProjects\Support\Abilities.
+        self::registerAbilities();
+    }
+
+    /**
+     * Contribute the module's ability catalogue to the host role editor.
+     *
+     * The registry namespaces every name as `tasks-projects:{ability}`, so the
+     * ids below can never collide with a host ability. Dependencies on a host
+     * ability stay bare; dependencies on a module ability are namespaced with
+     * Registry::abilityId(). See specs/tasks-projects.md "Authorization".
+     */
+    private static function registerAbilities(): void
+    {
+        $viewProject = Registry::abilityId(Abilities::SLUG, Abilities::VIEW_PROJECT);
+        $viewTask = Registry::abilityId(Abilities::SLUG, Abilities::VIEW_TASK);
+        $viewOwnTime = Registry::abilityId(Abilities::SLUG, Abilities::VIEW_OWN_TIME);
+        $viewAllTime = Registry::abilityId(Abilities::SLUG, Abilities::VIEW_ALL_TIME);
+
+        $abilities = [
+            [Abilities::VIEW_PROJECT, 'View projects', []],
+            [Abilities::CREATE_PROJECT, 'Create projects', [$viewProject, Abilities::HOST_VIEW_CUSTOMER]],
+            [Abilities::EDIT_PROJECT, 'Edit projects', [$viewProject, Abilities::HOST_VIEW_CUSTOMER]],
+            [Abilities::DELETE_PROJECT, 'Delete projects', [$viewProject]],
+            [Abilities::VIEW_TASK, 'View tasks', [$viewProject]],
+            [Abilities::CREATE_TASK, 'Create tasks', [$viewTask]],
+            [Abilities::EDIT_TASK, 'Edit tasks', [$viewTask]],
+            [Abilities::DELETE_TASK, 'Delete tasks', [$viewTask]],
+            [Abilities::MANAGE_TASK_STATUS, 'Manage task statuses', [$viewTask]],
+            [Abilities::VIEW_OWN_TIME, 'View own time', []],
+            [Abilities::VIEW_ALL_TIME, 'View all time', [$viewOwnTime]],
+            [Abilities::EDIT_ALL_TIME, 'Edit all time', [$viewAllTime]],
+            [Abilities::INVOICE_TASKS, 'Invoice tasks', [$viewAllTime, Abilities::HOST_CREATE_INVOICE]],
+        ];
+
+        foreach ($abilities as [$ability, $name, $dependsOn]) {
+            Registry::registerAbility(Abilities::SLUG, [
+                'ability' => $ability,
+                'name' => $name,
+                'depends_on' => $dependsOn,
+            ]);
+        }
     }
 }
