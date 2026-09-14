@@ -48,7 +48,7 @@ It is configured for the `stable` channel, so release only final SemVer versions
 1. Update the exact release version in `module.json`.
 2. Build and commit any changed `dist/` files, run every check above, and merge the release change
    to `main`.
-3. Create an unprefixed tag that exactly matches `module.json`—for example, `0.1.0`—and push it:
+3. Create an unprefixed tag that exactly matches `module.json`, for example, `0.1.0`, and push it:
 
    ```bash
    git tag 0.1.0
