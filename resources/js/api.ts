@@ -4,7 +4,8 @@ import type { CompanyMember } from '@/types/member'
 import type { ModuleSettings } from '@/types/settings'
 import type { Project, ProjectInput, ProjectListParams } from '@/types/project'
 
-const BASE = '/api/v1/tasks-projects'
+/** Every module path hangs off the slug prefix, so a core route can never collide. */
+export const BASE = '/api/v1/tasks-projects'
 
 /** Every endpoint the module owns. */
 export const TASKS_PROJECTS_API = {
