@@ -17,6 +17,8 @@ final class ModuleRegistration
             'title' => 'tasksprojects::menu.title',
             'link' => '/admin/modules/tasks-projects',
             'icon' => 'ClipboardDocumentListIcon',
+            // Lower sorts first within the sidebar group; official modules use 10, 20, ...
+            'priority' => 10,
         ]);
 
         Registry::registerSettings('tasks-projects', [

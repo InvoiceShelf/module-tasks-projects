@@ -25,7 +25,7 @@ final class ModuleRegistrationTest extends TestCase
         self::assertSame([
             'group' => 'modules',
             'group_label' => 'navigation.modules',
-            'priority' => 100,
+            'priority' => 10,
             'title' => 'tasksprojects::menu.title',
             'link' => '/admin/modules/tasks-projects',
             'icon' => 'ClipboardDocumentListIcon',
