@@ -9,10 +9,11 @@ use InvoiceShelf\Modules\Contracts\Host\CompanyDataReader;
 /**
  * An in-memory stand-in for the host company reader.
  *
- * Only the two surfaces this module actually uses carry state: the invoice ids
- * that still exist, which decide whether a stamped entry counts as billed, and
- * the company member list, which supplies names for the member grouping. The
- * rest satisfy the contract and return nothing.
+ * Only the surfaces this module actually uses carry state: the invoice ids
+ * that still exist, which decide whether a stamped entry counts as billed, the
+ * company member list, which supplies names for the member grouping, and the
+ * customers, which lend a new project its currency. The rest satisfy the
+ * contract and return nothing.
  */
 final class MemoryCompanyDataReader implements CompanyDataReader
 {
@@ -21,6 +22,9 @@ final class MemoryCompanyDataReader implements CompanyDataReader
 
     /** @var array<int, list<array{id: int, name: string, email: string, avatar: string|null}>> */
     public array $members = [];
+
+    /** @var array<int, array<int, array<string, mixed>>> customers, keyed by company then id */
+    public array $customers = [];
 
     /** @var list<array{company_id: int, invoice_ids: list<int>}> */
     public array $invoiceLookups = [];
@@ -44,6 +48,20 @@ final class MemoryCompanyDataReader implements CompanyDataReader
         return $this;
     }
 
+    public function withCustomer(int $companyId, int $customerId, ?int $currencyId = null): self
+    {
+        $this->customers[$companyId][$customerId] = [
+            'id' => $customerId,
+            'name' => 'Customer '.$customerId,
+            'currency_id' => $currencyId,
+            'currency' => $currencyId === null
+                ? null
+                : ['id' => $currencyId, 'code' => 'EUR', 'symbol' => 'E', 'precision' => 2],
+        ];
+
+        return $this;
+    }
+
     /** @return array<string, mixed> */
     public function companyStats(int $companyId, string $startDate, string $endDate): array
     {
@@ -53,7 +71,7 @@ final class MemoryCompanyDataReader implements CompanyDataReader
     /** @return array<string, mixed>|null */
     public function findCustomer(int $companyId, int $customerId): ?array
     {
-        return null;
+        return $this->customers[$companyId][$customerId] ?? null;
     }
 
     /** @return array<string, mixed> */

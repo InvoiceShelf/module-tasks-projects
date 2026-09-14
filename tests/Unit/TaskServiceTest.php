@@ -33,7 +33,7 @@ final class TaskServiceTest extends TestCase
             new TaskNumberSequence,
             new BoardOrderingService,
             $this->statuses,
-            new ProjectService,
+            new ProjectService($this->companyData),
         );
     }
 

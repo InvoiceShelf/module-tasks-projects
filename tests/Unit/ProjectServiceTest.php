@@ -26,7 +26,7 @@ final class ProjectServiceTest extends TestCase
     {
         parent::setUp();
 
-        $this->projects = new ProjectService;
+        $this->projects = new ProjectService($this->companyData);
         $this->members = new ProjectMemberService($this->projects);
     }
 
@@ -83,6 +83,76 @@ final class ProjectServiceTest extends TestCase
         $this->projects->update(self::COMPANY, (int) $project->id, ['customer_id' => 43]);
 
         self::assertSame(43, $task->fresh()->customer_id);
+    }
+
+    public function test_a_new_project_inherits_the_currency_of_its_customer(): void
+    {
+        $this->companyData->withCustomer(self::COMPANY, 42, 3);
+
+        $project = $this->projects->create(self::COMPANY, ['name' => 'Website', 'customer_id' => 42]);
+
+        self::assertSame(3, $project->currency_id);
+    }
+
+    public function test_a_named_currency_survives_the_customer_it_was_filed_under(): void
+    {
+        $this->companyData->withCustomer(self::COMPANY, 42, 3);
+
+        $project = $this->projects->create(self::COMPANY, [
+            'name' => 'Website',
+            'customer_id' => 42,
+            'currency_id' => 4,
+        ]);
+
+        self::assertSame(4, $project->currency_id);
+    }
+
+    public function test_an_internal_project_and_a_customer_without_a_currency_stay_currencyless(): void
+    {
+        $this->companyData->withCustomer(self::COMPANY, 43, null);
+
+        $internal = $this->projects->create(self::COMPANY, ['name' => 'Internal tooling']);
+        $unpriced = $this->projects->create(self::COMPANY, ['name' => 'Favour', 'customer_id' => 43]);
+
+        self::assertNull($internal->currency_id);
+        self::assertNull($unpriced->currency_id);
+    }
+
+    public function test_changing_the_customer_moves_the_project_to_that_customers_currency(): void
+    {
+        $this->companyData->withCustomer(self::COMPANY, 42, 3)->withCustomer(self::COMPANY, 43, 4);
+
+        $project = $this->projects->create(self::COMPANY, ['name' => 'Website', 'customer_id' => 42]);
+        $moved = $this->projects->update(self::COMPANY, (int) $project->id, ['customer_id' => 43]);
+
+        self::assertSame(4, $moved->currency_id);
+    }
+
+    public function test_an_update_that_leaves_the_customer_alone_leaves_the_currency_alone(): void
+    {
+        $this->companyData->withCustomer(self::COMPANY, 42, 3);
+
+        $project = $this->projects->create(self::COMPANY, [
+            'name' => 'Website',
+            'customer_id' => 42,
+            'currency_id' => 4,
+        ]);
+        $renamed = $this->projects->update(self::COMPANY, (int) $project->id, ['name' => 'Website 2']);
+
+        self::assertSame(4, $renamed->currency_id);
+    }
+
+    public function test_an_explicit_null_currency_clears_it(): void
+    {
+        $this->companyData->withCustomer(self::COMPANY, 42, 3);
+
+        $project = $this->projects->create(self::COMPANY, ['name' => 'Website', 'customer_id' => 42]);
+        $cleared = $this->projects->update(self::COMPANY, (int) $project->id, [
+            'customer_id' => 42,
+            'currency_id' => null,
+        ]);
+
+        self::assertNull($cleared->currency_id);
     }
 
     public function test_a_member_is_attached_with_a_rate_and_reattaching_updates_it(): void

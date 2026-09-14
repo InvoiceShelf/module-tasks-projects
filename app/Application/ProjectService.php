@@ -8,6 +8,7 @@ use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Database\Eloquent\ModelNotFoundException;
 use Illuminate\Support\Facades\DB;
+use InvoiceShelf\Modules\Contracts\Host\CompanyDataReader;
 use Modules\TasksProjects\Application\Exceptions\ProjectInUse;
 use Modules\TasksProjects\Models\Project;
 use Modules\TasksProjects\Models\ProjectMember;
@@ -22,6 +23,8 @@ final class ProjectService
         'customer_id', 'name', 'identifier', 'description', 'colour', 'status',
         'currency_id', 'default_rate', 'budget_minutes', 'due_date', 'creator_id',
     ];
+
+    public function __construct(private readonly CompanyDataReader $companyData) {}
 
     /**
      * @param  array{status?: string, customer_id?: int, user_id?: int, search?: string}  $filters
@@ -68,7 +71,12 @@ final class ProjectService
         return $project;
     }
 
-    /** @param array<string, mixed> $attributes */
+    /**
+     * A project's currency follows the customer it was filed under, unless the
+     * caller named one itself.
+     *
+     * @param  array<string, mixed>  $attributes
+     */
     public function create(int $companyId, array $attributes): Project
     {
         $values = ['company_id' => $companyId, 'status' => Project::STATUS_ACTIVE];
@@ -79,12 +87,21 @@ final class ProjectService
             }
         }
 
+        if (! array_key_exists('currency_id', $attributes)) {
+            $currencyId = $this->customerCurrency($companyId, $values['customer_id'] ?? null);
+
+            if ($currencyId !== null) {
+                $values['currency_id'] = $currencyId;
+            }
+        }
+
         return Project::query()->create($values);
     }
 
     /**
      * A project's customer is denormalised onto its tasks, so changing it
-     * rewrites the tasks that follow the project.
+     * rewrites the tasks that follow the project, and moves the project to
+     * that customer's currency unless the caller named one itself.
      *
      * @param  array<string, mixed>  $attributes
      */
@@ -98,6 +115,14 @@ final class ProjectService
             foreach (self::FIELDS as $field) {
                 if (array_key_exists($field, $attributes)) {
                     $project->{$field} = $attributes[$field];
+                }
+            }
+
+            if (! array_key_exists('currency_id', $attributes) && array_key_exists('customer_id', $attributes)) {
+                $currencyId = $this->customerCurrency($companyId, $project->customer_id);
+
+                if ($currencyId !== null) {
+                    $project->currency_id = $currencyId;
                 }
             }
 
@@ -205,6 +230,23 @@ final class ProjectService
             'unbilled_amount' => $unbilledAmount,
             'currency_id' => $project->currency_id === null ? null : (int) $project->currency_id,
         ];
+    }
+
+    /**
+     * The currency of one customer, read through the host contract.
+     *
+     * An internal project has no customer and so no currency to inherit, and a
+     * customer without one leaves the project's currency alone.
+     */
+    private function customerCurrency(int $companyId, mixed $customerId): ?int
+    {
+        if ($customerId === null) {
+            return null;
+        }
+
+        $currencyId = $this->companyData->findCustomer($companyId, (int) $customerId)['currency_id'] ?? null;
+
+        return $currencyId === null ? null : (int) $currencyId;
     }
 
     private function setStatus(int $companyId, int $id, string $status): Project

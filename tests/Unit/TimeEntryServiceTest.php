@@ -33,7 +33,7 @@ final class TimeEntryServiceTest extends TestCase
         $this->entries = new TimeEntryService(
             new RateResolver,
             $this->moduleSettings(),
-            new TaskService(new TaskNumberSequence, new BoardOrderingService, new TaskStatusService, new ProjectService),
+            new TaskService(new TaskNumberSequence, new BoardOrderingService, new TaskStatusService, new ProjectService($this->companyData)),
         );
     }
 

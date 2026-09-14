@@ -32,7 +32,7 @@ final class TimerServiceTest extends TestCase
         parent::setUp();
 
         $this->timer = new TimerService(
-            new TaskService(new TaskNumberSequence, new BoardOrderingService, new TaskStatusService, new ProjectService),
+            new TaskService(new TaskNumberSequence, new BoardOrderingService, new TaskStatusService, new ProjectService($this->companyData)),
             new RateResolver,
             $this->moduleSettings(),
         );
