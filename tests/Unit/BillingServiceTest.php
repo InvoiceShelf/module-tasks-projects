@@ -4,16 +4,21 @@ declare(strict_types=1);
 
 namespace Modules\TasksProjects\Tests\Unit;
 
+use Illuminate\Database\Eloquent\ModelNotFoundException;
 use Illuminate\Support\Carbon;
 use InvalidArgumentException;
+use Modules\TasksProjects\Application\BillingSelection;
 use Modules\TasksProjects\Application\BillingService;
 use Modules\TasksProjects\Application\Exceptions\EntriesAlreadyInvoiced;
 use Modules\TasksProjects\Application\Exceptions\MixedBillingSelection;
 use Modules\TasksProjects\Application\Exceptions\NotBillable;
+use Modules\TasksProjects\Application\Exceptions\NothingToInvoice;
 use Modules\TasksProjects\Application\Exceptions\UnknownTimeEntries;
+use Modules\TasksProjects\Application\InvoiceLineComposer;
 use Modules\TasksProjects\Models\Project;
 use Modules\TasksProjects\Models\Task;
 use Modules\TasksProjects\Models\TimeEntry;
+use Modules\TasksProjects\Support\ModuleSettings;
 use Modules\TasksProjects\Tests\TestCase;
 
 final class BillingServiceTest extends TestCase
@@ -44,7 +49,7 @@ final class BillingServiceTest extends TestCase
     {
         parent::setUp();
 
-        $this->billing = new BillingService($this->companyData);
+        $this->billing = new BillingService($this->companyData, $this->moduleSettings(), new InvoiceLineComposer);
         $this->companyData->withMember(self::COMPANY, 7, 'Ada Lovelace')->withMember(self::COMPANY, 8, 'Grace Hopper');
 
         $this->website = $this->makeProject(self::COMPANY, ['name' => 'Website', 'customer_id' => self::CUSTOMER, 'currency_id' => self::CURRENCY]);
@@ -132,7 +137,7 @@ final class BillingServiceTest extends TestCase
         Carbon::setTestNow('2026-09-15 08:00:00');
         $entries = $this->entries();
 
-        $payload = $this->billing->prepare(self::COMPANY, $this->ids($entries), 'task');
+        $payload = $this->billing->prepare(self::COMPANY, BillingSelection::fromEntryIds($this->ids($entries)), 'task');
 
         self::assertSame('2026-09-15', $payload['invoice_date']);
         self::assertSame(self::CUSTOMER, $payload['customer_id']);
@@ -145,10 +150,10 @@ final class BillingServiceTest extends TestCase
         self::assertSame(34500, $payload['total']);
 
         self::assertSame([
-            ['name' => 'Landing page', 'description' => null, 'quantity' => 1.5, 'price' => 6000, 'discount_type' => 'fixed', 'discount' => 0, 'discount_val' => 0, 'tax' => 0, 'taxes' => [], 'total' => 9000],
-            ['name' => 'Pricing page', 'description' => null, 'quantity' => 1.5, 'price' => 6000, 'discount_type' => 'fixed', 'discount' => 0, 'discount_val' => 0, 'tax' => 0, 'taxes' => [], 'total' => 9000],
-            ['name' => 'Onboarding flow', 'description' => null, 'quantity' => 2.0, 'price' => 6000, 'discount_type' => 'fixed', 'discount' => 0, 'discount_val' => 0, 'tax' => 0, 'taxes' => [], 'total' => 12000],
-            ['name' => 'Ad hoc call', 'description' => null, 'quantity' => 0.75, 'price' => 6000, 'discount_type' => 'fixed', 'discount' => 0, 'discount_val' => 0, 'tax' => 0, 'taxes' => [], 'total' => 4500],
+            ['name' => '#1 Landing page', 'description' => "2026-09-01  1.00 h\n2026-09-02  0.50 h", 'quantity' => 1.5, 'price' => 6000, 'discount_type' => 'fixed', 'discount' => 0, 'discount_val' => 0, 'tax' => 0, 'taxes' => [], 'total' => 9000],
+            ['name' => '#2 Pricing page', 'description' => '2026-09-03  1.50 h', 'quantity' => 1.5, 'price' => 6000, 'discount_type' => 'fixed', 'discount' => 0, 'discount_val' => 0, 'tax' => 0, 'taxes' => [], 'total' => 9000],
+            ['name' => '#3 Onboarding flow', 'description' => '2026-09-04  2.00 h', 'quantity' => 2.0, 'price' => 6000, 'discount_type' => 'fixed', 'discount' => 0, 'discount_val' => 0, 'tax' => 0, 'taxes' => [], 'total' => 12000],
+            ['name' => '#4 Ad hoc call', 'description' => '2026-09-05  0.75 h', 'quantity' => 0.75, 'price' => 6000, 'discount_type' => 'fixed', 'discount' => 0, 'discount_val' => 0, 'tax' => 0, 'taxes' => [], 'total' => 4500],
         ], $payload['items']);
 
         self::assertSame([
@@ -164,7 +169,7 @@ final class BillingServiceTest extends TestCase
     {
         $entries = $this->entries();
 
-        $payload = $this->billing->prepare(self::COMPANY, $this->ids($entries), 'summary');
+        $payload = $this->billing->prepare(self::COMPANY, BillingSelection::fromEntryIds($this->ids($entries)), 'summary');
 
         self::assertSame([
             'invoice_date',
@@ -311,9 +316,10 @@ final class BillingServiceTest extends TestCase
 
     public function test_prepare_builds_one_line_per_project(): void
     {
+        $this->noteSettings();
         $entries = $this->entries();
 
-        $payload = $this->billing->prepare(self::COMPANY, $this->ids($entries), 'project');
+        $payload = $this->billing->prepare(self::COMPANY, BillingSelection::fromEntryIds($this->ids($entries)), 'project');
 
         self::assertSame([
             ['name' => 'Website', 'description' => null, 'quantity' => 3.0, 'price' => 6000, 'discount_type' => 'fixed', 'discount' => 0, 'discount_val' => 0, 'tax' => 0, 'taxes' => [], 'total' => 18000],
@@ -325,10 +331,11 @@ final class BillingServiceTest extends TestCase
 
     public function test_prepare_builds_one_line_per_member_and_names_a_leaver(): void
     {
+        $this->noteSettings();
         $entries = $this->entries();
         $entries[] = $this->entry($this->landing, 99, 60, '2026-09-06');
 
-        $payload = $this->billing->prepare(self::COMPANY, $this->ids($entries), 'member');
+        $payload = $this->billing->prepare(self::COMPANY, BillingSelection::fromEntryIds($this->ids($entries)), 'member');
 
         self::assertSame([
             ['name' => 'Ada Lovelace', 'description' => null, 'quantity' => 3.25, 'price' => 6000, 'discount_type' => 'fixed', 'discount' => 0, 'discount_val' => 0, 'tax' => 0, 'taxes' => [], 'total' => 19500],
@@ -339,9 +346,10 @@ final class BillingServiceTest extends TestCase
 
     public function test_prepare_collapses_everything_into_one_summary_line(): void
     {
+        $this->noteSettings();
         $entries = $this->entries();
 
-        $payload = $this->billing->prepare(self::COMPANY, $this->ids($entries), 'summary');
+        $payload = $this->billing->prepare(self::COMPANY, BillingSelection::fromEntryIds($this->ids($entries)), 'summary');
 
         self::assertSame([
             ['name' => 'Time', 'description' => null, 'quantity' => 5.75, 'price' => 6000, 'discount_type' => 'fixed', 'discount' => 0, 'discount_val' => 0, 'tax' => 0, 'taxes' => [], 'total' => 34500],
@@ -351,26 +359,30 @@ final class BillingServiceTest extends TestCase
 
     public function test_a_line_over_two_rates_bills_the_blended_rate(): void
     {
+        $this->noteSettings();
         $first = $this->entry($this->landing, 7, 60, '2026-09-01', ['rate' => 6000, 'amount' => 6000]);
         $second = $this->entry($this->landing, 7, 30, '2026-09-02', ['rate' => 12000, 'amount' => 6000]);
 
-        $payload = $this->billing->prepare(self::COMPANY, $this->ids([$first, $second]), 'task');
+        $payload = $this->billing->prepare(self::COMPANY, BillingSelection::fromEntryIds($this->ids([$first, $second])), 'task');
 
         self::assertSame(
-            [['name' => 'Landing page', 'description' => null, 'quantity' => 1.5, 'price' => 8000, 'discount_type' => 'fixed', 'discount' => 0, 'discount_val' => 0, 'tax' => 0, 'taxes' => [], 'total' => 12000]],
+            [['name' => '#1 Landing page', 'description' => null, 'quantity' => 1.5, 'price' => 8000, 'discount_type' => 'fixed', 'discount' => 0, 'discount_val' => 0, 'tax' => 0, 'taxes' => [], 'total' => 12000]],
             $payload['items'],
         );
     }
 
-    public function test_entry_descriptions_become_the_line_description(): void
+    public function test_entry_descriptions_become_one_note_line_each(): void
     {
+        $this->noteSettings('invoice_entry_descriptions');
         $first = $this->entry($this->landing, 7, 60, '2026-09-01', ['description' => 'Hero section']);
         $second = $this->entry($this->landing, 7, 60, '2026-09-02', ['description' => 'Hero section']);
         $third = $this->entry($this->landing, 7, 60, '2026-09-03', ['description' => 'Footer']);
 
-        $payload = $this->billing->prepare(self::COMPANY, $this->ids([$first, $second, $third]), 'task');
+        $payload = $this->billing->prepare(self::COMPANY, BillingSelection::fromEntryIds($this->ids([$first, $second, $third])), 'task');
 
-        self::assertSame("Hero section\nFooter", $payload['items'][0]['description']);
+        // Two days of the same work are two days of work, not one line: the
+        // note follows the time log rather than de-duplicating it.
+        self::assertSame("Hero section\nHero section\nFooter", $payload['items'][0]['description']);
     }
 
     public function test_prepare_refuses_a_selection_spanning_two_customers(): void
@@ -381,7 +393,7 @@ final class BillingServiceTest extends TestCase
         $this->expectException(MixedBillingSelection::class);
         $this->expectExceptionMessage('more than one customer');
 
-        $this->billing->prepare(self::COMPANY, $this->ids([$ours, $theirs]), 'task');
+        $this->billing->prepare(self::COMPANY, BillingSelection::fromEntryIds($this->ids([$ours, $theirs])), 'task');
     }
 
     public function test_prepare_refuses_a_selection_spanning_two_currencies(): void
@@ -392,7 +404,7 @@ final class BillingServiceTest extends TestCase
         $this->expectException(MixedBillingSelection::class);
         $this->expectExceptionMessage('more than one currency');
 
-        $this->billing->prepare(self::COMPANY, $this->ids([$euros, $pounds]), 'task');
+        $this->billing->prepare(self::COMPANY, BillingSelection::fromEntryIds($this->ids([$euros, $pounds])), 'task');
     }
 
     public function test_prepare_refuses_an_empty_selection(): void
@@ -400,7 +412,7 @@ final class BillingServiceTest extends TestCase
         $this->expectException(MixedBillingSelection::class);
         $this->expectExceptionMessage('No time entries were selected.');
 
-        $this->billing->prepare(self::COMPANY, [], 'task');
+        $this->billing->prepare(self::COMPANY, BillingSelection::fromEntryIds([]), 'task');
     }
 
     public function test_prepare_refuses_an_entry_of_another_company(): void
@@ -411,7 +423,7 @@ final class BillingServiceTest extends TestCase
         $this->expectException(UnknownTimeEntries::class);
         $this->expectExceptionMessage("Time entries {$foreign->id} do not belong to this company.");
 
-        $this->billing->prepare(self::COMPANY, [(int) $foreign->id], 'task');
+        $this->billing->prepare(self::COMPANY, BillingSelection::fromEntryIds([(int) $foreign->id]), 'task');
     }
 
     public function test_prepare_refuses_non_billable_time(): void
@@ -421,7 +433,7 @@ final class BillingServiceTest extends TestCase
         $this->expectException(NotBillable::class);
         $this->expectExceptionMessage("Time entries {$entry->id} are not billable.");
 
-        $this->billing->prepare(self::COMPANY, [(int) $entry->id], 'task');
+        $this->billing->prepare(self::COMPANY, BillingSelection::fromEntryIds([(int) $entry->id]), 'task');
     }
 
     public function test_prepare_refuses_a_timer_that_is_still_running(): void
@@ -431,7 +443,7 @@ final class BillingServiceTest extends TestCase
         $this->expectException(NotBillable::class);
         $this->expectExceptionMessage('still running');
 
-        $this->billing->prepare(self::COMPANY, [(int) $entry->id], 'task');
+        $this->billing->prepare(self::COMPANY, BillingSelection::fromEntryIds([(int) $entry->id]), 'task');
     }
 
     public function test_prepare_refuses_time_that_is_already_on_a_live_invoice(): void
@@ -441,14 +453,14 @@ final class BillingServiceTest extends TestCase
 
         $this->expectException(EntriesAlreadyInvoiced::class);
 
-        $this->billing->prepare(self::COMPANY, [(int) $entry->id], 'task');
+        $this->billing->prepare(self::COMPANY, BillingSelection::fromEntryIds([(int) $entry->id]), 'task');
     }
 
     public function test_prepare_re_bills_time_whose_invoice_vanished(): void
     {
         $entry = $this->entry($this->landing, 7, 60, '2026-09-01', ['invoice_id' => 88]);
 
-        $payload = $this->billing->prepare(self::COMPANY, [(int) $entry->id], 'task');
+        $payload = $this->billing->prepare(self::COMPANY, BillingSelection::fromEntryIds([(int) $entry->id]), 'task');
 
         self::assertSame(6000, $payload['total']);
     }
@@ -460,7 +472,7 @@ final class BillingServiceTest extends TestCase
         $this->expectException(InvalidArgumentException::class);
         $this->expectExceptionMessage("Grouping 'weekday' is not one of task, project, member, summary.");
 
-        $this->billing->prepare(self::COMPANY, [(int) $entry->id], 'weekday');
+        $this->billing->prepare(self::COMPANY, BillingSelection::fromEntryIds([(int) $entry->id]), 'weekday');
     }
 
     public function test_prepare_refuses_time_with_no_customer_to_bill(): void
@@ -472,7 +484,7 @@ final class BillingServiceTest extends TestCase
         $this->expectException(NotBillable::class);
         $this->expectExceptionMessage('has no customer to bill');
 
-        $this->billing->prepare(self::COMPANY, [(int) $entry->id], 'task');
+        $this->billing->prepare(self::COMPANY, BillingSelection::fromEntryIds([(int) $entry->id]), 'task');
     }
 
     public function test_confirm_stamps_every_entry_with_its_line(): void
@@ -529,6 +541,211 @@ final class BillingServiceTest extends TestCase
         }
 
         self::assertNull($ours->fresh()->invoice_id);
+    }
+
+    public function test_prepare_invoices_every_unbilled_entry_of_the_named_tasks(): void
+    {
+        $this->noteSettings();
+        $first = $this->entry($this->landing, 7, 60, '2026-09-01');
+        $second = $this->entry($this->landing, 8, 30, '2026-09-02');
+        $third = $this->entry($this->pricing, 7, 90, '2026-09-03');
+        $this->entry($this->onboarding, 7, 60, '2026-09-04');
+
+        $payload = $this->billing->prepare(
+            self::COMPANY,
+            BillingSelection::fromTaskIds([(int) $this->landing->id, (int) $this->pricing->id]),
+        );
+
+        self::assertSame(['#1 Landing page', '#2 Pricing page'], array_column($payload['items'], 'name'));
+        self::assertSame([
+            ['entry_ids' => [(int) $first->id, (int) $second->id]],
+            ['entry_ids' => [(int) $third->id]],
+        ], $payload['groups']);
+        self::assertSame(18000, $payload['total']);
+    }
+
+    public function test_a_task_selection_takes_only_the_time_that_can_be_billed_today(): void
+    {
+        $open = $this->entry($this->landing, 7, 60, '2026-09-01');
+        $this->entry($this->landing, 7, 60, '2026-09-02', ['billable' => false]);
+        $this->entry($this->landing, 7, 0, '2026-09-03', ['running_user_id' => 7, 'ended_at' => null]);
+        $this->entry($this->landing, 7, 60, '2026-09-04', ['invoice_id' => 77, 'invoice_item_id' => 5]);
+        $orphan = $this->entry($this->landing, 7, 30, '2026-09-05', ['invoice_id' => 88, 'invoice_item_id' => 6]);
+        $this->companyData->withInvoices(self::COMPANY, 77);
+
+        $payload = $this->billing->prepare(self::COMPANY, BillingSelection::fromTaskIds([(int) $this->landing->id]));
+
+        // 88 was deleted in the host, so that half hour is unbilled again.
+        self::assertSame([['entry_ids' => [(int) $open->id, (int) $orphan->id]]], $payload['groups']);
+        self::assertSame([['company_id' => self::COMPANY, 'invoice_ids' => [77, 88]]], $this->companyData->invoiceLookups);
+    }
+
+    public function test_a_project_selection_covers_every_task_filed_under_it(): void
+    {
+        $this->noteSettings();
+        $this->entry($this->landing, 7, 60, '2026-09-01');
+        $this->entry($this->pricing, 7, 90, '2026-09-02');
+        $this->entry($this->onboarding, 7, 60, '2026-09-03');
+        $this->entry($this->adHoc, 7, 45, '2026-09-04');
+
+        $payload = $this->billing->prepare(self::COMPANY, BillingSelection::fromProject((int) $this->website->id));
+
+        self::assertSame(['#1 Landing page', '#2 Pricing page'], array_column($payload['items'], 'name'));
+        self::assertSame(15000, $payload['total']);
+    }
+
+    public function test_a_task_selection_with_nothing_left_to_bill_is_refused(): void
+    {
+        $this->entry($this->landing, 7, 60, '2026-09-01', ['billable' => false]);
+
+        $this->expectException(NothingToInvoice::class);
+        $this->expectExceptionMessage('No unbilled billable time on the selected tasks.');
+
+        $this->billing->prepare(self::COMPANY, BillingSelection::fromTaskIds([(int) $this->landing->id]));
+    }
+
+    public function test_a_project_with_no_unbilled_time_is_refused(): void
+    {
+        $this->expectException(NothingToInvoice::class);
+        $this->expectExceptionMessage('No unbilled billable time on the selected tasks.');
+
+        $this->billing->prepare(self::COMPANY, BillingSelection::fromProject((int) $this->mobile->id));
+    }
+
+    public function test_a_task_selection_spanning_two_customers_names_them_in_the_refusal(): void
+    {
+        $theirs = $this->task('Theirs', null, 43);
+        $this->entry($this->landing, 7, 60, '2026-09-01');
+        $this->entry($theirs, 7, 60, '2026-09-02');
+
+        try {
+            $this->billing->prepare(
+                self::COMPANY,
+                BillingSelection::fromTaskIds([(int) $this->landing->id, (int) $theirs->id]),
+            );
+            self::fail('Expected the selection to be refused.');
+        } catch (MixedBillingSelection $exception) {
+            self::assertStringContainsString('more than one customer', $exception->getMessage());
+            self::assertSame(['customer_ids' => [self::CUSTOMER, 43]], $exception->context());
+        }
+    }
+
+    public function test_prepare_refuses_a_task_of_another_company(): void
+    {
+        $foreignTask = $this->makeTask(10, ['customer_id' => self::CUSTOMER]);
+        $this->makeEntry(10, (int) $foreignTask->id);
+
+        $this->expectException(ModelNotFoundException::class);
+
+        $this->billing->prepare(self::COMPANY, BillingSelection::fromTaskIds([(int) $foreignTask->id]));
+    }
+
+    public function test_prepare_refuses_a_project_of_another_company(): void
+    {
+        $foreignProject = $this->makeProject(10, ['name' => 'Theirs', 'customer_id' => self::CUSTOMER]);
+
+        $this->expectException(ModelNotFoundException::class);
+
+        $this->billing->prepare(self::COMPANY, BillingSelection::fromProject((int) $foreignProject->id));
+    }
+
+    public function test_a_note_line_carries_exactly_the_parts_the_company_asked_for(): void
+    {
+        $entry = $this->entry($this->landing, 7, 90, '2026-09-01', ['description' => 'Hero section']);
+        $selection = BillingSelection::fromEntryIds([(int) $entry->id]);
+
+        $this->noteSettings();
+        self::assertNull($this->billing->prepare(self::COMPANY, $selection)['items'][0]['description']);
+
+        $this->noteSettings('invoice_entry_dates');
+        self::assertSame('2026-09-01', $this->billing->prepare(self::COMPANY, $selection)['items'][0]['description']);
+
+        $this->noteSettings('invoice_entry_times');
+        self::assertSame('09:00-10:30', $this->billing->prepare(self::COMPANY, $selection)['items'][0]['description']);
+
+        $this->noteSettings('invoice_entry_hours');
+        self::assertSame('1.50 h', $this->billing->prepare(self::COMPANY, $selection)['items'][0]['description']);
+
+        $this->noteSettings('invoice_entry_descriptions');
+        self::assertSame('Hero section', $this->billing->prepare(self::COMPANY, $selection)['items'][0]['description']);
+
+        $this->noteSettings('invoice_entry_dates', 'invoice_entry_times', 'invoice_entry_hours', 'invoice_entry_descriptions');
+        self::assertSame(
+            '2026-09-01  09:00-10:30  1.50 h  Hero section',
+            $this->billing->prepare(self::COMPANY, $selection)['items'][0]['description'],
+        );
+    }
+
+    public function test_an_entry_with_nothing_switched_on_to_show_leaves_no_note_line(): void
+    {
+        $this->noteSettings('invoice_entry_times', 'invoice_entry_descriptions');
+        $described = $this->entry($this->landing, 7, 60, '2026-09-01', ['description' => 'Hero section']);
+        $manual = $this->entry($this->landing, 7, 60, '2026-09-02', ['started_at' => null, 'ended_at' => null]);
+
+        $payload = $this->billing->prepare(self::COMPANY, BillingSelection::fromEntryIds($this->ids([$described, $manual])));
+
+        self::assertSame('09:00-10:00  Hero section', $payload['items'][0]['description']);
+    }
+
+    public function test_a_note_can_open_with_the_project_name_and_the_task_description(): void
+    {
+        Task::query()->whereKey($this->landing->id)->update(['description' => "  Rebuild the hero  \n"]);
+        $entry = $this->entry($this->landing, 7, 60, '2026-09-01');
+        $selection = BillingSelection::fromEntryIds([(int) $entry->id]);
+
+        $this->noteSettings('invoice_project_heading', 'invoice_task_description', 'invoice_entry_dates');
+        self::assertSame(
+            "## Website\nRebuild the hero\n2026-09-01",
+            $this->billing->prepare(self::COMPANY, $selection)['items'][0]['description'],
+        );
+
+        $this->noteSettings('invoice_entry_dates');
+        self::assertSame('2026-09-01', $this->billing->prepare(self::COMPANY, $selection)['items'][0]['description']);
+    }
+
+    public function test_the_task_description_never_heads_a_line_that_is_not_one_task(): void
+    {
+        Task::query()->whereKey($this->landing->id)->update(['description' => 'Rebuild the hero']);
+        $this->noteSettings('invoice_project_heading', 'invoice_task_description', 'invoice_entry_dates');
+        $entry = $this->entry($this->landing, 7, 60, '2026-09-01');
+
+        $payload = $this->billing->prepare(self::COMPANY, BillingSelection::fromEntryIds([(int) $entry->id]), 'member');
+
+        self::assertSame("## Website\n2026-09-01", $payload['items'][0]['description']);
+    }
+
+    public function test_a_note_too_long_to_print_says_how_many_entries_it_left_out(): void
+    {
+        $this->noteSettings('invoice_entry_dates', 'invoice_entry_descriptions');
+        $entries = [];
+        for ($day = 1; $day <= 60; $day++) {
+            $entries[] = $this->entry($this->landing, 7, 60, '2026-09-01', ['description' => str_repeat('x', 60)]);
+        }
+
+        $payload = $this->billing->prepare(self::COMPANY, BillingSelection::fromEntryIds($this->ids($entries)));
+        $description = (string) $payload['items'][0]['description'];
+        $lines = explode("\n", $description);
+
+        self::assertLessThanOrEqual(InvoiceLineComposer::MAX_LENGTH, mb_strlen($description));
+        self::assertCount(28, $lines);
+        self::assertSame('and 33 more entries', end($lines));
+        self::assertSame('2026-09-01  '.str_repeat('x', 60), $lines[0]);
+    }
+
+    /**
+     * Turn on exactly these line note settings, and nothing else.
+     *
+     * Most of what `prepare()` returns has nothing to do with the notes, so a
+     * test that is about quantities or groups says so by switching every part
+     * off, and a test that is about one part switches on only that one.
+     */
+    private function noteSettings(string ...$on): void
+    {
+        foreach (array_keys(ModuleSettings::FLAGS) as $key) {
+            if (str_starts_with($key, 'invoice_')) {
+                $this->settings->putCompany(self::COMPANY, ModuleSettings::PREFIX.$key, in_array($key, $on, true));
+            }
+        }
     }
 
     private function task(string $name, ?Project $project, int $customerId = self::CUSTOMER): Task

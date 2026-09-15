@@ -130,8 +130,8 @@ final class BillingApiTest extends TestCase
         $byTask->assertJsonPath('data.template_name', null);
         $byTask->assertJsonPath('data.taxes', []);
         $byTask->assertJsonPath('data.items', [
-            $this->line('Landing page', 1.0, 6000),
-            $this->line('Pricing page', 1.5, 9000),
+            $this->line('#1 Landing page', 1.0, 6000, '2026-09-01  1.00 h'),
+            $this->line('#2 Pricing page', 1.5, 9000, '2026-09-02  1.50 h'),
         ]);
         $byTask->assertJsonPath('data.groups', [
             ['entry_ids' => [(int) $first->id]],
@@ -345,12 +345,98 @@ final class BillingApiTest extends TestCase
             ]);
     }
 
+    public function test_prepare_invoices_a_selection_of_tasks(): void
+    {
+        $first = $this->entry($this->landing, 60, '2026-09-01');
+        $second = $this->entry($this->pricing, 90, '2026-09-02');
+        $this->entry($this->task('Theirs', null, 43), 60, '2026-09-03');
+
+        $this->prepareBody(['task_ids' => [(int) $this->landing->id, (int) $this->pricing->id]])
+            ->assertOk()
+            ->assertJsonPath('data.customer_id', self::CUSTOMER)
+            ->assertJsonPath('data.total', 15000)
+            ->assertJsonPath('data.items', [
+                $this->line('#1 Landing page', 1.0, 6000, '2026-09-01  1.00 h'),
+                $this->line('#2 Pricing page', 1.5, 9000, '2026-09-02  1.50 h'),
+            ])
+            ->assertJsonPath('data.groups', [
+                ['entry_ids' => [(int) $first->id]],
+                ['entry_ids' => [(int) $second->id]],
+            ]);
+    }
+
+    public function test_prepare_invoices_a_whole_project(): void
+    {
+        $this->entry($this->landing, 60, '2026-09-01');
+        $this->entry($this->pricing, 90, '2026-09-02');
+        $this->entry($this->task('Ad hoc call', null), 45, '2026-09-03');
+
+        $this->prepareBody(['project_id' => (int) $this->website->id])
+            ->assertOk()
+            ->assertJsonPath('data.total', 15000)
+            ->assertJsonPath('data.items.0.name', '#1 Landing page')
+            ->assertJsonPath('data.items.1.name', '#2 Pricing page')
+            ->assertJsonCount(2, 'data.items');
+    }
+
+    public function test_prepare_takes_exactly_one_kind_of_selection(): void
+    {
+        $entry = $this->entry($this->landing, 60, '2026-09-01');
+
+        $this->prepareBody([])
+            ->assertStatus(422)
+            ->assertJsonValidationErrors(['entry_ids', 'task_ids', 'project_id']);
+
+        $this->prepareBody(['entry_ids' => [(int) $entry->id], 'task_ids' => [(int) $this->landing->id]])
+            ->assertStatus(422)
+            ->assertJsonValidationErrors(['entry_ids', 'task_ids']);
+
+        $this->prepareBody(['task_ids' => [(int) $this->landing->id], 'project_id' => (int) $this->website->id])
+            ->assertStatus(422)
+            ->assertJsonValidationErrors(['task_ids', 'project_id']);
+    }
+
+    public function test_prepare_says_when_a_selection_has_nothing_left_to_bill(): void
+    {
+        $this->entry($this->landing, 60, '2026-09-01', ['billable' => false]);
+
+        $this->prepareBody(['task_ids' => [(int) $this->landing->id]])
+            ->assertStatus(422)
+            ->assertJsonPath('error', 'nothing_to_invoice')
+            ->assertJsonPath('message', 'No unbilled billable time on the selected tasks.');
+
+        $this->prepareBody(['project_id' => (int) $this->website->id])
+            ->assertStatus(422)
+            ->assertJsonPath('error', 'nothing_to_invoice');
+    }
+
+    public function test_prepare_names_the_customers_a_mixed_task_selection_spans(): void
+    {
+        $theirs = $this->task('Theirs', null, 43);
+        $this->entry($this->landing, 60, '2026-09-01');
+        $this->entry($theirs, 60, '2026-09-02');
+
+        $this->prepareBody(['task_ids' => [(int) $this->landing->id, (int) $theirs->id]])
+            ->assertStatus(422)
+            ->assertJsonPath('error', 'mixed_billing_selection')
+            ->assertJsonPath('customer_ids', [self::CUSTOMER, 43]);
+    }
+
+    public function test_prepare_refuses_a_task_or_a_project_of_another_company(): void
+    {
+        $foreignTask = $this->makeTask(self::OTHER_COMPANY, ['customer_id' => self::CUSTOMER]);
+        $foreignProject = $this->makeProject(self::OTHER_COMPANY, ['name' => 'Theirs', 'customer_id' => self::CUSTOMER]);
+
+        $this->prepareBody(['task_ids' => [(int) $foreignTask->id]])->assertNotFound();
+        $this->prepareBody(['project_id' => (int) $foreignProject->id])->assertNotFound();
+    }
+
     /** One prepared invoice line, with the zeroed keys the host writer reads. */
-    private function line(string $name, float $quantity, int $total): array
+    private function line(string $name, float $quantity, int $total, ?string $description = null): array
     {
         return [
             'name' => $name,
-            'description' => null,
+            'description' => $description,
             'quantity' => $quantity,
             'price' => self::RATE,
             'discount_type' => 'fixed',
@@ -365,10 +451,13 @@ final class BillingApiTest extends TestCase
     /** @param list<int> $entryIds */
     private function prepare(array $entryIds, string $grouping): TestResponse
     {
-        return $this->asCompany(self::COMPANY)->postJson('/api/v1/tasks-projects/billing/prepare', [
-            'entry_ids' => $entryIds,
-            'grouping' => $grouping,
-        ]);
+        return $this->prepareBody(['entry_ids' => $entryIds, 'grouping' => $grouping]);
+    }
+
+    /** @param array<string, mixed> $body */
+    private function prepareBody(array $body): TestResponse
+    {
+        return $this->asCompany(self::COMPANY)->postJson('/api/v1/tasks-projects/billing/prepare', $body);
     }
 
     private function task(string $name, ?Project $project, int $customerId = self::CUSTOMER): Task
