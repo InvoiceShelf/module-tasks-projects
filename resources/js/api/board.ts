@@ -12,9 +12,11 @@ import type {
   TaskInput,
   TaskListParams,
   TaskMoveInput,
+  TaskQuickInput,
 } from '@/types/task'
 import type { TaskStatus } from '@/types/task-status'
 import type { TimeEntry, TimeEntryListParams } from '@/types/time-entry'
+import type { StopTimerInput } from '@/types/timer'
 
 /** The columns `GET tasks` orders by. Mirrors `TaskService::SORT_KEYS`. */
 export const TASK_SORT_KEYS = ['number', 'name', 'priority', 'due_date', 'created_at'] as const
@@ -64,7 +66,17 @@ export async function listTasks(
   return data
 }
 
-export async function createTask(client: AxiosInstance, input: TaskInput): Promise<Task> {
+/**
+ * Create a task.
+ *
+ * The quick shape is the whole of what the start dialog knows: the server
+ * picks the default column and the rest of the defaults, so starting the clock
+ * on something new never means filling in a form first.
+ */
+export async function createTask(
+  client: AxiosInstance,
+  input: TaskInput | TaskQuickInput,
+): Promise<Task> {
   const { data } = await client.post<Wrapped<Task>>(BOARD_API.tasks, input)
 
   return data.data
@@ -102,16 +114,30 @@ export async function startTask(
   client: AxiosInstance,
   id: number,
   description: string | null = null,
+  billable?: boolean,
 ): Promise<TimeEntry> {
-  const body = description === null ? {} : { description }
+  const body: { description?: string | null; billable?: boolean } = {}
+
+  if (description !== null) {
+    body.description = description
+  }
+
+  if (billable !== undefined) {
+    body.billable = billable
+  }
+
   const { data } = await client.post<Wrapped<TimeEntry>>(BOARD_API.startTask(id), body)
 
   return data.data
 }
 
 /** Close the caller's running entry on a task. 409 `timer_mismatch` if it moved. */
-export async function stopTask(client: AxiosInstance, id: number): Promise<TimeEntry> {
-  const { data } = await client.post<Wrapped<TimeEntry>>(BOARD_API.stopTask(id))
+export async function stopTask(
+  client: AxiosInstance,
+  id: number,
+  input: StopTimerInput = {},
+): Promise<TimeEntry> {
+  const { data } = await client.post<Wrapped<TimeEntry>>(BOARD_API.stopTask(id), input)
 
   return data.data
 }

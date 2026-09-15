@@ -5,7 +5,7 @@ import type { ModuleSettings } from '@/types/settings'
 import type { TaskStatus, TaskStatusInput } from '@/types/task-status'
 import type { TaskSummary } from '@/types/task-summary'
 import type { TimeEntry, TimeEntryInput, TimeEntryListParams } from '@/types/time-entry'
-import type { RunningTimer, StartTimerInput } from '@/types/timer'
+import type { RunningTimer, StartTimerInput, StopTimerInput } from '@/types/timer'
 
 const BASE = '/api/v1/tasks-projects'
 
@@ -111,8 +111,12 @@ export async function startTimer(
   return data.data
 }
 
-export async function stopTimer(client: AxiosInstance): Promise<TimeEntry> {
-  const { data } = await client.post<Wrapped<TimeEntry>>(TIME_API.timerStop)
+/** Close the running entry, with whatever the stop dialog collected. */
+export async function stopTimer(
+  client: AxiosInstance,
+  input: StopTimerInput = {},
+): Promise<TimeEntry> {
+  const { data } = await client.post<Wrapped<TimeEntry>>(TIME_API.timerStop, input)
 
   return data.data
 }
@@ -160,16 +164,33 @@ export async function reorderTaskStatuses(
   return data.data ?? []
 }
 
+/** How a picker narrows the task search beyond the typed text. */
+export interface TaskSearchOptions {
+  /** Only this project's tasks; omit or null to search every task. */
+  projectId?: number | null
+  /** `0` for tasks not yet on an invoice; omit to search either way. */
+  invoiced?: 0 | 1
+  limit?: number
+}
+
 /** Tasks matching what the picker has typed so far. */
 export async function searchTasks(
   client: AxiosInstance,
   search: string,
-  limit = TASK_SEARCH_LIMIT,
+  options: TaskSearchOptions = {},
 ): Promise<TaskSummary[]> {
-  const params: Record<string, string | number> = { limit }
+  const params: Record<string, string | number> = { limit: options.limit ?? TASK_SEARCH_LIMIT }
 
   if (search.trim() !== '') {
     params.search = search.trim()
+  }
+
+  if (typeof options.projectId === 'number') {
+    params.project_id = options.projectId
+  }
+
+  if (options.invoiced !== undefined) {
+    params.invoiced = options.invoiced
   }
 
   const { data } = await client.get<Paginated<TaskSummary>>(TIME_API.tasks, { params })

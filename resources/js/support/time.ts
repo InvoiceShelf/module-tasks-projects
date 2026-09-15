@@ -7,6 +7,8 @@
  * differently offset timestamps.
  */
 
+import type { RoundingDirection } from '@/types/settings'
+
 const MINUTES_PER_HOUR = 60
 const SECONDS_PER_MINUTE = 60
 const DAYS_PER_WEEK = 7
@@ -55,6 +57,39 @@ export function parseDuration(value: string): number | null {
   const hours = Number(text.replace(',', '.'))
 
   return Number.isNaN(hours) ? null : Math.round(hours * MINUTES_PER_HOUR)
+}
+
+/**
+ * A duration rounded the way the server will round it.
+ *
+ * This mirrors `Application\Rounding::roundMinutes` so the stop dialog can
+ * promise what the entry is about to say. Zero stays zero whichever way the
+ * company rounds; `nearest` bills a spell shorter than one increment as a
+ * whole one, and `down` is the one direction that may answer zero for real
+ * work. An increment that is not a positive number rounds to the minute, which
+ * is the server's own fallback rather than a crash on the screen.
+ */
+export function roundMinutes(
+  minutes: number,
+  increment: number,
+  direction: RoundingDirection = 'nearest',
+): number {
+  const step = Number.isFinite(increment) && increment >= 1 ? Math.floor(increment) : 1
+  const total = Number.isFinite(minutes) ? Math.floor(minutes) : 0
+
+  if (total <= 0) {
+    return 0
+  }
+
+  if (direction === 'up') {
+    return Math.ceil(total / step) * step
+  }
+
+  if (direction === 'down') {
+    return Math.floor(total / step) * step
+  }
+
+  return total < step ? step : Math.round(total / step) * step
 }
 
 /** The local calendar date of an instant, as the `Y-m-d` the API takes. */

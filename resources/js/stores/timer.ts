@@ -1,14 +1,21 @@
 import { computed, onScopeDispose, reactive } from 'vue'
 import type { ComputedRef } from 'vue'
 import type { AxiosInstance } from 'axios'
-import { startTask, stopTask } from '@/api/board'
+import { createTask, startTask, stopTask } from '@/api/board'
 import { discardTimer, fetchTimer, startTimer, stopTimer } from '@/api/time'
 import { errorMessage } from '@/support/errors'
 import { errorCode, isConflict } from '@/support/http'
-import { secondsBetween } from '@/support/time'
+import { formatDuration, secondsBetween } from '@/support/time'
 import type { Translate } from '@/support/i18n'
 import type { TimeEntry } from '@/types/time-entry'
-import { bumpTaskVersion, ensureTaskNames, patchTime } from './tasks'
+import type {
+  StartAnswer,
+  StartPreset,
+  StopAnswer,
+  StopPrompt,
+  StopTimerInput,
+} from '@/types/timer'
+import { bumpTaskVersion, ensureTaskNames, patchTime, rememberTask, taskLabel } from './tasks'
 
 /**
  * The running timer, shared by the header chip, the quick-start launcher, the
@@ -34,15 +41,37 @@ export interface TimerFeedback {
   t: Translate
 }
 
+/** The running entry the stop dialog is asking about, and who is waiting. */
+interface StopPromptState extends StopPrompt {
+  resolve: (answer: StopAnswer | null) => void
+}
+
+/** What the start dialog opened with, and who is waiting for its answer. */
+interface StartPromptState extends StartPreset {
+  resolve: (answer: StartAnswer | null) => void
+}
+
 interface TimerState {
   running: TimeEntry | null
   /** True while a start, stop or discard is in flight, to disable the buttons. */
   busy: boolean
+  /**
+   * The two questions the timer asks, promise-driven like the invoicing store.
+   *
+   * Every stop control on the screen asks the same question, and the dialog
+   * that answers is mounted once in the company layout rather than by each of
+   * them, so a header chip, a task row and a time log row all reach it without
+   * carrying a dialog of their own.
+   */
+  stopPrompt: StopPromptState | null
+  startPrompt: StartPromptState | null
 }
 
 const state = reactive<TimerState>({
   running: null,
   busy: false,
+  stopPrompt: null,
+  startPrompt: null,
 })
 
 /**
@@ -130,6 +159,32 @@ function claim(entry: TimeEntry): void {
   })
 }
 
+/**
+ * Write down a task the start dialog only has a name for.
+ *
+ * The clock is started separately rather than relying on `auto_start_tasks`,
+ * because the company may not have that switch on; when it does, the start
+ * that follows lands on the timer the server already opened.
+ */
+async function createTaskToTime(
+  client: AxiosInstance,
+  create: { name: string; projectId: number | null },
+  feedback?: TimerFeedback,
+): Promise<number | null> {
+  try {
+    const task = await createTask(client, { name: create.name, project_id: create.projectId })
+
+    rememberTask(task)
+    bumpTaskVersion()
+
+    return typeof task.id === 'number' ? task.id : null
+  } catch (error: unknown) {
+    report(feedback, error, 'tasks_projects.tasks.save_failed')
+
+    return null
+  }
+}
+
 export const timerStore = {
   /** The running entry, or null when the clock is not running. */
   get running(): TimeEntry | null {
@@ -151,6 +206,16 @@ export const timerStore = {
   /** True while a timer request is in flight. */
   get busy(): boolean {
     return state.busy
+  },
+
+  /** The running entry the stop dialog is open on, or null when it is closed. */
+  get stopPrompt(): StopPromptState | null {
+    return state.stopPrompt
+  },
+
+  /** What the start dialog is open with, or null when it is closed. */
+  get startPrompt(): StartPromptState | null {
+    return state.startPrompt
   },
 
   /** Whether the caller's own clock is on this task. */
@@ -220,6 +285,7 @@ export const timerStore = {
     taskId: number,
     description: string | null = null,
     feedback?: TimerFeedback,
+    billable?: boolean,
   ): Promise<TimeEntry | null> {
     if (state.busy) {
       return null
@@ -228,7 +294,7 @@ export const timerStore = {
     state.busy = true
 
     try {
-      const entry = await startTask(client, taskId, description)
+      const entry = await startTask(client, taskId, description, billable)
 
       adopt(entry, client)
       claim(entry)
@@ -249,8 +315,17 @@ export const timerStore = {
     }
   },
 
-  /** Close the running entry and answer the completed one. */
-  async stop(client: AxiosInstance, feedback?: TimerFeedback): Promise<TimeEntry | null> {
+  /**
+   * Close the running entry and answer the completed one.
+   *
+   * `details` is what the stop dialog collected. What it leaves out the server
+   * leaves alone, so a stop with nothing to say keeps the start's own note.
+   */
+  async stop(
+    client: AxiosInstance,
+    feedback?: TimerFeedback,
+    details?: StopTimerInput,
+  ): Promise<TimeEntry | null> {
     if (state.busy || state.running === null) {
       return null
     }
@@ -260,7 +335,7 @@ export const timerStore = {
     state.busy = true
 
     try {
-      const entry = await stopTimer(client)
+      const entry = await stopTimer(client, details)
 
       adopt(null)
       patchTime(taskId, { running: [] })
@@ -287,6 +362,7 @@ export const timerStore = {
     client: AxiosInstance,
     taskId: number,
     feedback?: TimerFeedback,
+    details?: StopTimerInput,
   ): Promise<TimeEntry | null> {
     if (state.busy) {
       return null
@@ -295,7 +371,7 @@ export const timerStore = {
     state.busy = true
 
     try {
-      const entry = await stopTask(client, taskId)
+      const entry = await stopTask(client, taskId, details)
 
       adopt(null)
       patchTime(taskId, { running: [] })
@@ -315,6 +391,172 @@ export const timerStore = {
     } finally {
       state.busy = false
     }
+  },
+
+  /**
+   * Ask what to do with the running timer and wait for the answer.
+   *
+   * A second ask cancels the first, which cannot happen while one dialog is
+   * mounted but keeps the promise from being dropped if it ever did.
+   */
+  askStop(): Promise<StopAnswer | null> {
+    this.answerStop(null)
+
+    const entry = state.running
+
+    if (entry === null) {
+      return Promise.resolve(null)
+    }
+
+    return new Promise<StopAnswer | null>((resolve) => {
+      state.stopPrompt = { entry, resolve }
+    })
+  },
+
+  /** Hand the waiting stop its answer, or null when the user backed out. */
+  answerStop(answer: StopAnswer | null): void {
+    const prompt = state.stopPrompt
+
+    if (prompt === null) {
+      return
+    }
+
+    state.stopPrompt = null
+    prompt.resolve(answer)
+  },
+
+  /** Ask which task to start on, and with what, then wait for the answer. */
+  askStart(preset: StartPreset = {}): Promise<StartAnswer | null> {
+    this.answerStart(null)
+
+    return new Promise<StartAnswer | null>((resolve) => {
+      state.startPrompt = { ...preset, resolve }
+    })
+  },
+
+  /** Hand the waiting start its answer, or null when the user backed out. */
+  answerStart(answer: StartAnswer | null): void {
+    const prompt = state.startPrompt
+
+    if (prompt === null) {
+      return
+    }
+
+    state.startPrompt = null
+    prompt.resolve(answer)
+  },
+
+  /**
+   * The one way a timer is ever stopped: ask, then do what was asked.
+   *
+   * Every stop control goes through here, so the dialog, the discard and the
+   * one success message are written once rather than by each caller. Cancel is
+   * a real answer: the clock keeps running and nothing is written.
+   *
+   * `taskId` names the task the caller believes is running, so a stale row
+   * cannot stop a clock that has since moved; the mismatch is reported before
+   * the dialog opens rather than after the user has typed into it.
+   */
+  async stopWithPrompt(
+    client: AxiosInstance,
+    feedback?: TimerFeedback,
+    opts: { taskId?: number } = {},
+  ): Promise<TimeEntry | null> {
+    const running = state.running
+
+    if (running === null) {
+      return null
+    }
+
+    const taskId = opts.taskId
+
+    if (typeof taskId === 'number' && running.task_id !== taskId) {
+      feedback?.notify('warning', feedback.t('tasks_projects.timer.mismatch'))
+      await this.refresh(client)
+
+      return null
+    }
+
+    // Read before the stop, because the entry is gone by the time it lands.
+    const name = taskLabel(running.task_id)
+    const answer = await this.askStop()
+
+    if (answer === null) {
+      return null
+    }
+
+    if (answer.action === 'discard') {
+      if (await this.discard(client, feedback)) {
+        feedback?.notify('success', feedback.t('tasks_projects.timer.discarded'))
+      }
+
+      return null
+    }
+
+    const details: StopTimerInput = {
+      description: answer.description,
+      billable: answer.billable,
+    }
+
+    const entry =
+      typeof taskId === 'number'
+        ? await this.stopOnTask(client, taskId, feedback, details)
+        : await this.stop(client, feedback, details)
+
+    if (entry !== null) {
+      feedback?.notify(
+        'success',
+        feedback.t('tasks_projects.timer.stopped', {
+          name,
+          duration: formatDuration(entry.duration_minutes),
+        }),
+      )
+    }
+
+    return entry
+  },
+
+  /**
+   * The one way a timer is ever started from a launcher: ask, then start.
+   *
+   * A task the dialog had to create is created first and timed second, so the
+   * answer "start on something I have just thought of" costs one dialog rather
+   * than a form and a search.
+   */
+  async startWithPrompt(
+    client: AxiosInstance,
+    feedback?: TimerFeedback,
+    preset: StartPreset = {},
+  ): Promise<TimeEntry | null> {
+    const answer = await this.askStart(preset)
+
+    if (answer === null) {
+      return null
+    }
+
+    const taskId =
+      'taskId' in answer ? answer.taskId : await createTaskToTime(client, answer.create, feedback)
+
+    if (taskId === null) {
+      return null
+    }
+
+    const entry = await this.startOnTask(
+      client,
+      taskId,
+      answer.description,
+      feedback,
+      answer.billable,
+    )
+
+    if (entry !== null) {
+      feedback?.notify(
+        'success',
+        feedback.t('tasks_projects.timer.started', { name: taskLabel(taskId) }),
+      )
+    }
+
+    return entry
   },
 
   /** Throw the running entry away without recording any time. */
@@ -346,6 +588,8 @@ export const timerStore = {
 
   /** Forget the clock, for a company switch or a sign-out. */
   reset(): void {
+    this.answerStop(null)
+    this.answerStart(null)
     state.busy = false
     adopt(null)
   },

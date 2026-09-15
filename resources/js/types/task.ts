@@ -79,6 +79,18 @@ export interface TaskInput {
   rate: number | null
 }
 
+/**
+ * The least a task can be created with.
+ *
+ * The start dialog creates a task out of the name someone typed into its
+ * search box, so everything else is left to the server: the default column,
+ * the billable flag and the number all come from the company's own settings.
+ */
+export interface TaskQuickInput {
+  name: string
+  project_id: number | null
+}
+
 export interface TaskListParams {
   page?: number
   limit?: number
