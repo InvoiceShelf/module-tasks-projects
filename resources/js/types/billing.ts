@@ -1,17 +1,43 @@
 /**
- * Everything the billing wizard passes between the module and the host.
+ * Everything the invoicing flow passes between the module and the host.
  *
  * Money is integer minor units on both sides of the boundary and `quantity` is
  * decimal hours, which is what the host's own invoice form posts. The shapes
  * under "module" come from `billing/*`; the ones under "host" are the host's
  * own invoice, template, number and currency endpoints, typed here only as far
- * as the wizard reads them.
+ * as the flow reads them.
  */
 
 import type { Customer } from '@/types/api'
 
 /** How a selection is collapsed into invoice lines. */
 export type BillingGrouping = 'task' | 'project' | 'member' | 'summary'
+
+/**
+ * What to invoice, in exactly one of the three shapes the endpoint takes.
+ *
+ * The screens name whichever they know: the unbilled time page ticks entries
+ * off, a row, a task page or a bulk selection names tasks, and a project
+ * header names a project. They are mutually exclusive, which is what the
+ * request rules enforce, so the union is spelled out rather than left as one
+ * object with three optional keys.
+ */
+export interface EntryIdSelection {
+  entryIds: number[]
+  grouping?: BillingGrouping
+}
+
+export interface TaskIdSelection {
+  taskIds: number[]
+  grouping?: BillingGrouping
+}
+
+export interface ProjectSelection {
+  projectId: number
+  grouping?: BillingGrouping
+}
+
+export type BillingSelection = EntryIdSelection | TaskIdSelection | ProjectSelection
 
 /** A customer with time waiting to be invoiced, in one currency. */
 export interface UnbilledCustomer {
@@ -114,7 +140,7 @@ export interface InvoicePayloadItem extends PreparedItem {
  * The body posted to the host's `POST /api/v1/invoices`.
  *
  * Only the keys the host validates or stores: it recomputes the totals from
- * the lines, so what is sent here is the preview's arithmetic offered for
+ * the lines, so what is sent here is the module's arithmetic offered for
  * checking rather than a figure the host trusts.
  */
 export interface InvoicePayload {
@@ -137,7 +163,7 @@ export interface InvoicePayload {
   taxes: unknown[]
 }
 
-/** The invoice the host answers with, as far as the wizard reads it. */
+/** The invoice the host answers with, as far as the module reads it. */
 export interface CreatedInvoice {
   id: number
   invoice_number: string
@@ -170,10 +196,10 @@ export interface BillingCustomer extends Customer {
 /**
  * The company's own invoice defaults, read from the host bootstrap payload.
  *
- * A module bundle cannot reach the host's company store, so the wizard asks
- * the same endpoint the shell does and keeps only the settings the preview
- * step needs: the home currency, the due-date rule, whether numbers generate
- * themselves and which template the user last defaulted to.
+ * A module bundle cannot reach the host's company store, so the module asks
+ * the same endpoint the shell does and keeps only the settings a draft needs:
+ * the home currency, the due-date rule, whether numbers generate themselves
+ * and which template the user last defaulted to.
  */
 export interface CompanyInvoiceDefaults {
   currency: CurrencyFormat | null

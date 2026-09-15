@@ -2,7 +2,7 @@ import type { AxiosInstance } from 'axios'
 import type { Wrapped } from '@/types/api'
 import type {
   BillingCustomer,
-  BillingGrouping,
+  BillingSelection,
   CompanyInvoiceDefaults,
   ConfirmItem,
   CreatedInvoice,
@@ -16,7 +16,7 @@ import type {
 
 const BASE = '/api/v1/tasks-projects'
 
-/** The module endpoints the wizard talks to. */
+/** The module endpoints the invoicing flow talks to. */
 export const BILLING_API = {
   customers: `${BASE}/billing/customers`,
   unbilled: `${BASE}/billing/unbilled`,
@@ -33,15 +33,12 @@ export const BILLING_API = {
  */
 export const HOST_BILLING_API = {
   bootstrap: '/api/v1/bootstrap',
-  customers: '/api/v1/customers',
+  customer: (customerId: number): string => `/api/v1/customers/${customerId}`,
   invoices: '/api/v1/invoices',
   invoiceTemplates: '/api/v1/invoices/templates',
   nextNumber: '/api/v1/next-number',
   exchangeRate: (currencyId: number): string => `/api/v1/currencies/${currencyId}/exchange-rate`,
 } as const
-
-/** How many contacts the name lookup asks for. */
-export const CUSTOMER_LOOKUP_LIMIT = 200
 
 export interface UnbilledRange {
   /** `Y-m-d`, inclusive. */
@@ -75,24 +72,46 @@ export async function fetchUnbilledTime(
   return data.data
 }
 
-/** The invoice body for a selection, plus the entries behind each line. */
+/**
+ * The invoice body for a selection, plus the entries behind each line.
+ *
+ * The selection arrives in whichever of the three shapes the calling screen
+ * knows and leaves as the one key the endpoint expects, because the rules
+ * refuse a body that names two of them. The grouping rides along only when the
+ * caller chose one, so the server's own default stays the default.
+ */
 export async function prepareInvoice(
   client: AxiosInstance,
-  entryIds: number[],
-  grouping: BillingGrouping,
+  selection: BillingSelection,
 ): Promise<PreparedInvoice> {
-  const { data } = await client.post<Wrapped<PreparedInvoice>>(BILLING_API.prepare, {
-    entry_ids: entryIds,
-    grouping,
-  })
+  const { data } = await client.post<Wrapped<PreparedInvoice>>(
+    BILLING_API.prepare,
+    prepareBody(selection),
+  )
 
   return data.data
+}
+
+/** The one selection key the request carries, plus the grouping when set. */
+function prepareBody(selection: BillingSelection): Record<string, unknown> {
+  const body: Record<string, unknown> =
+    'taskIds' in selection
+      ? { task_ids: selection.taskIds }
+      : 'projectId' in selection
+        ? { project_id: selection.projectId }
+        : { entry_ids: selection.entryIds }
+
+  if (selection.grouping !== undefined) {
+    body.grouping = selection.grouping
+  }
+
+  return body
 }
 
 /**
  * Stamp the entries with the ids the host handed back.
  *
- * Idempotent, so a wizard that created the invoice and then lost the stamp can
+ * Idempotent, so a flow that created the invoice and then lost the stamp can
  * offer the same call again rather than a second invoice.
  */
 export async function confirmInvoice(
@@ -108,16 +127,23 @@ export async function confirmInvoice(
   return data?.stamped ?? 0
 }
 
-/** The company's contacts, for turning a customer id into a name. */
-export async function listBillingCustomers(
+/**
+ * One contact, read for the currency it settles in.
+ *
+ * The host's invoice endpoint compares the *contact's* currency with the
+ * company setting to decide whether an exchange rate is required, so the
+ * answer has to come from the contact rather than from the currency the time
+ * happened to be logged in.
+ */
+export async function fetchBillingCustomer(
   client: AxiosInstance,
-  limit = CUSTOMER_LOOKUP_LIMIT,
-): Promise<BillingCustomer[]> {
-  const { data } = await client.get<Wrapped<BillingCustomer[]>>(HOST_BILLING_API.customers, {
-    params: { limit },
-  })
+  customerId: number,
+): Promise<BillingCustomer | null> {
+  const { data } = await client.get<Wrapped<BillingCustomer>>(
+    HOST_BILLING_API.customer(customerId),
+  )
 
-  return data.data ?? []
+  return data?.data ?? null
 }
 
 /** Create the draft invoice with the session's own client. */
