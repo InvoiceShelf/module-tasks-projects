@@ -321,11 +321,14 @@ defineExpose({ openCreate: () => openCreate(null) })
       <BaseIcon name="ViewColumnsIcon" class="mt-5 mb-4 h-16 w-16 text-subtle" />
     </BaseEmptyPlaceholder>
 
+    <!-- A board with many statuses scrolls sideways, but the four a company
+         starts with have to fit the page: a column sliced by the right edge
+         reads as a broken screen rather than as something to scroll. -->
     <div v-else class="flex items-start gap-4 overflow-x-auto pb-4">
       <section
         v-for="column in columns"
         :key="column.status.id"
-        class="w-72 shrink-0 rounded-xl border border-line-default bg-surface-secondary"
+        class="w-64 shrink-0 rounded-xl border border-line-default bg-surface-secondary"
       >
         <header class="flex items-center justify-between border-b border-line-light px-3 py-2.5">
           <div class="flex items-center">
