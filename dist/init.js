@@ -2262,7 +2262,7 @@ var nr = {
 						o("p", $r, [c(v, { amount: u.value.unbilled_amount }, null, 8, ["amount"])]),
 						h.value ? (_(), a("span", {
 							key: 0,
-							class: "mt-2 inline-flex",
+							class: "mt-2 inline-flex cursor-not-allowed opacity-60",
 							title: C(l)("tasks_projects.project.invoice_soon")
 						}, [c(b, {
 							variant: "primary-outline",
@@ -2529,7 +2529,7 @@ var Ti = { class: "mt-4 flex flex-wrap items-end gap-3" }, Ei = {
 				}, 8, ["disabled"]),
 				o("span", {
 					title: C(u)("tasks_projects.tasks.invoice_soon"),
-					class: "inline-flex"
+					class: "inline-flex cursor-not-allowed opacity-60"
 				}, [c(h, {
 					variant: "primary-outline",
 					size: "sm",
@@ -5392,7 +5392,7 @@ var ac = { en: { tasks_projects: {
 							]),
 							o("span", {
 								title: C(d)("tasks_projects.tasks.invoice_soon"),
-								class: "inline-flex"
+								class: "inline-flex cursor-not-allowed opacity-60"
 							}, [c(E, {
 								variant: "white",
 								disabled: ""

@@ -94,7 +94,7 @@ const overBudgetMinutes = computed(() => {
              card does not change shape under people once it does. -->
         <span
           v-if="canInvoice"
-          class="mt-2 inline-flex"
+          class="mt-2 inline-flex cursor-not-allowed opacity-60"
           :title="t('tasks_projects.project.invoice_soon')"
         >
           <BaseButton variant="primary-outline" size="sm" disabled>
