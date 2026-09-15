@@ -49,4 +49,6 @@ final class Abilities
     public const HOST_VIEW_CUSTOMER = 'view-customer';
 
     public const HOST_CREATE_INVOICE = 'create-invoice';
+
+    public const HOST_EDIT_INVOICE = 'edit-invoice';
 }

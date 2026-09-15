@@ -9,6 +9,7 @@ use Illuminate\Http\JsonResponse;
 use Illuminate\Support\Str;
 use Modules\TasksProjects\Application\Exceptions\TasksProjectsException;
 use Modules\TasksProjects\Application\Exceptions\TimerAlreadyRunning;
+use Modules\TasksProjects\Application\Exceptions\TimerMismatch;
 use Symfony\Component\HttpFoundation\Response;
 
 /**
@@ -24,6 +25,7 @@ final class DomainExceptionRenderer
     /** Statuses that are not the 422 default. */
     private const STATUSES = [
         TimerAlreadyRunning::class => Response::HTTP_CONFLICT,
+        TimerMismatch::class => Response::HTTP_CONFLICT,
     ];
 
     public static function register(Handler $handler): void

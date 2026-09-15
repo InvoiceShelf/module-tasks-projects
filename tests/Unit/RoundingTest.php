@@ -45,8 +45,42 @@ final class RoundingTest extends TestCase
     public function test_it_refuses_an_increment_the_settings_do_not_offer(): void
     {
         $this->expectException(InvalidArgumentException::class);
-        $this->expectExceptionMessage('Rounding increment 7 is not one of 1, 6, 15, 30.');
+        $this->expectExceptionMessage('Rounding increment 7 is not one of 1, 5, 6, 15, 30, 60.');
 
         Rounding::roundMinutes(10, 7);
+    }
+
+    public function test_rounding_up_takes_the_whole_increment_every_time(): void
+    {
+        self::assertSame(15, Rounding::roundMinutes(1, 15, Rounding::UP));
+        self::assertSame(15, Rounding::roundMinutes(15, 15, Rounding::UP));
+        self::assertSame(30, Rounding::roundMinutes(16, 15, Rounding::UP));
+        self::assertSame(60, Rounding::roundMinutes(46, 15, Rounding::UP));
+        self::assertSame(137, Rounding::roundMinutes(137, 1, Rounding::UP));
+    }
+
+    public function test_rounding_down_drops_the_part_increment_and_may_bill_nothing(): void
+    {
+        self::assertSame(0, Rounding::roundMinutes(14, 15, Rounding::DOWN));
+        self::assertSame(15, Rounding::roundMinutes(15, 15, Rounding::DOWN));
+        self::assertSame(15, Rounding::roundMinutes(29, 15, Rounding::DOWN));
+        self::assertSame(120, Rounding::roundMinutes(137, 60, Rounding::DOWN));
+        self::assertSame(137, Rounding::roundMinutes(137, 1, Rounding::DOWN));
+    }
+
+    public function test_nothing_logged_stays_nothing_billed_whichever_way_it_rounds(): void
+    {
+        foreach (Rounding::DIRECTIONS as $direction) {
+            self::assertSame(0, Rounding::roundMinutes(0, 30, $direction));
+            self::assertSame(0, Rounding::roundMinutes(-5, 30, $direction));
+        }
+    }
+
+    public function test_it_refuses_a_direction_it_does_not_know(): void
+    {
+        $this->expectException(InvalidArgumentException::class);
+        $this->expectExceptionMessage('Rounding direction sideways is not one of nearest, up, down.');
+
+        Rounding::roundMinutes(10, 15, 'sideways');
     }
 }

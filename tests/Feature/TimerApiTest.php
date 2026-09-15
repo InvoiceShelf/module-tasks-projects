@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Modules\TasksProjects\Tests\Feature;
 
 use Illuminate\Support\Carbon;
+use Modules\TasksProjects\Application\Rounding;
 use Modules\TasksProjects\Models\TimeEntry;
 use Modules\TasksProjects\Support\Abilities;
 use Modules\TasksProjects\Support\Authorizes;
@@ -79,6 +80,25 @@ final class TimerApiTest extends TestCase
         $this->asCompany(self::COMPANY)
             ->getJson('/api/v1/tasks-projects/timer')
             ->assertExactJson(['data' => null]);
+    }
+
+    public function test_stopping_follows_the_companys_rounding_direction(): void
+    {
+        $this->settings->putCompany(self::COMPANY, ModuleSettings::PREFIX.'rounding_minutes', 15);
+        $this->settings->putCompany(self::COMPANY, ModuleSettings::PREFIX.'rounding_direction', Rounding::UP);
+        $task = $this->taskOnProjectAt(6000);
+
+        Carbon::setTestNow('2026-09-15 09:00:00');
+        $this->asCompany(self::COMPANY)->postJson('/api/v1/tasks-projects/timer/start', ['task_id' => $task])->assertCreated();
+
+        Carbon::setTestNow('2026-09-15 09:50:00');
+
+        // Nearest would have billed 45 minutes; rounding up takes the hour.
+        $this->asCompany(self::COMPANY)
+            ->postJson('/api/v1/tasks-projects/timer/stop')
+            ->assertOk()
+            ->assertJsonPath('data.duration_minutes', 60)
+            ->assertJsonPath('data.amount', 6000);
     }
 
     public function test_the_stopped_entry_joins_the_timesheet(): void
@@ -157,6 +177,115 @@ final class TimerApiTest extends TestCase
         $this->asCompany(self::COMPANY)->postJson('/api/v1/tasks-projects/timer/start', ['task_id' => $task])->assertForbidden();
         $this->asCompany(self::COMPANY)->postJson('/api/v1/tasks-projects/timer/stop')->assertForbidden();
         $this->asCompany(self::COMPANY)->deleteJson('/api/v1/tasks-projects/timer')->assertForbidden();
+    }
+
+    public function test_a_task_row_starts_the_clock_on_that_task(): void
+    {
+        Carbon::setTestNow('2026-09-15 09:00:00');
+        $task = $this->taskOnProjectAt(6000);
+
+        $response = $this->asCompany(self::COMPANY)->postJson(
+            '/api/v1/tasks-projects/tasks/'.$task.'/start',
+            ['description' => 'Fixing the importer'],
+        );
+
+        $response->assertCreated();
+        $response->assertJsonPath('data.task_id', $task);
+        $response->assertJsonPath('data.user_id', self::DEFAULT_USER);
+        $response->assertJsonPath('data.is_running', true);
+        $response->assertJsonPath('data.description', 'Fixing the importer');
+
+        $this->asCompany(self::COMPANY)
+            ->getJson('/api/v1/tasks-projects/tasks/'.$task)
+            ->assertJsonPath('data.time.running.0.user_id', self::DEFAULT_USER);
+    }
+
+    public function test_a_second_task_start_is_the_same_conflict_the_timer_reports(): void
+    {
+        $first = $this->taskOnProjectAt(6000);
+        $second = (int) $this->makeTask(self::COMPANY, ['name' => 'Something else'])->id;
+
+        $this->asCompany(self::COMPANY)->postJson('/api/v1/tasks-projects/tasks/'.$first.'/start')->assertCreated();
+
+        $this->asCompany(self::COMPANY)
+            ->postJson('/api/v1/tasks-projects/tasks/'.$second.'/start')
+            ->assertStatus(409)
+            ->assertJsonPath('error', 'timer_already_running');
+
+        self::assertSame(1, TimeEntry::query()->forCompany(self::COMPANY)->whereNotNull('running_user_id')->count());
+    }
+
+    public function test_stopping_a_task_closes_the_clock_that_runs_on_it(): void
+    {
+        $task = $this->taskOnProjectAt(6000);
+
+        Carbon::setTestNow('2026-09-15 09:00:00');
+        $this->asCompany(self::COMPANY)->postJson('/api/v1/tasks-projects/tasks/'.$task.'/start')->assertCreated();
+
+        Carbon::setTestNow('2026-09-15 10:00:00');
+        $response = $this->asCompany(self::COMPANY)->postJson('/api/v1/tasks-projects/tasks/'.$task.'/stop');
+
+        $response->assertOk();
+        $response->assertJsonPath('data.is_running', false);
+        $response->assertJsonPath('data.duration_minutes', 60);
+        $response->assertJsonPath('data.amount', 6000);
+
+        $this->asCompany(self::COMPANY)
+            ->getJson('/api/v1/tasks-projects/tasks/'.$task)
+            ->assertJsonPath('data.time.logged_minutes', 60)
+            ->assertJsonPath('data.time.unbilled_amount', 6000)
+            ->assertJsonPath('data.time.running', []);
+    }
+
+    public function test_stopping_the_wrong_task_is_a_mismatch_rather_than_a_stop(): void
+    {
+        $running = $this->taskOnProjectAt(6000);
+        $idle = (int) $this->makeTask(self::COMPANY, ['name' => 'Idle'])->id;
+
+        $this->asCompany(self::COMPANY)
+            ->postJson('/api/v1/tasks-projects/tasks/'.$idle.'/stop')
+            ->assertStatus(409)
+            ->assertJsonPath('error', 'timer_mismatch');
+
+        $this->asCompany(self::COMPANY)->postJson('/api/v1/tasks-projects/tasks/'.$running.'/start')->assertCreated();
+
+        $this->asCompany(self::COMPANY)
+            ->postJson('/api/v1/tasks-projects/tasks/'.$idle.'/stop')
+            ->assertStatus(409)
+            ->assertJsonPath('error', 'timer_mismatch');
+
+        // The clock the caller really had running is untouched.
+        $this->asCompany(self::COMPANY)
+            ->getJson('/api/v1/tasks-projects/timer')
+            ->assertJsonPath('data.task_id', $running);
+    }
+
+    public function test_the_task_routes_stay_inside_the_company(): void
+    {
+        $theirs = (int) $this->makeTask(self::OTHER_COMPANY)->id;
+
+        $this->asCompany(self::COMPANY)
+            ->postJson('/api/v1/tasks-projects/tasks/'.$theirs.'/start')
+            ->assertNotFound();
+
+        $this->asCompany(self::COMPANY)
+            ->postJson('/api/v1/tasks-projects/tasks/'.$theirs.'/stop')
+            ->assertNotFound();
+    }
+
+    public function test_the_task_routes_need_both_the_task_and_the_own_time_ability(): void
+    {
+        $task = $this->taskOnProjectAt(6000);
+
+        $this->authorization->deny(Authorizes::id(Abilities::VIEW_TASK));
+
+        $this->asCompany(self::COMPANY)->postJson('/api/v1/tasks-projects/tasks/'.$task.'/start')->assertForbidden();
+        $this->asCompany(self::COMPANY)->postJson('/api/v1/tasks-projects/tasks/'.$task.'/stop')->assertForbidden();
+
+        $this->authorization->denied = [Authorizes::id(Abilities::VIEW_OWN_TIME)];
+
+        $this->asCompany(self::COMPANY)->postJson('/api/v1/tasks-projects/tasks/'.$task.'/start')->assertForbidden();
+        $this->asCompany(self::COMPANY)->postJson('/api/v1/tasks-projects/tasks/'.$task.'/stop')->assertForbidden();
     }
 
     private function taskOnProjectAt(int $rate): int

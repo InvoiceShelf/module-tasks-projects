@@ -7,13 +7,8 @@ namespace Modules\TasksProjects\Tests\Unit;
 use Illuminate\Database\Eloquent\ModelNotFoundException;
 use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\DB;
-use Modules\TasksProjects\Application\BoardOrderingService;
 use Modules\TasksProjects\Application\Exceptions\TimerAlreadyRunning;
-use Modules\TasksProjects\Application\ProjectService;
 use Modules\TasksProjects\Application\RateResolver;
-use Modules\TasksProjects\Application\TaskNumberSequence;
-use Modules\TasksProjects\Application\TaskService;
-use Modules\TasksProjects\Application\TaskStatusService;
 use Modules\TasksProjects\Application\TimerService;
 use Modules\TasksProjects\Models\TimeEntry;
 use Modules\TasksProjects\Support\ModuleSettings;
@@ -32,7 +27,7 @@ final class TimerServiceTest extends TestCase
         parent::setUp();
 
         $this->timer = new TimerService(
-            new TaskService(new TaskNumberSequence, new BoardOrderingService, new TaskStatusService, new ProjectService($this->companyData)),
+            $this->taskService(),
             new RateResolver,
             $this->moduleSettings(),
         );

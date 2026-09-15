@@ -47,6 +47,16 @@ class Task extends Model
         self::PRIORITY_URGENT,
     ];
 
+    /**
+     * The time block the API renders, hung on the model by TaskTimeSummary.
+     *
+     * A real property rather than an attribute: it is derived from the time
+     * entries, never a column, and must never travel back into a save().
+     *
+     * @var array<string, mixed>|null
+     */
+    public ?array $timeSummary = null;
+
     protected $table = 'tp_tasks';
 
     protected $guarded = ['id'];

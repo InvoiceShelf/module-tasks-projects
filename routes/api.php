@@ -3,6 +3,7 @@
 use Illuminate\Support\Facades\Route;
 use Modules\TasksProjects\Http\Controllers\BillingController;
 use Modules\TasksProjects\Http\Controllers\BoardController;
+use Modules\TasksProjects\Http\Controllers\BulkTasksController;
 use Modules\TasksProjects\Http\Controllers\MembersController;
 use Modules\TasksProjects\Http\Controllers\ProjectMembersController;
 use Modules\TasksProjects\Http\Controllers\ProjectsController;
@@ -10,6 +11,7 @@ use Modules\TasksProjects\Http\Controllers\ReportsController;
 use Modules\TasksProjects\Http\Controllers\SettingsController;
 use Modules\TasksProjects\Http\Controllers\TasksController;
 use Modules\TasksProjects\Http\Controllers\TaskStatusesController;
+use Modules\TasksProjects\Http\Controllers\TaskTimeLogController;
 use Modules\TasksProjects\Http\Controllers\TimeEntriesController;
 use Modules\TasksProjects\Http\Controllers\TimerController;
 
@@ -38,10 +40,14 @@ Route::prefix('api/v1/tasks-projects')->middleware(['api', 'auth:sanctum', 'comp
 
     Route::get('tasks', [TasksController::class, 'index'])->name('tasks-projects.tasks.index');
     Route::post('tasks', [TasksController::class, 'store'])->name('tasks-projects.tasks.store');
+    Route::post('tasks/bulk', BulkTasksController::class)->name('tasks-projects.tasks.bulk');
     Route::get('tasks/{id}', [TasksController::class, 'show'])->name('tasks-projects.tasks.show');
     Route::put('tasks/{id}', [TasksController::class, 'update'])->name('tasks-projects.tasks.update');
     Route::delete('tasks/{id}', [TasksController::class, 'destroy'])->name('tasks-projects.tasks.destroy');
     Route::post('tasks/{id}/move', [TasksController::class, 'move'])->name('tasks-projects.tasks.move');
+    Route::post('tasks/{id}/start', [TimerController::class, 'startOnTask'])->name('tasks-projects.tasks.start');
+    Route::post('tasks/{id}/stop', [TimerController::class, 'stopOnTask'])->name('tasks-projects.tasks.stop');
+    Route::get('tasks/{id}/time-log', TaskTimeLogController::class)->name('tasks-projects.tasks.time-log');
 
     Route::get('board', BoardController::class)->name('tasks-projects.board.index');
 

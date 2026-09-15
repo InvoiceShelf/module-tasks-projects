@@ -6,10 +6,7 @@ namespace Modules\TasksProjects\Tests\Unit;
 
 use Illuminate\Database\Eloquent\ModelNotFoundException;
 use Illuminate\Support\Carbon;
-use Modules\TasksProjects\Application\BoardOrderingService;
 use Modules\TasksProjects\Application\Exceptions\EntriesAlreadyInvoiced;
-use Modules\TasksProjects\Application\ProjectService;
-use Modules\TasksProjects\Application\TaskNumberSequence;
 use Modules\TasksProjects\Application\TaskService;
 use Modules\TasksProjects\Application\TaskStatusService;
 use Modules\TasksProjects\Models\Task;
@@ -29,12 +26,7 @@ final class TaskServiceTest extends TestCase
         parent::setUp();
 
         $this->statuses = new TaskStatusService;
-        $this->tasks = new TaskService(
-            new TaskNumberSequence,
-            new BoardOrderingService,
-            $this->statuses,
-            new ProjectService($this->companyData),
-        );
+        $this->tasks = $this->taskService($this->statuses);
     }
 
     public function test_it_denormalises_the_customer_from_the_project(): void

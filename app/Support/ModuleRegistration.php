@@ -5,6 +5,8 @@ declare(strict_types=1);
 namespace Modules\TasksProjects\Support;
 
 use InvoiceShelf\Modules\Registry;
+use InvoiceShelf\Modules\Settings\FieldType;
+use Modules\TasksProjects\Application\Rounding;
 
 final class ModuleRegistration
 {
@@ -13,43 +15,89 @@ final class ModuleRegistration
         Registry::registerScript('tasks-projects', $modulePath.'/dist/init.js');
         Registry::registerStyle('tasks-projects', $modulePath.'/dist/style.css');
 
+        self::registerMenu();
+        Registry::registerSettings('tasks-projects', self::settingsSchema());
+        self::registerAbilities();
+    }
+
+    /**
+     * Two sidebar entries, in the host's own main group.
+     *
+     * Projects and Tasks are two ways into the same module, not one feature and
+     * its sub-page: people either plan work or do work. They join `main` after
+     * Items (priorities 10, 20, 30) because a firm that installs this module
+     * lives in it all day, and a "Modules" heading would file it away as an
+     * add-on. The registry keys are separate, so `menuFor('tasks-projects')`
+     * still answers with the module's primary entry.
+     */
+    private static function registerMenu(): void
+    {
         Registry::registerMenu('tasks-projects', [
-            'title' => 'tasksprojects::menu.title',
-            'link' => '/admin/modules/tasks-projects',
-            'icon' => 'ClipboardDocumentListIcon',
-            // Lower sorts first within the sidebar group; official modules use 10, 20, ...
-            'priority' => 10,
+            'title' => 'tasksprojects::menu.projects',
+            'link' => '/admin/modules/tasks-projects/projects',
+            'icon' => 'FolderIcon',
+            'group' => 'main',
+            'group_label' => '',
+            // Lower sorts first within the group; the core entries end at 30.
+            'priority' => 40,
         ]);
 
-        Registry::registerSettings('tasks-projects', [
+        Registry::registerMenu('tasks-projects.tasks', [
+            'title' => 'tasksprojects::menu.tasks',
+            'link' => '/admin/modules/tasks-projects',
+            'icon' => 'ClipboardDocumentListIcon',
+            'group' => 'main',
+            'group_label' => '',
+            'priority' => 50,
+        ]);
+    }
+
+    /**
+     * The per-company settings the host renders and validates.
+     *
+     * General holds how time is measured and who may see it; the second section
+     * is only about what an invoice line says, which is a different question and
+     * a different audience.
+     *
+     * @return array<string, mixed>
+     */
+    private static function settingsSchema(): array
+    {
+        return [
             'sections' => [
                 [
                     'title' => 'tasksprojects::settings.general_section',
                     'fields' => [
                         [
                             'key' => 'default_rate',
-                            'type' => 'number',
+                            'type' => FieldType::Number->value,
                             'label' => 'tasksprojects::settings.default_rate',
                             'default' => 0,
                             'rules' => ['integer', 'min:0'],
                         ],
                         [
                             'key' => 'rounding_minutes',
-                            'type' => 'select',
+                            'type' => FieldType::Select->value,
                             'label' => 'tasksprojects::settings.rounding_minutes',
-                            'default' => 1,
+                            'default' => ModuleSettings::DEFAULT_ROUNDING_MINUTES,
+                            'options' => self::roundingOptions(),
+                        ],
+                        [
+                            'key' => 'rounding_direction',
+                            'type' => FieldType::Select->value,
+                            'label' => 'tasksprojects::settings.rounding_direction',
+                            'default' => ModuleSettings::DEFAULT_ROUNDING_DIRECTION,
                             'options' => [
-                                1 => '1',
-                                6 => '6',
-                                15 => '15',
-                                30 => '30',
+                                Rounding::NEAREST => 'tasksprojects::settings.rounding_nearest',
+                                Rounding::UP => 'tasksprojects::settings.rounding_up',
+                                Rounding::DOWN => 'tasksprojects::settings.rounding_down',
                             ],
                         ],
                         [
                             'key' => 'week_start',
-                            'type' => 'select',
+                            'type' => FieldType::Select->value,
                             'label' => 'tasksprojects::settings.week_start',
-                            'default' => 1,
+                            'default' => ModuleSettings::DEFAULT_WEEK_START,
                             'options' => [
                                 0 => 'Sunday',
                                 1 => 'Monday',
@@ -60,18 +108,52 @@ final class ModuleRegistration
                                 6 => 'Saturday',
                             ],
                         ],
-                        [
-                            'key' => 'members_see_all_time',
-                            'type' => 'switch',
-                            'label' => 'tasksprojects::settings.members_see_all_time',
-                            'default' => false,
-                        ],
+                        self::switchField('members_see_all_time'),
+                        self::switchField('auto_start_tasks'),
+                        self::switchField('lock_invoiced_tasks'),
+                        self::switchField('hide_invoiced_on_board'),
+                    ],
+                ],
+                [
+                    'title' => 'tasksprojects::settings.invoice_section',
+                    'fields' => [
+                        self::switchField('invoice_project_heading'),
+                        self::switchField('invoice_task_description'),
+                        self::switchField('invoice_entry_dates'),
+                        self::switchField('invoice_entry_times'),
+                        self::switchField('invoice_entry_hours'),
+                        self::switchField('invoice_entry_descriptions'),
                     ],
                 ],
             ],
-        ]);
+        ];
+    }
 
-        self::registerAbilities();
+    /**
+     * One stored switch, taking its default from the same table the readers use.
+     *
+     * @return array<string, mixed>
+     */
+    private static function switchField(string $key): array
+    {
+        return [
+            'key' => $key,
+            'type' => FieldType::Switch_->value,
+            'label' => 'tasksprojects::settings.'.$key,
+            'default' => ModuleSettings::FLAGS[$key],
+        ];
+    }
+
+    /** @return array<int, string> */
+    private static function roundingOptions(): array
+    {
+        $options = [];
+
+        foreach (ModuleSettings::ROUNDING_INCREMENTS as $minutes) {
+            $options[$minutes] = (string) $minutes;
+        }
+
+        return $options;
     }
 
     /**
@@ -102,7 +184,13 @@ final class ModuleRegistration
             [Abilities::VIEW_OWN_TIME, 'View own time', []],
             [Abilities::VIEW_ALL_TIME, 'View all time', [$viewOwnTime]],
             [Abilities::EDIT_ALL_TIME, 'Edit all time', [$viewAllTime]],
-            [Abilities::INVOICE_TASKS, 'Invoice tasks', [$viewAllTime, Abilities::HOST_CREATE_INVOICE]],
+            // Invoicing a task ends on the host invoice edit page, so the role
+            // that may raise the invoice must also be allowed to open it.
+            [Abilities::INVOICE_TASKS, 'Invoice tasks', [
+                $viewAllTime,
+                Abilities::HOST_CREATE_INVOICE,
+                Abilities::HOST_EDIT_INVOICE,
+            ]],
         ];
 
         foreach ($abilities as [$ability, $name, $dependsOn]) {
