@@ -1,8 +1,10 @@
 <script setup lang="ts">
 import { computed, onBeforeUnmount, onMounted, reactive, ref, watch } from 'vue'
 import type { AxiosInstance } from 'axios'
-import { listMembers, listProjects } from '@/api'
+import { listMembers, listProjects, sortParams } from '@/api'
+import type { SortParams, TableSort } from '@/api'
 import { deleteTask, listTaskStatuses, listTasks } from '@/api/board'
+import type { TaskSortKey } from '@/api/board'
 import TaskDrawer from '@/components/TaskDrawer.vue'
 import type { TaskDefaults } from '@/components/TaskDrawer.vue'
 import { errorMessage } from '@/support/errors'
@@ -43,6 +45,14 @@ const emit = defineEmits<{
 const PER_PAGE = 10
 const SEARCH_DEBOUNCE_MS = 350
 
+/** Which API sort key each sortable column asks the endpoint for. */
+const SORT_KEYS: Record<string, TaskSortKey> = {
+  number: 'number',
+  name: 'name',
+  priority: 'priority',
+  due_date: 'due_date',
+}
+
 const t = useTranslate()
 
 const tableRef = ref<{ refresh: (preservePage?: boolean) => void } | null>(null)
@@ -79,12 +89,12 @@ const showEmptyScreen = computed(
 )
 
 const columns = computed(() => [
-  { key: 'number', label: t('tasks_projects.tasks.columns.number'), sortable: false, tdClass: 'text-muted' },
-  { key: 'name', label: t('tasks_projects.tasks.columns.name'), sortable: false, thClass: 'extra', tdClass: 'font-medium text-heading' },
+  { key: 'number', label: t('tasks_projects.tasks.columns.number'), sortable: true, sortBy: 'number', tdClass: 'text-muted' },
+  { key: 'name', label: t('tasks_projects.tasks.columns.name'), sortable: true, sortBy: 'name', thClass: 'extra', tdClass: 'font-medium text-heading' },
   { key: 'status', label: t('tasks_projects.tasks.columns.status'), sortable: false },
   { key: 'assignee', label: t('tasks_projects.tasks.columns.assignee'), sortable: false },
-  { key: 'priority', label: t('tasks_projects.tasks.columns.priority'), sortable: false },
-  { key: 'due_date', label: t('tasks_projects.tasks.columns.due_date'), sortable: false },
+  { key: 'priority', label: t('tasks_projects.tasks.columns.priority'), sortable: true, sortBy: 'priority' },
+  { key: 'due_date', label: t('tasks_projects.tasks.columns.due_date'), sortable: true, sortBy: 'due_date' },
   { key: 'actions', label: t('tasks_projects.general.actions'), sortable: false, tdClass: 'text-right text-sm font-medium' },
 ])
 
@@ -132,7 +142,11 @@ async function loadPickers(): Promise<void> {
   }
 
   try {
-    const response = await listProjects(props.client, { limit: 100, status: 'ACTIVE' })
+    const response = await listProjects(props.client, {
+      limit: 100,
+      status: 'ACTIVE',
+      sort_by: 'name',
+    })
 
     projects.value = response.data.map((project) => ({ id: project.id, label: project.name }))
   } catch (error: unknown) {
@@ -140,8 +154,9 @@ async function loadPickers(): Promise<void> {
   }
 }
 
-async function fetchTasks({ page }: { page: number }): Promise<TableResult> {
-  const params: TaskListParams = { page, limit: PER_PAGE }
+async function fetchTasks({ page, sort }: { page: number; sort?: TableSort }): Promise<TableResult> {
+  const order: SortParams<TaskSortKey> = sortParams(sort, SORT_KEYS)
+  const params: TaskListParams & SortParams<TaskSortKey> = { page, limit: PER_PAGE, ...order }
 
   if (props.projectId) {
     params.project_id = props.projectId

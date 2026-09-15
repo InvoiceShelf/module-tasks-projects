@@ -3,8 +3,9 @@ import { computed, onMounted, ref, watch } from 'vue'
 import type { AxiosInstance } from 'axios'
 import type { Router } from 'vue-router'
 import { archiveProject, unarchiveProject } from '@/api'
-import { fetchCustomer, fetchProject } from '@/api/board'
+import { fetchProject } from '@/api/board'
 import ProjectFormModal from '@/components/ProjectFormModal.vue'
+import { customerName, ensureLoaded } from '@/stores/customers'
 import { errorMessage } from '@/support/errors'
 import { formatDate } from '@/support/format'
 import { useTranslate } from '@/support/i18n'
@@ -30,7 +31,6 @@ const ROUTE = 'extension.page.tasks-projects.project'
 const t = useTranslate()
 
 const project = ref<Project | null>(null)
-const customerName = ref<string | null>(null)
 const loading = ref(true)
 const busy = ref(false)
 const modalOpen = ref(false)
@@ -52,6 +52,13 @@ const tabs = computed<Tab[]>(() => [
 const currentRouteName = computed(() => String(props.router.currentRoute.value.name ?? ''))
 
 const title = computed(() => project.value?.name ?? t('tasks_projects.projects.title'))
+
+/**
+ * The contact name for the header, from the company-wide map rather than a
+ * lookup of its own: every other screen already needs the same map, and a
+ * contact deleted since keeps its id as its label.
+ */
+const customerLabel = computed(() => customerName(project.value?.customer_id ?? null))
 
 watch(projectId, () => {
   void load()
@@ -84,30 +91,14 @@ async function load(): Promise<void> {
 
   try {
     project.value = await fetchProject(props.client, projectId.value)
-    await loadCustomer()
+
+    if (typeof project.value?.customer_id === 'number') {
+      await ensureLoaded(props.client)
+    }
   } catch (error: unknown) {
     props.notify('error', errorMessage(error, t('tasks_projects.project.load_failed')))
   } finally {
     loading.value = false
-  }
-}
-
-/** The contact name for the header. A deleted contact falls back to its id. */
-async function loadCustomer(): Promise<void> {
-  const customerId = project.value?.customer_id ?? null
-
-  if (customerId === null) {
-    customerName.value = null
-
-    return
-  }
-
-  try {
-    const customer = await fetchCustomer(props.client, customerId)
-
-    customerName.value = customer.display_name || customer.name || `#${customerId}`
-  } catch {
-    customerName.value = `#${customerId}`
   }
 }
 
@@ -195,7 +186,7 @@ function statusLabel(status: ProjectStatus): string {
 
         <span v-if="project.customer_id">
           {{ t('tasks_projects.project.customer') }}:
-          <span class="text-body">{{ customerName ?? `#${project.customer_id}` }}</span>
+          <span class="text-body">{{ customerLabel }}</span>
         </span>
         <span v-else class="text-subtle">{{ t('tasks_projects.projects.internal') }}</span>
 

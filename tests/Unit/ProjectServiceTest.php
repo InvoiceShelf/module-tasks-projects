@@ -62,7 +62,8 @@ final class ProjectServiceTest extends TestCase
         $this->projects->archive(self::COMPANY, (int) $archived->id);
         $this->projects->create(10, ['name' => 'Elsewhere']);
 
-        self::assertSame(['Alpha', 'Beta'], $this->projects->listFor(self::COMPANY)->pluck('name')->all());
+        // Newest first by default, and two rows of the same second break on the id.
+        self::assertSame(['Beta', 'Alpha'], $this->projects->listFor(self::COMPANY)->pluck('name')->all());
         self::assertSame(['Alpha'], $this->projects->listFor(self::COMPANY, ['status' => Project::STATUS_ACTIVE])->pluck('name')->all());
         self::assertSame(['Beta'], $this->projects->listFor(self::COMPANY, ['customer_id' => 43])->pluck('name')->all());
     }

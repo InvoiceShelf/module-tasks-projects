@@ -10,6 +10,7 @@ use Illuminate\Database\QueryException;
 use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\DB;
 use Modules\TasksProjects\Application\Concerns\DetectsUniqueViolations;
+use Modules\TasksProjects\Application\Concerns\SortsLists;
 use Modules\TasksProjects\Application\Exceptions\EntriesAlreadyInvoiced;
 use Modules\TasksProjects\Models\Project;
 use Modules\TasksProjects\Models\Task;
@@ -20,6 +21,20 @@ use Modules\TasksProjects\Models\TimeEntry;
 final class TaskService
 {
     use DetectsUniqueViolations;
+    use SortsLists;
+
+    /**
+     * The columns the list may be ordered by. The request rule reads this, so
+     * a new key is added here and nowhere else.
+     *
+     * @var list<string>
+     */
+    public const SORT_KEYS = ['number', 'name', 'priority', 'due_date', 'created_at'];
+
+    /** The per-company sequence, which is the order people refer to tasks in. */
+    public const DEFAULT_SORT_KEY = 'number';
+
+    public const DEFAULT_SORT_ORDER = 'asc';
 
     /** @var list<string> */
     private const FIELDS = [
@@ -35,7 +50,7 @@ final class TaskService
     ) {}
 
     /**
-     * @param  array{project_id?: int, assignee_id?: int, task_status_id?: int, customer_id?: int, due_before?: string, due_after?: string, search?: string}  $filters
+     * @param  array{project_id?: int, assignee_id?: int, task_status_id?: int, customer_id?: int, due_before?: string, due_after?: string, search?: string, sort_by?: string, sort_order?: string}  $filters
      * @return Collection<int, Task>
      */
     public function listFor(int $companyId, array $filters = []): Collection
@@ -60,7 +75,38 @@ final class TaskService
             $query->where('name', 'like', '%'.$filters['search'].'%');
         }
 
-        return $query->orderBy('number')->get();
+        $sorts = $this->sorts();
+        [$key, $order] = $this->sortFor($filters, $sorts, self::DEFAULT_SORT_KEY, self::DEFAULT_SORT_ORDER);
+
+        return $this->sortList($query->get(), $sorts[$key], $order);
+    }
+
+    /**
+     * How each sortable column compares, as a value the sorter can order.
+     *
+     * Priority sorts by its rank rather than by its name, so URGENT sits above
+     * HIGH instead of below it, and a task with no priority set answers null,
+     * which the sorter always puts last.
+     *
+     * @return array<string, callable(Task): (int|string|null)>
+     */
+    private function sorts(): array
+    {
+        return [
+            'number' => static fn (Task $task): int => (int) $task->number,
+            'name' => static fn (Task $task): string => (string) $task->name,
+            'priority' => static fn (Task $task): ?int => self::priorityRank($task),
+            'due_date' => static fn (Task $task): ?int => $task->due_date?->getTimestamp(),
+            'created_at' => static fn (Task $task): ?int => $task->created_at?->getTimestamp(),
+        ];
+    }
+
+    /** LOW, NORMAL, HIGH, URGENT as 1 to 4; an unset or unknown value as null. */
+    private static function priorityRank(Task $task): ?int
+    {
+        $rank = array_search($task->priority, Task::PRIORITIES, true);
+
+        return $rank === false ? null : $rank + 1;
     }
 
     public function findForCompany(int $companyId, int $id): Task

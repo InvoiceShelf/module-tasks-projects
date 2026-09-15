@@ -87,7 +87,7 @@ async function loadMembers(): Promise<void> {
 
 async function loadProjects(): Promise<void> {
   try {
-    const response = await listProjects(props.client, { limit: 100 })
+    const response = await listProjects(props.client, { limit: 100, sort_by: 'name' })
 
     projects.value = response.data ?? []
   } catch {
@@ -161,7 +161,7 @@ function tabClass(value: TimeTab): string {
         <div class="flex items-center justify-end space-x-5">
           <span
             v-if="timerStore.running !== null"
-            class="hidden items-center gap-2 text-sm text-muted sm:flex"
+            class="max-sm:hidden flex items-center gap-2 text-sm text-muted"
           >
             <BaseIcon name="ClockIcon" class="h-4 w-4 text-primary-500" />
             {{ t('tasks_projects.timer.running') }}

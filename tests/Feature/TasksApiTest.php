@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Modules\TasksProjects\Tests\Feature;
 
+use Illuminate\Support\Carbon;
 use Modules\TasksProjects\Models\Task;
 use Modules\TasksProjects\Models\TaskStatus;
 use Modules\TasksProjects\Support\Abilities;
@@ -104,6 +105,44 @@ final class TasksApiTest extends TestCase
         $this->assertListReturns([$landing->id], '?due_before=2026-09-30');
         $this->assertListReturns([$pricing->id], '?due_after=2026-09-30');
         $this->assertListReturns([$pricing->id], '?search=Pricing');
+    }
+
+    public function test_the_list_opens_by_number_and_sorts_by_every_supported_key(): void
+    {
+        $this->fourTasks();
+
+        self::assertSame(['zebra', 'apple', 'Mango', 'berry'], $this->names(''));
+        self::assertSame(['berry', 'Mango', 'apple', 'zebra'], $this->names('sort_by=number&sort_order=desc'));
+        self::assertSame(['apple', 'berry', 'Mango', 'zebra'], $this->names('sort_by=name'));
+        self::assertSame(['zebra', 'Mango', 'berry', 'apple'], $this->names('sort_by=name&sort_order=desc'));
+        self::assertSame(['apple', 'berry', 'zebra', 'Mango'], $this->names('sort_by=due_date'));
+        self::assertSame(['zebra', 'berry', 'apple', 'Mango'], $this->names('sort_by=due_date&sort_order=desc'));
+        self::assertSame(['zebra', 'apple', 'Mango', 'berry'], $this->names('sort_by=created_at'));
+        self::assertSame(['berry', 'Mango', 'apple', 'zebra'], $this->names('sort_by=created_at&sort_order=desc'));
+    }
+
+    public function test_priority_sorts_by_rank_rather_than_by_name(): void
+    {
+        $this->fourTasks();
+
+        // Alphabetically these run HIGH, LOW, NORMAL, URGENT, which is not an
+        // order anyone means; the rank runs LOW, NORMAL, HIGH, URGENT, and the
+        // task with no priority set trails both ways.
+        self::assertSame(['zebra', 'Mango', 'apple', 'berry'], $this->names('sort_by=priority'));
+        self::assertSame(['apple', 'Mango', 'zebra', 'berry'], $this->names('sort_by=priority&sort_order=desc'));
+    }
+
+    public function test_the_task_sort_refuses_a_key_or_direction_it_does_not_know(): void
+    {
+        $this->asCompany(self::COMPANY)
+            ->getJson('/api/v1/tasks-projects/tasks?sort_by=board_position')
+            ->assertStatus(422)
+            ->assertJsonValidationErrors(['sort_by']);
+
+        $this->asCompany(self::COMPANY)
+            ->getJson('/api/v1/tasks-projects/tasks?sort_by=number&sort_order=up')
+            ->assertStatus(422)
+            ->assertJsonValidationErrors(['sort_order']);
     }
 
     public function test_the_list_is_paged_and_never_leaves_the_company(): void
@@ -280,5 +319,51 @@ final class TasksApiTest extends TestCase
             ->json('data.*.id');
 
         self::assertSame(array_map(intval(...), $expected), $ids);
+    }
+
+    /**
+     * Four tasks that differ in every sortable column, created a day apart so
+     * `created_at` orders them without relying on the clock.
+     *
+     * One carries no priority and one no due date, which is what proves a
+     * missing value lands last rather than first.
+     */
+    private function fourTasks(): void
+    {
+        $status = $this->makeStatus(self::COMPANY);
+
+        $rows = [
+            ['2026-09-01 09:00:00', 'zebra', Task::PRIORITY_LOW, '2026-03-01'],
+            ['2026-09-02 09:00:00', 'apple', Task::PRIORITY_URGENT, '2026-01-01'],
+            ['2026-09-03 09:00:00', 'Mango', Task::PRIORITY_NORMAL, null],
+            ['2026-09-04 09:00:00', 'berry', null, '2026-02-01'],
+        ];
+
+        foreach ($rows as [$day, $name, $priority, $due]) {
+            Carbon::setTestNow($day);
+            $this->makeTask(self::COMPANY, [
+                'task_status_id' => $status->id,
+                'name' => $name,
+                'priority' => $priority,
+                'due_date' => $due,
+            ]);
+        }
+
+        Carbon::setTestNow();
+    }
+
+    /**
+     * The names the list answers with, in the order it answered them.
+     *
+     * @return list<string>
+     */
+    private function names(string $query): array
+    {
+        $response = $this->asCompany(self::COMPANY)
+            ->getJson('/api/v1/tasks-projects/tasks?'.$query);
+
+        $response->assertOk();
+
+        return array_column((array) $response->json('data'), 'name');
     }
 }

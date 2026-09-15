@@ -9,6 +9,7 @@ use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Database\Eloquent\ModelNotFoundException;
 use Illuminate\Support\Facades\DB;
 use InvoiceShelf\Modules\Contracts\Host\CompanyDataReader;
+use Modules\TasksProjects\Application\Concerns\SortsLists;
 use Modules\TasksProjects\Application\Exceptions\ProjectInUse;
 use Modules\TasksProjects\Models\Project;
 use Modules\TasksProjects\Models\ProjectMember;
@@ -18,6 +19,21 @@ use Modules\TasksProjects\Models\TimeEntry;
 /** Project CRUD, archiving and the totals the project detail screen shows. */
 final class ProjectService
 {
+    use SortsLists;
+
+    /**
+     * The columns the list may be ordered by. The request rule reads this, so
+     * a new key is added here and nowhere else.
+     *
+     * @var list<string>
+     */
+    public const SORT_KEYS = ['name', 'status', 'due_date', 'created_at', 'default_rate'];
+
+    /** Newest first, the way the host's own lists open. */
+    public const DEFAULT_SORT_KEY = 'created_at';
+
+    public const DEFAULT_SORT_ORDER = 'desc';
+
     /** @var list<string> */
     private const FIELDS = [
         'customer_id', 'name', 'identifier', 'description', 'colour', 'status',
@@ -27,7 +43,7 @@ final class ProjectService
     public function __construct(private readonly CompanyDataReader $companyData) {}
 
     /**
-     * @param  array{status?: string, customer_id?: int, user_id?: int, search?: string}  $filters
+     * @param  array{status?: string, customer_id?: int, user_id?: int, search?: string, sort_by?: string, sort_order?: string}  $filters
      * @return Collection<int, Project>
      */
     public function listFor(int $companyId, array $filters = []): Collection
@@ -57,7 +73,30 @@ final class ProjectService
             });
         }
 
-        return $query->orderBy('name')->orderBy('id')->get();
+        $sorts = $this->sorts();
+        [$key, $order] = $this->sortFor($filters, $sorts, self::DEFAULT_SORT_KEY, self::DEFAULT_SORT_ORDER);
+
+        return $this->sortList($query->get(), $sorts[$key], $order);
+    }
+
+    /**
+     * How each sortable column compares, as a value the sorter can order.
+     *
+     * Dates become timestamps rather than Carbon instances so the comparison
+     * is a plain integer one, and a missing date or rate answers null, which
+     * the sorter always puts last.
+     *
+     * @return array<string, callable(Project): (int|string|null)>
+     */
+    private function sorts(): array
+    {
+        return [
+            'name' => static fn (Project $project): string => (string) $project->name,
+            'status' => static fn (Project $project): string => (string) $project->status,
+            'due_date' => static fn (Project $project): ?int => $project->due_date?->getTimestamp(),
+            'created_at' => static fn (Project $project): ?int => $project->created_at?->getTimestamp(),
+            'default_rate' => static fn (Project $project): ?int => $project->default_rate,
+        ];
     }
 
     public function findForCompany(int $companyId, int $id): Project

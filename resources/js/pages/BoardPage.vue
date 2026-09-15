@@ -7,6 +7,7 @@ import { listMembers, listProjects } from '@/api'
 import { fetchBoard, moveTask } from '@/api/board'
 import TaskDrawer from '@/components/TaskDrawer.vue'
 import type { TaskDefaults } from '@/components/TaskDrawer.vue'
+import { customerName, ensureLoaded } from '@/stores/customers'
 import { errorMessage } from '@/support/errors'
 import { formatDate, initials, isOverdue } from '@/support/format'
 import { useTranslate } from '@/support/i18n'
@@ -91,7 +92,11 @@ onBeforeUnmount(() => {
 
 async function loadPickers(): Promise<void> {
   try {
-    const response = await listProjects(props.client, { limit: 100, status: 'ACTIVE' })
+    const response = await listProjects(props.client, {
+      limit: 100,
+      status: 'ACTIVE',
+      sort_by: 'name',
+    })
 
     projectRecords.value = response.data
   } catch (error: unknown) {
@@ -120,6 +125,11 @@ async function loadBoard(): Promise<void> {
 
   try {
     columns.value = await fetchBoard(props.client, params)
+
+    // Only a board that shows a contact is worth one lookup of the address book.
+    if (columns.value.some((column) => column.tasks.some((task) => task.customer_id !== null))) {
+      void ensureLoaded(props.client)
+    }
   } catch (error: unknown) {
     props.notify('error', errorMessage(error, t('tasks_projects.board.load_failed')))
   } finally {
@@ -299,6 +309,16 @@ function projectIdentifier(task: Task): string | null {
   return project?.identifier || project?.name || null
 }
 
+/**
+ * What the project badge says in full: the project, and the contact the work
+ * is billed to when the module knows its name. The card itself stays short.
+ */
+function projectTooltip(task: Task): string {
+  const project = projectRecords.value.find((record) => record.id === task.project_id)
+
+  return [project?.name, customerName(task.customer_id)].filter(Boolean).join(' \u00b7 ')
+}
+
 function assigneeInitials(task: Task): string | null {
   if (task.assignee_id === null) {
     return null
@@ -442,6 +462,7 @@ function priorityClass(priority: TaskPriority): string {
               <span
                 v-if="projectIdentifier(task)"
                 class="rounded-sm bg-surface-tertiary px-1.5 py-0.5 text-[11px] text-body"
+                :title="projectTooltip(task)"
               >
                 {{ projectIdentifier(task) }}
               </span>

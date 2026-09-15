@@ -4,6 +4,8 @@ declare(strict_types=1);
 
 namespace Modules\TasksProjects\Http\Requests;
 
+use Modules\TasksProjects\Application\TaskService;
+
 final class ListTasksRequest extends ModuleRequest
 {
     /** @return array<string, list<string>> */
@@ -17,6 +19,8 @@ final class ListTasksRequest extends ModuleRequest
             'due_before' => ['sometimes', 'date'],
             'due_after' => ['sometimes', 'date'],
             'search' => ['sometimes', 'string', 'max:255'],
+            'sort_by' => ['sometimes', 'string', 'in:'.implode(',', TaskService::SORT_KEYS)],
+            'sort_order' => ['sometimes', 'string', 'in:asc,desc'],
         ];
     }
 }
