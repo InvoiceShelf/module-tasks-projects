@@ -68,8 +68,21 @@ const PER_PAGE = 10
 const SORT_KEYS: Record<string, TaskSortKey> = {
   number: 'number',
   name: 'name',
-  due_date: 'due_date',
 }
+
+/**
+ * Narrower cells than the host table's own.
+ *
+ * A task row carries nine facts, where a host list carries six, and at the
+ * host's `px-6` the table is some three hundred pixels wider than the content
+ * area on a 1280 screen: the row menu ends up past the right edge, behind a
+ * horizontal scrollbar nobody looks for. Half the padding fits the same
+ * columns on the page and leaves the rows just as readable.
+ */
+const TH_CLASS =
+  'whitespace-nowrap px-3 py-3 text-left text-xs font-medium text-muted uppercase tracking-wider'
+
+const TD_CLASS = 'px-3 py-4 text-sm text-muted whitespace-nowrap'
 
 const t = useTranslate()
 
@@ -103,19 +116,27 @@ const filtered = computed<boolean>(
 
 const showEmptyScreen = computed(() => !isFetching.value && totalCount.value === 0 && !filtered.value)
 
-const columns = computed(() => [
-  { key: 'select', label: '', sortable: false, tdClass: 'w-8' },
-  { key: 'number', label: t('tasks_projects.tasks.columns.number'), sortable: true, sortBy: 'number', tdClass: 'text-muted' },
-  { key: 'name', label: t('tasks_projects.tasks.columns.name'), sortable: true, sortBy: 'name', thClass: 'extra', tdClass: 'font-medium text-heading' },
-  { key: 'status', label: t('tasks_projects.tasks.columns.status'), sortable: false },
-  { key: 'assignee', label: t('tasks_projects.tasks.columns.assignee'), sortable: false },
-  { key: 'logged', label: t('tasks_projects.tasks.columns.logged'), sortable: false },
-  { key: 'unbilled', label: t('tasks_projects.tasks.columns.unbilled'), sortable: false },
-  { key: 'invoiced', label: t('tasks_projects.tasks.columns.invoiced'), sortable: false },
-  { key: 'timer', label: t('tasks_projects.tasks.columns.timer'), sortable: false },
-  { key: 'due_date', label: t('tasks_projects.tasks.columns.due_date'), sortable: true, sortBy: 'due_date' },
-  { key: 'actions', label: t('tasks_projects.general.actions'), sortable: false, tdClass: 'text-right text-sm font-medium' },
-])
+/**
+ * The columns, each in the module's own narrower cell.
+ *
+ * The due date rides under the task name rather than in a column of its own:
+ * it is a detail of the task, it is empty on most rows, and a tenth column is
+ * what pushed the table off the page.
+ */
+const columns = computed(() =>
+  [
+    { key: 'select', label: '', sortable: false, tdClass: 'w-8' },
+    { key: 'number', label: t('tasks_projects.tasks.columns.number'), sortable: true, sortBy: 'number', tdClass: 'text-muted' },
+    { key: 'name', label: t('tasks_projects.tasks.columns.name'), sortable: true, sortBy: 'name', thClass: 'extra', tdClass: 'font-medium text-heading' },
+    { key: 'status', label: t('tasks_projects.tasks.columns.status'), sortable: false },
+    { key: 'assignee', label: t('tasks_projects.tasks.columns.assignee'), sortable: false },
+    { key: 'logged', label: t('tasks_projects.tasks.columns.logged'), sortable: false },
+    { key: 'unbilled', label: t('tasks_projects.tasks.columns.unbilled'), sortable: false },
+    { key: 'invoiced', label: t('tasks_projects.tasks.columns.invoiced'), sortable: false },
+    { key: 'timer', label: t('tasks_projects.tasks.columns.timer'), sortable: false },
+    { key: 'actions', label: t('tasks_projects.general.actions'), sortable: false, tdClass: 'text-right text-sm font-medium' },
+  ].map((column) => ({ defaultThClass: TH_CLASS, defaultTdClass: TD_CLASS, ...column })),
+)
 
 // The screen above owns the filters; a change to them is a new first page.
 watch(() => filterKey(props.filters), () => refresh())
@@ -425,6 +446,18 @@ defineExpose({ openCreate, refresh })
           <router-link class="hover:text-primary-500" :to="PATHS.task(row.data.id)">
             {{ row.data.name }}
           </router-link>
+
+          <span
+            v-if="row.data.due_date"
+            class="mt-0.5 block text-xs font-normal"
+            :class="
+              isOverdue(row.data.due_date) && !row.data.closed_at
+                ? 'font-medium text-status-red'
+                : 'text-muted'
+            "
+          >
+            {{ t('tasks_projects.tasks.columns.due_date') }}: {{ formatDate(row.data.due_date) }}
+          </span>
         </template>
 
         <template #cell-status="{ row }">
@@ -471,18 +504,6 @@ defineExpose({ openCreate, refresh })
             :task="row.data"
             :members="members"
           />
-        </template>
-
-        <template #cell-due_date="{ row }">
-          <span
-            v-if="row.data.due_date"
-            :class="
-              isOverdue(row.data.due_date) && !row.data.closed_at ? 'font-medium text-status-red' : ''
-            "
-          >
-            {{ formatDate(row.data.due_date) }}
-          </span>
-          <span v-else class="text-subtle">-</span>
         </template>
 
         <template #cell-actions="{ row }">
