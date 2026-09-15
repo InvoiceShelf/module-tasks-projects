@@ -8,6 +8,7 @@ use Illuminate\Http\JsonResponse;
 use Modules\TasksProjects\Application\BillingService;
 use Modules\TasksProjects\Http\Requests\ConfirmInvoiceRequest;
 use Modules\TasksProjects\Http\Requests\PrepareInvoiceRequest;
+use Modules\TasksProjects\Http\Requests\UnbilledCustomersRequest;
 use Modules\TasksProjects\Http\Requests\UnbilledTimeRequest;
 use Modules\TasksProjects\Support\Abilities;
 use Modules\TasksProjects\Support\Authorizes;
@@ -25,6 +26,27 @@ final class BillingController extends Controller
     public function __construct(Authorizes $authorizes, private readonly BillingService $billing)
     {
         parent::__construct($authorizes);
+    }
+
+    /**
+     * Who has unbilled time, before the wizard asks for anyone's entries.
+     *
+     * One row per customer and currency, so the first step can be a list of
+     * people worth invoicing rather than a customer picker over the whole
+     * address book.
+     */
+    public function customers(UnbilledCustomersRequest $request): JsonResponse
+    {
+        $context = $this->context($request);
+        $this->authorize($context, Abilities::INVOICE_TASKS);
+
+        $filters = $request->validated();
+
+        return response()->json(['data' => $this->billing->customers(
+            $context->companyId,
+            $filters['from'] ?? null,
+            $filters['to'] ?? null,
+        )]);
     }
 
     public function unbilled(UnbilledTimeRequest $request): JsonResponse

@@ -62,6 +62,7 @@ Route::prefix('api/v1/tasks-projects')->middleware(['api', 'auth:sanctum', 'comp
     Route::post('timer/start', [TimerController::class, 'start'])->name('tasks-projects.timer.start');
     Route::post('timer/stop', [TimerController::class, 'stop'])->name('tasks-projects.timer.stop');
 
+    Route::get('billing/customers', [BillingController::class, 'customers'])->name('tasks-projects.billing.customers');
     Route::get('billing/unbilled', [BillingController::class, 'unbilled'])->name('tasks-projects.billing.unbilled');
     Route::post('billing/prepare', [BillingController::class, 'prepare'])->name('tasks-projects.billing.prepare');
     Route::post('billing/confirm', [BillingController::class, 'confirm'])->name('tasks-projects.billing.confirm');

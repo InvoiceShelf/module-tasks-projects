@@ -47,7 +47,7 @@ final class BillingService
      *
      * @param  string|null  $from  inclusive start date, Y-m-d
      * @param  string|null  $to  inclusive end date, Y-m-d
-     * @return array{customer_id: int, from: string|null, to: string|null, entry_ids: list<int>, minutes: int, currencies: list<array{currency_id: int|null, minutes: int, amount: int}>, groups: array{task: list<array<string, mixed>>, project: list<array<string, mixed>>, member: list<array<string, mixed>>, summary: list<array<string, mixed>>}}
+     * @return array{customer_id: int, from: string|null, to: string|null, entry_ids: list<int>, minutes: int, currencies: list<array{currency_id: int|null, minutes: int, amount: int}>, entries: list<array<string, mixed>>, groups: array{task: list<array<string, mixed>>, project: list<array<string, mixed>>, member: list<array<string, mixed>>, summary: list<array<string, mixed>>}}
      */
     public function unbilled(int $companyId, int $customerId, ?string $from = null, ?string $to = null): array
     {
@@ -72,6 +72,7 @@ final class BillingService
             'entry_ids' => $entries->map(static fn (TimeEntry $entry): int => (int) $entry->id)->all(),
             'minutes' => $minutes,
             'currencies' => array_values($currencies),
+            'entries' => $this->rows($entries, $labels),
             'groups' => [
                 'task' => $this->group($entries, 'task', $labels, true),
                 'project' => $this->group($entries, 'project', $labels, true),
@@ -79,6 +80,59 @@ final class BillingService
                 'summary' => $this->group($entries, 'summary', $labels, true),
             ],
         ];
+    }
+
+    /**
+     * Which customers have unbilled billable time, and how much of it.
+     *
+     * The same rule `unbilled()` applies to one customer, applied to all of
+     * them at once: the wizard's first step needs to know who is worth opening
+     * before it asks for anyone's entries. A customer whose work spans two
+     * currencies gets a row per currency, because money in two denominations
+     * cannot be added up and `prepare()` refuses such a selection anyway.
+     *
+     * @param  string|null  $from  inclusive start date, Y-m-d
+     * @param  string|null  $to  inclusive end date, Y-m-d
+     * @return list<array{customer_id: int, entries: int, minutes: int, amount: int, currency_id: int|null}>
+     */
+    public function customers(int $companyId, ?string $from = null, ?string $to = null): array
+    {
+        $customerByTask = Task::query()
+            ->forCompany($companyId)
+            ->whereNotNull('customer_id')
+            ->pluck('customer_id', 'id');
+
+        $entries = $this->unbilledEntriesForTasks(
+            $companyId,
+            array_map(intval(...), $customerByTask->keys()->all()),
+            $from,
+            $to,
+        );
+
+        $rows = [];
+        foreach ($entries as $entry) {
+            $customerId = (int) $customerByTask->get((int) $entry->task_id);
+            $currencyId = $entry->currency_id === null ? null : (int) $entry->currency_id;
+
+            $bucket = $customerId.'|'.($currencyId ?? 'null');
+            $rows[$bucket] ??= [
+                'customer_id' => $customerId,
+                'entries' => 0,
+                'minutes' => 0,
+                'amount' => 0,
+                'currency_id' => $currencyId,
+            ];
+
+            $rows[$bucket]['entries']++;
+            $rows[$bucket]['minutes'] += (int) $entry->duration_minutes;
+            $rows[$bucket]['amount'] += (int) $entry->amount;
+        }
+
+        $rows = array_values($rows);
+        usort($rows, static fn (array $left, array $right): int => [$left['customer_id'], $left['currency_id'] ?? 0]
+            <=> [$right['customer_id'], $right['currency_id'] ?? 0]);
+
+        return $rows;
     }
 
     /**
@@ -91,9 +145,15 @@ final class BillingService
      * blended rate when they differ, and its `total` is `quantity * price` so
      * the invoice the host builds matches the preview exactly.
      *
+     * Every key the host's invoice writer reads is present, including the ones
+     * this module never sets: a line carries its zeroed discount and tax fields
+     * so `DocumentItemService::createItems` never reaches for a missing index,
+     * and `notes` and `template_name` are placeholders the wizard fills in from
+     * the company's own defaults before it posts.
+     *
      * @param  list<int>  $entryIds
      * @param  'task'|'project'|'member'|'summary'  $grouping
-     * @return array{invoice_date: string, customer_id: int, currency_id: int|null, discount: int, discount_type: string, discount_val: int, tax: int, sub_total: int, total: int, items: list<array{name: string, description: string|null, quantity: float, price: int, total: int}>, groups: list<array{entry_ids: list<int>}>}
+     * @return array{invoice_date: string, customer_id: int, currency_id: int|null, discount: int, discount_type: string, discount_val: int, tax: int, sub_total: int, total: int, notes: string|null, template_name: string|null, taxes: list<array<string, mixed>>, items: list<array{name: string, description: string|null, quantity: float, price: int, discount_type: string, discount: int, discount_val: int, tax: int, taxes: list<array<string, mixed>>, total: int}>, groups: list<array{entry_ids: list<int>}>}
      */
     public function prepare(int $companyId, array $entryIds, string $grouping): array
     {
@@ -121,6 +181,11 @@ final class BillingService
                 'description' => $row['description'],
                 'quantity' => $quantity,
                 'price' => $price,
+                'discount_type' => 'fixed',
+                'discount' => 0,
+                'discount_val' => 0,
+                'tax' => 0,
+                'taxes' => [],
                 'total' => $total,
             ];
             $groups[] = ['entry_ids' => $row['entry_ids']];
@@ -137,6 +202,9 @@ final class BillingService
             'tax' => 0,
             'sub_total' => $subTotal,
             'total' => $subTotal,
+            'notes' => null,
+            'template_name' => null,
+            'taxes' => [],
             'items' => $items,
             'groups' => $groups,
         ];
@@ -212,6 +280,21 @@ final class BillingService
             ->pluck('id')
             ->all();
 
+        return $this->unbilledEntriesForTasks($companyId, array_map(intval(...), $taskIds), $from, $to);
+    }
+
+    /**
+     * The billable, stopped, not-yet-invoiced time logged against these tasks.
+     *
+     * One customer's list and the whole company's list differ only in which
+     * tasks go in, so both ask this: the internal-project exclusion, the date
+     * range and the vanished-invoice rule are written once.
+     *
+     * @param  list<int>  $taskIds
+     * @return Collection<int, TimeEntry>
+     */
+    private function unbilledEntriesForTasks(int $companyId, array $taskIds, ?string $from, ?string $to): Collection
+    {
         if ($taskIds === []) {
             /** @var Collection<int, TimeEntry> $none */
             $none = new Collection;
@@ -377,6 +460,38 @@ final class BillingService
         $currencyId = reset($currencies);
 
         return $currencyId === null ? null : (int) $currencyId;
+    }
+
+    /**
+     * One row per entry, with the names the review step shows.
+     *
+     * The grouped views answer "how much"; this answers "which work", so the
+     * step that ticks entries off can render the task, the project, the member
+     * and the day without a second round trip per row.
+     *
+     * @param  Collection<int, TimeEntry>  $entries
+     * @param  array{task: array<int, string>, project: array<int, string>, member: array<int, string>}  $labels
+     * @return list<array{id: int, task_id: int, task_name: string, project_id: int|null, project_name: string|null, user_id: int, user_name: string, date: string|null, minutes: int, amount: int, rate: int, currency_id: int|null, description: string|null}>
+     */
+    private function rows(Collection $entries, array $labels): array
+    {
+        return $entries->map(static fn (TimeEntry $entry): array => [
+            'id' => (int) $entry->id,
+            'task_id' => (int) $entry->task_id,
+            'task_name' => $labels['task'][(int) $entry->task_id] ?? "Task {$entry->task_id}",
+            'project_id' => $entry->project_id === null ? null : (int) $entry->project_id,
+            'project_name' => $entry->project_id === null
+                ? null
+                : ($labels['project'][(int) $entry->project_id] ?? "Project {$entry->project_id}"),
+            'user_id' => (int) $entry->user_id,
+            'user_name' => $labels['member'][(int) $entry->user_id] ?? 'Removed member',
+            'date' => $entry->started_at?->toDateString(),
+            'minutes' => (int) $entry->duration_minutes,
+            'amount' => (int) $entry->amount,
+            'rate' => (int) $entry->rate,
+            'currency_id' => $entry->currency_id === null ? null : (int) $entry->currency_id,
+            'description' => $entry->description,
+        ])->values()->all();
     }
 
     /**

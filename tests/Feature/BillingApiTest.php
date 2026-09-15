@@ -126,9 +126,12 @@ final class BillingApiTest extends TestCase
         $byTask->assertJsonPath('data.currency_id', self::CURRENCY);
         $byTask->assertJsonPath('data.sub_total', 15000);
         $byTask->assertJsonPath('data.total', 15000);
+        $byTask->assertJsonPath('data.notes', null);
+        $byTask->assertJsonPath('data.template_name', null);
+        $byTask->assertJsonPath('data.taxes', []);
         $byTask->assertJsonPath('data.items', [
-            ['name' => 'Landing page', 'description' => null, 'quantity' => 1.0, 'price' => self::RATE, 'total' => 6000],
-            ['name' => 'Pricing page', 'description' => null, 'quantity' => 1.5, 'price' => self::RATE, 'total' => 9000],
+            $this->line('Landing page', 1.0, 6000),
+            $this->line('Pricing page', 1.5, 9000),
         ]);
         $byTask->assertJsonPath('data.groups', [
             ['entry_ids' => [(int) $first->id]],
@@ -272,6 +275,10 @@ final class BillingApiTest extends TestCase
         $this->authorization->deny(Authorizes::id(Abilities::INVOICE_TASKS));
 
         $this->asCompany(self::COMPANY)
+            ->getJson('/api/v1/tasks-projects/billing/customers')
+            ->assertForbidden();
+
+        $this->asCompany(self::COMPANY)
             ->getJson('/api/v1/tasks-projects/billing/unbilled?customer_id='.self::CUSTOMER)
             ->assertForbidden();
 
@@ -283,6 +290,76 @@ final class BillingApiTest extends TestCase
                 'items' => [['invoice_item_id' => 101, 'entry_ids' => [(int) $entry->id]]],
             ])
             ->assertForbidden();
+    }
+
+    public function test_unbilled_lists_the_entries_behind_the_totals(): void
+    {
+        $entry = $this->entry($this->landing, 90, '2026-09-01', ['description' => 'Hero section']);
+
+        $this->asCompany(self::COMPANY)
+            ->getJson('/api/v1/tasks-projects/billing/unbilled?customer_id='.self::CUSTOMER)
+            ->assertOk()
+            ->assertJsonPath('data.entries', [[
+                'id' => (int) $entry->id,
+                'task_id' => (int) $this->landing->id,
+                'task_name' => 'Landing page',
+                'project_id' => (int) $this->website->id,
+                'project_name' => 'Website',
+                'user_id' => self::DEFAULT_USER,
+                'user_name' => 'Ada Lovelace',
+                'date' => '2026-09-01',
+                'minutes' => 90,
+                'amount' => 9000,
+                'rate' => self::RATE,
+                'currency_id' => self::CURRENCY,
+                'description' => 'Hero section',
+            ]]);
+    }
+
+    public function test_customers_lists_who_has_time_waiting_to_be_invoiced(): void
+    {
+        $this->entry($this->landing, 60, '2026-09-01');
+        $this->entry($this->pricing, 90, '2026-09-02');
+        $this->entry($this->task('Their logo', null, 43), 30, '2026-09-03');
+        $this->entry($this->landing, 60, '2026-09-04', ['billable' => false]);
+
+        $this->asCompany(self::COMPANY)
+            ->getJson('/api/v1/tasks-projects/billing/customers')
+            ->assertOk()
+            ->assertJsonPath('data', [
+                ['customer_id' => self::CUSTOMER, 'entries' => 2, 'minutes' => 150, 'amount' => 15000, 'currency_id' => self::CURRENCY],
+                ['customer_id' => 43, 'entries' => 1, 'minutes' => 30, 'amount' => 3000, 'currency_id' => self::CURRENCY],
+            ]);
+    }
+
+    public function test_customers_honours_the_date_range(): void
+    {
+        $this->entry($this->landing, 60, '2026-09-01');
+        $this->entry($this->landing, 90, '2026-09-10');
+
+        $this->asCompany(self::COMPANY)
+            ->getJson('/api/v1/tasks-projects/billing/customers?from=2026-09-05&to=2026-09-15')
+            ->assertOk()
+            ->assertJsonPath('data', [
+                ['customer_id' => self::CUSTOMER, 'entries' => 1, 'minutes' => 90, 'amount' => 9000, 'currency_id' => self::CURRENCY],
+            ]);
+    }
+
+    /** One prepared invoice line, with the zeroed keys the host writer reads. */
+    private function line(string $name, float $quantity, int $total): array
+    {
+        return [
+            'name' => $name,
+            'description' => null,
+            'quantity' => $quantity,
+            'price' => self::RATE,
+            'discount_type' => 'fixed',
+            'discount' => 0,
+            'discount_val' => 0,
+            'tax' => 0,
+            'taxes' => [],
+            'total' => $total,
+        ];
     }
 
     /** @param list<int> $entryIds */

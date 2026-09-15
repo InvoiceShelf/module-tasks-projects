@@ -145,10 +145,10 @@ final class BillingServiceTest extends TestCase
         self::assertSame(34500, $payload['total']);
 
         self::assertSame([
-            ['name' => 'Landing page', 'description' => null, 'quantity' => 1.5, 'price' => 6000, 'total' => 9000],
-            ['name' => 'Pricing page', 'description' => null, 'quantity' => 1.5, 'price' => 6000, 'total' => 9000],
-            ['name' => 'Onboarding flow', 'description' => null, 'quantity' => 2.0, 'price' => 6000, 'total' => 12000],
-            ['name' => 'Ad hoc call', 'description' => null, 'quantity' => 0.75, 'price' => 6000, 'total' => 4500],
+            ['name' => 'Landing page', 'description' => null, 'quantity' => 1.5, 'price' => 6000, 'discount_type' => 'fixed', 'discount' => 0, 'discount_val' => 0, 'tax' => 0, 'taxes' => [], 'total' => 9000],
+            ['name' => 'Pricing page', 'description' => null, 'quantity' => 1.5, 'price' => 6000, 'discount_type' => 'fixed', 'discount' => 0, 'discount_val' => 0, 'tax' => 0, 'taxes' => [], 'total' => 9000],
+            ['name' => 'Onboarding flow', 'description' => null, 'quantity' => 2.0, 'price' => 6000, 'discount_type' => 'fixed', 'discount' => 0, 'discount_val' => 0, 'tax' => 0, 'taxes' => [], 'total' => 12000],
+            ['name' => 'Ad hoc call', 'description' => null, 'quantity' => 0.75, 'price' => 6000, 'discount_type' => 'fixed', 'discount' => 0, 'discount_val' => 0, 'tax' => 0, 'taxes' => [], 'total' => 4500],
         ], $payload['items']);
 
         self::assertSame([
@@ -160,6 +160,155 @@ final class BillingServiceTest extends TestCase
         self::assertCount(count($payload['items']), $payload['groups']);
     }
 
+    public function test_prepare_carries_every_key_the_host_invoice_writer_reads(): void
+    {
+        $entries = $this->entries();
+
+        $payload = $this->billing->prepare(self::COMPANY, $this->ids($entries), 'summary');
+
+        self::assertSame([
+            'invoice_date',
+            'customer_id',
+            'currency_id',
+            'discount',
+            'discount_type',
+            'discount_val',
+            'tax',
+            'sub_total',
+            'total',
+            'notes',
+            'template_name',
+            'taxes',
+            'items',
+            'groups',
+        ], array_keys($payload));
+
+        self::assertNull($payload['notes']);
+        self::assertNull($payload['template_name']);
+        self::assertSame([], $payload['taxes']);
+
+        self::assertSame([
+            'name',
+            'description',
+            'quantity',
+            'price',
+            'discount_type',
+            'discount',
+            'discount_val',
+            'tax',
+            'taxes',
+            'total',
+        ], array_keys($payload['items'][0]));
+    }
+
+    public function test_unbilled_lists_every_entry_with_the_names_the_review_step_shows(): void
+    {
+        $first = $this->entry($this->landing, 7, 60, '2026-09-01', ['description' => 'Hero section']);
+        $adHoc = $this->entry($this->adHoc, 8, 45, '2026-09-05');
+
+        $unbilled = $this->billing->unbilled(self::COMPANY, self::CUSTOMER);
+
+        self::assertSame([
+            [
+                'id' => (int) $first->id,
+                'task_id' => (int) $this->landing->id,
+                'task_name' => 'Landing page',
+                'project_id' => (int) $this->website->id,
+                'project_name' => 'Website',
+                'user_id' => 7,
+                'user_name' => 'Ada Lovelace',
+                'date' => '2026-09-01',
+                'minutes' => 60,
+                'amount' => 6000,
+                'rate' => self::RATE,
+                'currency_id' => self::CURRENCY,
+                'description' => 'Hero section',
+            ],
+            [
+                'id' => (int) $adHoc->id,
+                'task_id' => (int) $this->adHoc->id,
+                'task_name' => 'Ad hoc call',
+                'project_id' => null,
+                'project_name' => null,
+                'user_id' => 8,
+                'user_name' => 'Grace Hopper',
+                'date' => '2026-09-05',
+                'minutes' => 45,
+                'amount' => 4500,
+                'rate' => self::RATE,
+                'currency_id' => self::CURRENCY,
+                'description' => null,
+            ],
+        ], $unbilled['entries']);
+    }
+
+    public function test_unbilled_names_an_entry_logged_by_someone_who_has_left(): void
+    {
+        $this->entry($this->landing, 99, 60, '2026-09-01');
+
+        self::assertSame(
+            ['Removed member'],
+            array_column($this->billing->unbilled(self::COMPANY, self::CUSTOMER)['entries'], 'user_name'),
+        );
+    }
+
+    public function test_customers_rolls_up_the_unbilled_time_of_every_customer(): void
+    {
+        $this->entries();
+        $this->entry($this->task('Their logo', null, 43), 7, 30, '2026-09-06');
+
+        self::assertSame([
+            ['customer_id' => self::CUSTOMER, 'entries' => 5, 'minutes' => 345, 'amount' => 34500, 'currency_id' => self::CURRENCY],
+            ['customer_id' => 43, 'entries' => 1, 'minutes' => 30, 'amount' => 3000, 'currency_id' => self::CURRENCY],
+        ], $this->billing->customers(self::COMPANY));
+    }
+
+    public function test_customers_gives_a_customer_billed_in_two_currencies_a_row_each(): void
+    {
+        $this->entry($this->landing, 7, 60, '2026-09-01');
+        $this->entry($this->landing, 7, 60, '2026-09-02', ['currency_id' => 4]);
+
+        self::assertSame([
+            ['customer_id' => self::CUSTOMER, 'entries' => 1, 'minutes' => 60, 'amount' => 6000, 'currency_id' => self::CURRENCY],
+            ['customer_id' => self::CUSTOMER, 'entries' => 1, 'minutes' => 60, 'amount' => 6000, 'currency_id' => 4],
+        ], $this->billing->customers(self::COMPANY));
+    }
+
+    public function test_customers_applies_the_same_rule_the_unbilled_list_does(): void
+    {
+        $this->entry($this->landing, 7, 60, '2026-09-01');
+        $this->entry($this->landing, 7, 60, '2026-09-02', ['billable' => false]);
+        $this->entry($this->landing, 7, 0, '2026-09-03', ['running_user_id' => 7, 'ended_at' => null]);
+        $this->entry($this->landing, 7, 60, '2026-09-04', ['invoice_id' => 77, 'invoice_item_id' => 5]);
+        $this->companyData->withInvoices(self::COMPANY, 77);
+
+        $internal = $this->makeProject(self::COMPANY, ['name' => 'Internal tooling', 'customer_id' => null]);
+        $stray = $this->task('Stray', $internal);
+        Task::query()->whereKey($stray->id)->update(['customer_id' => self::CUSTOMER]);
+        $this->entry($stray, 7, 60, '2026-09-05', ['project_id' => $internal->id]);
+
+        self::assertSame([
+            ['customer_id' => self::CUSTOMER, 'entries' => 1, 'minutes' => 60, 'amount' => 6000, 'currency_id' => self::CURRENCY],
+        ], $this->billing->customers(self::COMPANY));
+    }
+
+    public function test_customers_honours_the_date_range_and_ignores_another_company(): void
+    {
+        $this->entry($this->landing, 7, 60, '2026-09-01');
+        $this->entry($this->landing, 7, 90, '2026-09-10');
+        $foreignTask = $this->makeTask(10, ['customer_id' => self::CUSTOMER]);
+        $this->makeEntry(10, (int) $foreignTask->id);
+
+        self::assertSame([
+            ['customer_id' => self::CUSTOMER, 'entries' => 1, 'minutes' => 90, 'amount' => 9000, 'currency_id' => self::CURRENCY],
+        ], $this->billing->customers(self::COMPANY, '2026-09-05', '2026-09-15'));
+    }
+
+    public function test_customers_is_empty_when_nothing_is_waiting_to_be_billed(): void
+    {
+        self::assertSame([], $this->billing->customers(self::COMPANY));
+    }
+
     public function test_prepare_builds_one_line_per_project(): void
     {
         $entries = $this->entries();
@@ -167,9 +316,9 @@ final class BillingServiceTest extends TestCase
         $payload = $this->billing->prepare(self::COMPANY, $this->ids($entries), 'project');
 
         self::assertSame([
-            ['name' => 'Website', 'description' => null, 'quantity' => 3.0, 'price' => 6000, 'total' => 18000],
-            ['name' => 'Mobile app', 'description' => null, 'quantity' => 2.0, 'price' => 6000, 'total' => 12000],
-            ['name' => 'No project', 'description' => null, 'quantity' => 0.75, 'price' => 6000, 'total' => 4500],
+            ['name' => 'Website', 'description' => null, 'quantity' => 3.0, 'price' => 6000, 'discount_type' => 'fixed', 'discount' => 0, 'discount_val' => 0, 'tax' => 0, 'taxes' => [], 'total' => 18000],
+            ['name' => 'Mobile app', 'description' => null, 'quantity' => 2.0, 'price' => 6000, 'discount_type' => 'fixed', 'discount' => 0, 'discount_val' => 0, 'tax' => 0, 'taxes' => [], 'total' => 12000],
+            ['name' => 'No project', 'description' => null, 'quantity' => 0.75, 'price' => 6000, 'discount_type' => 'fixed', 'discount' => 0, 'discount_val' => 0, 'tax' => 0, 'taxes' => [], 'total' => 4500],
         ], $payload['items']);
         self::assertSame(34500, $payload['total']);
     }
@@ -182,9 +331,9 @@ final class BillingServiceTest extends TestCase
         $payload = $this->billing->prepare(self::COMPANY, $this->ids($entries), 'member');
 
         self::assertSame([
-            ['name' => 'Ada Lovelace', 'description' => null, 'quantity' => 3.25, 'price' => 6000, 'total' => 19500],
-            ['name' => 'Grace Hopper', 'description' => null, 'quantity' => 2.5, 'price' => 6000, 'total' => 15000],
-            ['name' => 'Removed member', 'description' => null, 'quantity' => 1.0, 'price' => 6000, 'total' => 6000],
+            ['name' => 'Ada Lovelace', 'description' => null, 'quantity' => 3.25, 'price' => 6000, 'discount_type' => 'fixed', 'discount' => 0, 'discount_val' => 0, 'tax' => 0, 'taxes' => [], 'total' => 19500],
+            ['name' => 'Grace Hopper', 'description' => null, 'quantity' => 2.5, 'price' => 6000, 'discount_type' => 'fixed', 'discount' => 0, 'discount_val' => 0, 'tax' => 0, 'taxes' => [], 'total' => 15000],
+            ['name' => 'Removed member', 'description' => null, 'quantity' => 1.0, 'price' => 6000, 'discount_type' => 'fixed', 'discount' => 0, 'discount_val' => 0, 'tax' => 0, 'taxes' => [], 'total' => 6000],
         ], $payload['items']);
     }
 
@@ -195,7 +344,7 @@ final class BillingServiceTest extends TestCase
         $payload = $this->billing->prepare(self::COMPANY, $this->ids($entries), 'summary');
 
         self::assertSame([
-            ['name' => 'Time', 'description' => null, 'quantity' => 5.75, 'price' => 6000, 'total' => 34500],
+            ['name' => 'Time', 'description' => null, 'quantity' => 5.75, 'price' => 6000, 'discount_type' => 'fixed', 'discount' => 0, 'discount_val' => 0, 'tax' => 0, 'taxes' => [], 'total' => 34500],
         ], $payload['items']);
         self::assertSame([['entry_ids' => $this->ids($entries)]], $payload['groups']);
     }
@@ -208,7 +357,7 @@ final class BillingServiceTest extends TestCase
         $payload = $this->billing->prepare(self::COMPANY, $this->ids([$first, $second]), 'task');
 
         self::assertSame(
-            [['name' => 'Landing page', 'description' => null, 'quantity' => 1.5, 'price' => 8000, 'total' => 12000]],
+            [['name' => 'Landing page', 'description' => null, 'quantity' => 1.5, 'price' => 8000, 'discount_type' => 'fixed', 'discount' => 0, 'discount_val' => 0, 'tax' => 0, 'taxes' => [], 'total' => 12000]],
             $payload['items'],
         );
     }

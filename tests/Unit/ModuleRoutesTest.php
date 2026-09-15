@@ -66,6 +66,7 @@ final class ModuleRoutesTest extends TestCase
             ['DELETE', 'api/v1/tasks-projects/timer', 'tasks-projects.timer.destroy'],
             ['POST', 'api/v1/tasks-projects/timer/start', 'tasks-projects.timer.start'],
             ['POST', 'api/v1/tasks-projects/timer/stop', 'tasks-projects.timer.stop'],
+            ['GET', 'api/v1/tasks-projects/billing/customers', 'tasks-projects.billing.customers'],
             ['GET', 'api/v1/tasks-projects/billing/unbilled', 'tasks-projects.billing.unbilled'],
             ['POST', 'api/v1/tasks-projects/billing/prepare', 'tasks-projects.billing.prepare'],
             ['POST', 'api/v1/tasks-projects/billing/confirm', 'tasks-projects.billing.confirm'],
