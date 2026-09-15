@@ -156,13 +156,23 @@ export function isToday(date: Date): boolean {
 
 /** Seconds elapsed since an instant, never negative and never NaN. */
 export function secondsSince(instant: string | null): number {
+  return secondsBetween(instant, Date.now())
+}
+
+/**
+ * The same, measured against a caller-supplied instant.
+ *
+ * Every live clock on a screen reads one shared "now", so the rows tick
+ * together and one timer drives the whole page instead of one per row.
+ */
+export function secondsBetween(instant: string | null, now: number): number {
   const start = parseInstant(instant)
 
   if (start === null) {
     return 0
   }
 
-  return Math.max(0, Math.floor((Date.now() - start.getTime()) / 1000))
+  return Math.max(0, Math.floor((now - start.getTime()) / 1000))
 }
 
 function parseInstant(instant: string | null): Date | null {

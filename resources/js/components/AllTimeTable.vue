@@ -8,7 +8,6 @@ import { formatDate, toDateString } from '@/support/format'
 import { useTranslate } from '@/support/i18n'
 import { formatDuration, localDateOf } from '@/support/time'
 import type { CompanyMember } from '@/types/member'
-import type { Project } from '@/types/project'
 import type { TimeEntry, TimeEntryListParams } from '@/types/time-entry'
 
 type NotifyType = 'success' | 'error' | 'warning' | 'info'
@@ -31,7 +30,15 @@ const props = defineProps<{
   client: AxiosInstance
   notify: (type: NotifyType, message: string) => void
   members: CompanyMember[]
-  projects: Project[]
+  /**
+   * Who and what the screen above is filtered to.
+   *
+   * The member and project pickers live on the Tasks header now, shared by
+   * every view, so the table follows them rather than offering a second pair
+   * that could disagree with the first.
+   */
+  memberId: number | null
+  projectId: number | null
   /** Bumped by the page whenever an entry was saved elsewhere. */
   reloadToken: number
 }>()
@@ -46,48 +53,20 @@ const t = useTranslate()
 const tableRef = ref<{ refresh: (preservePage?: boolean) => void } | null>(null)
 
 const filters = reactive<{
-  memberId: number | null
-  projectId: number | null
   from: string
   to: string
   billing: BillingFilter
 }>({
-  memberId: null,
-  projectId: null,
   from: '',
   to: '',
   billing: 'ALL',
 })
-
-const memberOptions = computed<Option[]>(() => [
-  { id: 0, label: t('tasks_projects.time.filters.any_member') },
-  ...props.members.map((member) => ({ id: member.id, label: member.name })),
-])
-
-const projectOptions = computed<Option[]>(() => [
-  { id: 0, label: t('tasks_projects.time.filters.any_project') },
-  ...props.projects.map((project) => ({ id: project.id, label: project.name })),
-])
 
 const billingOptions = computed<Option[]>(() => [
   { id: 'ALL', label: t('tasks_projects.time.filters.all') },
   { id: 'BILLED', label: t('tasks_projects.time.billed') },
   { id: 'UNBILLED', label: t('tasks_projects.time.unbilled') },
 ])
-
-const memberOption = computed<Option>({
-  get: () => optionFor(memberOptions.value, filters.memberId ?? 0),
-  set: (option: Option) => {
-    filters.memberId = typeof option.id === 'number' && option.id > 0 ? option.id : null
-  },
-})
-
-const projectOption = computed<Option>({
-  get: () => optionFor(projectOptions.value, filters.projectId ?? 0),
-  set: (option: Option) => {
-    filters.projectId = typeof option.id === 'number' && option.id > 0 ? option.id : null
-  },
-})
 
 const billingOption = computed<Option>({
   get: () => optionFor(billingOptions.value, filters.billing),
@@ -119,6 +98,8 @@ const columns = computed(() => [
 
 watch(filters, () => refresh())
 
+watch([() => props.memberId, () => props.projectId], () => refresh())
+
 watch(() => props.reloadToken, () => refresh(true))
 
 function optionFor(options: Option[], id: number | BillingFilter): Option {
@@ -130,8 +111,6 @@ function refresh(preservePage = false): void {
 }
 
 function clearFilters(): void {
-  filters.memberId = null
-  filters.projectId = null
   filters.from = ''
   filters.to = ''
   filters.billing = 'ALL'
@@ -166,12 +145,12 @@ async function fetchEntries({ page }: { page: number }): Promise<{
 }> {
   const params: TimeEntryListParams = { page, limit: TIME_PAGE_SIZE }
 
-  if (filters.memberId !== null) {
-    params.user_id = filters.memberId
+  if (props.memberId !== null) {
+    params.user_id = props.memberId
   }
 
-  if (filters.projectId !== null) {
-    params.project_id = filters.projectId
+  if (props.projectId !== null) {
+    params.project_id = props.projectId
   }
 
   if (filters.from !== '') {
@@ -220,14 +199,6 @@ function paginationOf(
 <template>
   <section>
     <BaseFilterWrapper show row-on-xl class="mt-3" @clear="clearFilters">
-      <BaseInputGroup :label="t('tasks_projects.time.filters.member')" class="mt-2 flex-1">
-        <BaseSelectInput v-model="memberOption" :options="memberOptions" label-key="label" />
-      </BaseInputGroup>
-
-      <BaseInputGroup :label="t('tasks_projects.time.filters.project')" class="mt-2 flex-1">
-        <BaseSelectInput v-model="projectOption" :options="projectOptions" label-key="label" />
-      </BaseInputGroup>
-
       <BaseInputGroup :label="t('tasks_projects.time.filters.from')" class="mt-2 flex-1">
         <BaseDatePicker :model-value="filters.from" @update:model-value="onFrom" />
       </BaseInputGroup>

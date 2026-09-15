@@ -1,19 +1,28 @@
 <script setup lang="ts">
-import { computed, onBeforeUnmount, onMounted, reactive, ref, watch } from 'vue'
+import { computed, ref, watch } from 'vue'
 import type { AxiosInstance } from 'axios'
-import { listMembers, listProjects, sortParams } from '@/api'
+import { sortParams } from '@/api'
 import type { SortParams, TableSort } from '@/api'
-import { deleteTask, listTaskStatuses, listTasks } from '@/api/board'
+import { bulkTasks, deleteTask, listTasks } from '@/api/board'
 import type { TaskSortKey } from '@/api/board'
-import TaskDrawer from '@/components/TaskDrawer.vue'
-import type { TaskDefaults } from '@/components/TaskDrawer.vue'
+import BulkActionBar from '@/components/BulkActionBar.vue'
+import InvoicedBadge from '@/components/InvoicedBadge.vue'
+import TaskFormModal from '@/components/TaskFormModal.vue'
+import type { TaskDefaults } from '@/components/TaskFormModal.vue'
+import TaskRunControl from '@/components/TaskRunControl.vue'
+import { bumpTaskVersion, taskTime, taskVersion } from '@/stores/tasks'
 import { errorMessage } from '@/support/errors'
+import { filterKey, taskListParams } from '@/support/filters'
+import type { TaskFilterState } from '@/support/filters'
 import { formatDate, isOverdue } from '@/support/format'
 import { useTranslate } from '@/support/i18n'
+import { PATHS } from '@/support/page'
 import type { Notify } from '@/support/page'
+import { formatDuration } from '@/support/time'
 import type { SelectOption } from '@/types/board'
 import type { CompanyMember } from '@/types/member'
-import type { Task, TaskListParams, TaskPriority } from '@/types/task'
+import type { Project } from '@/types/project'
+import type { Task, TaskListParams } from '@/types/task'
 import type { TaskStatus } from '@/types/task-status'
 
 interface TablePagination {
@@ -28,14 +37,20 @@ interface TableResult {
   pagination: TablePagination
 }
 
-const props = defineProps<{
-  client: AxiosInstance
-  notify: Notify
-  /** Set on a project page: the list is fixed to it and so is a new task. */
-  projectId?: number | null
-  /** Show the search, status and assignee filters above the table. */
-  filterable?: boolean
-}>()
+const props = withDefaults(
+  defineProps<{
+    client: AxiosInstance
+    notify: Notify
+    /** What the screen above is filtered to. */
+    filters: TaskFilterState
+    statuses: TaskStatus[]
+    members: CompanyMember[]
+    projects: Project[]
+    /** Set on a project page: the list is fixed to it and so is a new task. */
+    projectId?: number | null
+  }>(),
+  { projectId: null },
+)
 
 const emit = defineEmits<{
   /** A task was created, changed or deleted, so any totals above are stale. */
@@ -43,13 +58,11 @@ const emit = defineEmits<{
 }>()
 
 const PER_PAGE = 10
-const SEARCH_DEBOUNCE_MS = 350
 
 /** Which API sort key each sortable column asks the endpoint for. */
 const SORT_KEYS: Record<string, TaskSortKey> = {
   number: 'number',
   name: 'name',
-  priority: 'priority',
   due_date: 'due_date',
 }
 
@@ -58,140 +71,84 @@ const t = useTranslate()
 const tableRef = ref<{ refresh: (preservePage?: boolean) => void } | null>(null)
 const isFetching = ref(true)
 const totalCount = ref(0)
-const statuses = ref<TaskStatus[]>([])
-const members = ref<CompanyMember[]>([])
-const projects = ref<SelectOption[]>([])
-const drawerOpen = ref(false)
+const rows = ref<Task[]>([])
+const selected = ref<number[]>([])
+const bulkBusy = ref(false)
+const modalOpen = ref(false)
 const editing = ref<Task | null>(null)
 const defaults = ref<TaskDefaults>({})
 const busyId = ref<number | null>(null)
 
-const filters = reactive<{ search: string; status: SelectOption | null; assignee: SelectOption | null }>({
-  search: '',
-  status: null,
-  assignee: null,
-})
-
-const statusOptions = computed<SelectOption[]>(() =>
-  statuses.value.map((status) => ({ id: status.id, label: status.name })),
+/** The form wants a picker's options; the screen above holds the records. */
+const projectOptions = computed<SelectOption[]>(() =>
+  props.projects.map((project) => ({ id: project.id, label: project.name })),
 )
 
-const memberOptions = computed<SelectOption[]>(() =>
-  members.value.map((member) => ({ id: member.id, label: member.name })),
+const filtered = computed<boolean>(
+  () =>
+    props.filters.search !== '' ||
+    props.filters.status !== '' ||
+    props.filters.user !== '' ||
+    (props.projectId === null && props.filters.project !== ''),
 )
 
-const hasFilters = computed(
-  () => filters.search.trim() !== '' || filters.status !== null || filters.assignee !== null,
-)
-
-const showEmptyScreen = computed(
-  () => !isFetching.value && totalCount.value === 0 && !hasFilters.value,
-)
+const showEmptyScreen = computed(() => !isFetching.value && totalCount.value === 0 && !filtered.value)
 
 const columns = computed(() => [
+  { key: 'select', label: '', sortable: false, tdClass: 'w-8' },
   { key: 'number', label: t('tasks_projects.tasks.columns.number'), sortable: true, sortBy: 'number', tdClass: 'text-muted' },
   { key: 'name', label: t('tasks_projects.tasks.columns.name'), sortable: true, sortBy: 'name', thClass: 'extra', tdClass: 'font-medium text-heading' },
   { key: 'status', label: t('tasks_projects.tasks.columns.status'), sortable: false },
   { key: 'assignee', label: t('tasks_projects.tasks.columns.assignee'), sortable: false },
-  { key: 'priority', label: t('tasks_projects.tasks.columns.priority'), sortable: true, sortBy: 'priority' },
+  { key: 'logged', label: t('tasks_projects.tasks.columns.logged'), sortable: false },
+  { key: 'unbilled', label: t('tasks_projects.tasks.columns.unbilled'), sortable: false },
+  { key: 'invoiced', label: t('tasks_projects.tasks.columns.invoiced'), sortable: false },
+  { key: 'timer', label: t('tasks_projects.tasks.columns.timer'), sortable: false },
   { key: 'due_date', label: t('tasks_projects.tasks.columns.due_date'), sortable: true, sortBy: 'due_date' },
   { key: 'actions', label: t('tasks_projects.general.actions'), sortable: false, tdClass: 'text-right text-sm font-medium' },
 ])
 
-/** Colours a priority the way the board does, so both screens read alike. */
-const PRIORITY_CLASS: Record<TaskPriority, string> = {
-  LOW: 'bg-surface-tertiary text-muted',
-  NORMAL: 'bg-primary-50 text-primary-500',
-  HIGH: 'bg-alert-warning-bg text-alert-warning-text',
-  URGENT: 'bg-alert-error-bg text-alert-error-text',
-}
+// The screen above owns the filters; a change to them is a new first page.
+watch(() => filterKey(props.filters), () => refresh())
 
-let searchTimer: ReturnType<typeof setTimeout> | undefined
+watch(() => props.projectId, () => refresh())
 
-watch(
-  () => filters.search,
-  () => {
-    clearTimeout(searchTimer)
-    searchTimer = setTimeout(() => refresh(), SEARCH_DEBOUNCE_MS)
-  },
-)
-
-watch([() => filters.status, () => filters.assignee, () => props.projectId], () => refresh())
-
-onMounted(() => {
-  void loadPickers()
-})
-
-onBeforeUnmount(() => clearTimeout(searchTimer))
-
-async function loadPickers(): Promise<void> {
-  try {
-    statuses.value = await listTaskStatuses(props.client)
-  } catch (error: unknown) {
-    props.notify('error', errorMessage(error, t('tasks_projects.task_statuses.load_failed')))
-  }
-
-  try {
-    members.value = await listMembers(props.client)
-  } catch (error: unknown) {
-    props.notify('error', errorMessage(error, t('tasks_projects.tasks.members_failed')))
-  }
-
-  if (props.projectId) {
-    return
-  }
-
-  try {
-    const response = await listProjects(props.client, {
-      limit: 100,
-      status: 'ACTIVE',
-      sort_by: 'name',
-    })
-
-    projects.value = response.data.map((project) => ({ id: project.id, label: project.name }))
-  } catch (error: unknown) {
-    props.notify('error', errorMessage(error, t('tasks_projects.tasks.projects_failed')))
-  }
-}
+// A write anywhere, including a timer that stopped on another screen.
+watch(taskVersion, () => refresh(true))
 
 async function fetchTasks({ page, sort }: { page: number; sort?: TableSort }): Promise<TableResult> {
   const order: SortParams<TaskSortKey> = sortParams(sort, SORT_KEYS)
-  const params: TaskListParams & SortParams<TaskSortKey> = { page, limit: PER_PAGE, ...order }
-
-  if (props.projectId) {
-    params.project_id = props.projectId
-  }
-
-  if (filters.status) {
-    params.task_status_id = filters.status.id
-  }
-
-  if (filters.assignee) {
-    params.assignee_id = filters.assignee.id
-  }
-
-  if (filters.search.trim() !== '') {
-    params.search = filters.search.trim()
+  const params: TaskListParams & SortParams<TaskSortKey> = {
+    page,
+    limit: PER_PAGE,
+    ...taskListParams(props.filters, { projectId: props.projectId }),
+    ...order,
   }
 
   isFetching.value = true
 
   try {
     const response = await listTasks(props.client, params)
+    const data = response.data ?? []
+    const meta = response.meta
 
-    totalCount.value = response.meta.total
+    totalCount.value = meta?.total ?? data.length
+    rows.value = data
+    // A row that left the page cannot stay in the selection the bar acts on.
+    selected.value = selected.value.filter((id) => data.some((task) => task.id === id))
 
     return {
-      data: response.data,
+      data,
       pagination: {
-        totalPages: response.meta.last_page,
-        currentPage: response.meta.current_page,
-        totalCount: response.meta.total,
-        limit: response.meta.per_page,
+        totalPages: meta?.last_page ?? 1,
+        currentPage: meta?.current_page ?? 1,
+        totalCount: meta?.total ?? data.length,
+        limit: meta?.per_page ?? PER_PAGE,
       },
     }
   } catch (error: unknown) {
     props.notify('error', errorMessage(error, t('tasks_projects.tasks.load_failed')))
+    rows.value = []
 
     return {
       data: [],
@@ -206,22 +163,34 @@ function refresh(preservePage = false): void {
   tableRef.value?.refresh(preservePage)
 }
 
-function clearFilters(): void {
-  filters.search = ''
-  filters.status = null
-  filters.assignee = null
+function isSelected(task: Task): boolean {
+  return selected.value.includes(task.id)
+}
+
+function toggle(task: Task): void {
+  selected.value = isSelected(task)
+    ? selected.value.filter((id) => id !== task.id)
+    : [...selected.value, task.id]
+}
+
+function selectPage(): void {
+  selected.value = rows.value.map((task) => task.id)
+}
+
+function clearSelection(): void {
+  selected.value = []
 }
 
 function openCreate(): void {
   editing.value = null
-  defaults.value = { project_id: props.projectId ?? null }
-  drawerOpen.value = true
+  defaults.value = { project_id: props.projectId }
+  modalOpen.value = true
 }
 
 function openEdit(task: Task): void {
   editing.value = task
   defaults.value = {}
-  drawerOpen.value = true
+  modalOpen.value = true
 }
 
 function onSaved(task: Task): void {
@@ -229,23 +198,23 @@ function onSaved(task: Task): void {
     ? t('tasks_projects.tasks.updated', { name: task.name })
     : t('tasks_projects.tasks.created', { name: task.name })
 
-  drawerOpen.value = false
+  modalOpen.value = false
   editing.value = null
   props.notify('success', message)
-  refresh(true)
+  bumpTaskVersion()
   emit('changed')
 }
 
 function onDeleted(task: Task): void {
-  drawerOpen.value = false
+  modalOpen.value = false
   editing.value = null
   props.notify('success', t('tasks_projects.tasks.deleted', { name: task.name }))
-  refresh(true)
+  bumpTaskVersion()
   emit('changed')
 }
 
 function statusFor(task: Task): TaskStatus | null {
-  return statuses.value.find((status) => status.id === task.task_status_id) ?? null
+  return props.statuses.find((status) => status.id === task.task_status_id) ?? null
 }
 
 function assigneeName(task: Task): string {
@@ -253,17 +222,11 @@ function assigneeName(task: Task): string {
     return t('tasks_projects.tasks.unassigned')
   }
 
-  const member = members.value.find((record) => record.id === task.assignee_id)
-
-  return member?.name ?? `#${task.assignee_id}`
+  return props.members.find((record) => record.id === task.assignee_id)?.name ?? `#${task.assignee_id}`
 }
 
-function priorityLabel(priority: TaskPriority): string {
-  return t(`tasks_projects.tasks.priority.${priority.toLowerCase()}`)
-}
-
-function priorityClass(priority: TaskPriority): string {
-  return PRIORITY_CLASS[priority]
+function loggedOf(task: Task): string {
+  return formatDuration(taskTime(task).logged_minutes)
 }
 
 async function onDelete(task: Task): Promise<void> {
@@ -276,7 +239,7 @@ async function onDelete(task: Task): Promise<void> {
   try {
     await deleteTask(props.client, task.id)
     props.notify('success', t('tasks_projects.tasks.deleted', { name: task.name }))
-    refresh(true)
+    bumpTaskVersion()
     emit('changed')
   } catch (error: unknown) {
     props.notify('error', errorMessage(error, t('tasks_projects.tasks.delete_failed')))
@@ -285,40 +248,78 @@ async function onDelete(task: Task): Promise<void> {
   }
 }
 
+async function onBulkStatus(statusId: number): Promise<void> {
+  await runBulk({ action: 'status', ids: [...selected.value], task_status_id: statusId }, 'applied')
+}
+
+async function onBulkDelete(): Promise<void> {
+  const count = selected.value.length
+
+  if (!window.confirm(t('tasks_projects.tasks.bulk.delete_confirm', { count }))) {
+    return
+  }
+
+  await runBulk({ action: 'delete', ids: [...selected.value] }, 'deleted')
+}
+
+/**
+ * Apply one bulk action and say what actually happened.
+ *
+ * The endpoint is partial on purpose, so a locked task in the selection is
+ * reported rather than swallowed: "12 updated, 2 refused" is the truth, and
+ * "done" would not be.
+ */
+async function runBulk(
+  input: Parameters<typeof bulkTasks>[1],
+  success: 'applied' | 'deleted',
+): Promise<void> {
+  if (bulkBusy.value || input.ids.length === 0) {
+    return
+  }
+
+  bulkBusy.value = true
+
+  try {
+    const result = await bulkTasks(props.client, input)
+
+    if (result.failed.length > 0) {
+      props.notify(
+        'warning',
+        t('tasks_projects.tasks.bulk.partial', {
+          count: result.updated,
+          failed: result.failed.length,
+        }),
+      )
+    } else if (result.updated === 0) {
+      props.notify('warning', t('tasks_projects.tasks.bulk.nothing'))
+    } else {
+      props.notify('success', t(`tasks_projects.tasks.bulk.${success}`, { count: result.updated }))
+    }
+
+    clearSelection()
+    bumpTaskVersion()
+    emit('changed')
+  } catch (error: unknown) {
+    props.notify('error', errorMessage(error, t('tasks_projects.tasks.bulk.failed')))
+  } finally {
+    bulkBusy.value = false
+  }
+}
+
 defineExpose({ openCreate, refresh })
 </script>
 
 <template>
   <div>
-    <BaseFilterWrapper v-if="filterable" :show="true" class="mt-3" @clear="clearFilters">
-      <BaseInputGroup :label="t('tasks_projects.general.search')" class="mt-2 flex-1">
-        <BaseInput
-          v-model="filters.search"
-          type="text"
-          name="search"
-          autocomplete="off"
-          :placeholder="t('tasks_projects.tasks.search_placeholder')"
-        />
-      </BaseInputGroup>
-
-      <BaseInputGroup :label="t('tasks_projects.tasks.columns.status')" class="mt-2 flex-1">
-        <BaseSelectInput
-          v-model="filters.status"
-          :options="statusOptions"
-          :placeholder="t('tasks_projects.tasks.all_tasks')"
-          label-key="label"
-        />
-      </BaseInputGroup>
-
-      <BaseInputGroup :label="t('tasks_projects.tasks.columns.assignee')" class="mt-2 flex-1">
-        <BaseSelectInput
-          v-model="filters.assignee"
-          :options="memberOptions"
-          :placeholder="t('tasks_projects.board.filters.all_assignees')"
-          label-key="label"
-        />
-      </BaseInputGroup>
-    </BaseFilterWrapper>
+    <BulkActionBar
+      :count="selected.length"
+      :statuses="statuses"
+      :busy="bulkBusy"
+      @status="onBulkStatus"
+      @delete="onBulkDelete"
+      @clear="clearSelection"
+      @select-page="selectPage"
+    />
 
     <BaseEmptyPlaceholder
       v-show="showEmptyScreen"
@@ -339,16 +340,24 @@ defineExpose({ openCreate, refresh })
 
     <div v-show="!showEmptyScreen" class="relative table-container">
       <BaseTable ref="tableRef" :data="fetchTasks" :columns="columns" class="mt-3">
+        <template #cell-select="{ row }">
+          <BaseCheckbox
+            :model-value="isSelected(row.data)"
+            :aria-label="row.data.name"
+            @change="toggle(row.data)"
+          />
+        </template>
+
         <template #cell-number="{ row }">#{{ row.data.number }}</template>
 
         <template #cell-name="{ row }">
-          <button type="button" class="text-left hover:text-primary-500" @click="openEdit(row.data)">
+          <router-link class="hover:text-primary-500" :to="PATHS.task(row.data.id)">
             {{ row.data.name }}
-          </button>
+          </router-link>
         </template>
 
         <template #cell-status="{ row }">
-          <span class="inline-flex items-center">
+          <span class="inline-flex items-center whitespace-nowrap">
             <span
               class="mr-2 inline-block h-2.5 w-2.5 shrink-0 rounded-full"
               :class="statusFor(row.data)?.colour ? '' : 'bg-line-default'"
@@ -368,15 +377,29 @@ defineExpose({ openCreate, refresh })
           </span>
         </template>
 
-        <template #cell-priority="{ row }">
-          <span
-            v-if="row.data.priority"
-            class="rounded-full px-2 py-0.5 text-xs font-medium"
-            :class="priorityClass(row.data.priority)"
-          >
-            {{ priorityLabel(row.data.priority) }}
-          </span>
+        <template #cell-logged="{ row }">
+          <span class="tabular-nums">{{ loggedOf(row.data) }}</span>
+        </template>
+
+        <template #cell-unbilled="{ row }">
+          <BaseFormatMoney
+            v-if="taskTime(row.data).unbilled_amount > 0"
+            :amount="taskTime(row.data).unbilled_amount"
+          />
           <span v-else class="text-subtle">-</span>
+        </template>
+
+        <template #cell-invoiced="{ row }">
+          <InvoicedBadge :state="taskTime(row.data).invoiced" />
+        </template>
+
+        <template #cell-timer="{ row }">
+          <TaskRunControl
+            :client="client"
+            :notify="notify"
+            :task="row.data"
+            :members="members"
+          />
         </template>
 
         <template #cell-due_date="{ row }">
@@ -402,6 +425,16 @@ defineExpose({ openCreate, refresh })
               {{ t('tasks_projects.general.edit') }}
             </BaseDropdownItem>
 
+            <!-- Invoicing arrives in its own slice; the entry stays visible so
+                 the menu does not change shape under people once it does. -->
+            <div
+              class="group flex cursor-not-allowed items-center px-4 py-2 text-sm font-normal text-subtle"
+              :title="t('tasks_projects.tasks.invoice_soon')"
+            >
+              <BaseIcon name="BanknotesIcon" class="mr-3 h-5 w-5 text-subtle" />
+              {{ t('tasks_projects.tasks.invoice_task') }}
+            </div>
+
             <BaseDropdownItem @click="onDelete(row.data)">
               <BaseIcon name="TrashIcon" class="mr-3 h-5 w-5 text-subtle group-hover:text-muted" />
               {{ t('tasks_projects.general.delete') }}
@@ -411,17 +444,18 @@ defineExpose({ openCreate, refresh })
       </BaseTable>
     </div>
 
-    <TaskDrawer
-      :show="drawerOpen"
+    <TaskFormModal
+      :show="modalOpen"
       :client="client"
       :notify="notify"
       :task="editing"
       :statuses="statuses"
       :members="members"
-      :projects="projects"
+      :projects="projectOptions"
       :defaults="defaults"
-      :lock-project="Boolean(projectId)"
-      @close="drawerOpen = false"
+      :lock-project="projectId !== null"
+      :compact="editing === null"
+      @close="modalOpen = false"
       @saved="onSaved"
       @deleted="onDeleted"
     />

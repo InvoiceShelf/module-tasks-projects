@@ -1,29 +1,32 @@
 <script setup lang="ts">
-import { computed, onMounted, ref } from 'vue'
+import { computed, onMounted, ref, watch } from 'vue'
 import type { AxiosInstance } from 'axios'
-import type { Router } from 'vue-router'
-import { listProjects } from '@/api'
-import { deleteTimeEntry, listTimeEntries, listTimeMembers } from '@/api/time'
+import { deleteTimeEntry, listTimeEntries } from '@/api/time'
 import AllTimeTable from '@/components/AllTimeTable.vue'
 import TimeEntryModal from '@/components/TimeEntryModal.vue'
 import WeekTimesheet from '@/components/WeekTimesheet.vue'
 import { refreshSession, session } from '@/stores/session'
-import { timerStore } from '@/stores/timer'
+import { bumpTaskVersion, taskVersion } from '@/stores/tasks'
 import { errorMessage } from '@/support/errors'
+import { idOf } from '@/support/filters'
+import type { TaskFilterState } from '@/support/filters'
 import { useTranslate } from '@/support/i18n'
+import type { Notify } from '@/support/page'
 import { formatLocalDate } from '@/support/time'
 import type { CompanyMember } from '@/types/member'
 import type { Project } from '@/types/project'
+import type { TaskStatus } from '@/types/task-status'
 import type { TimeEntry } from '@/types/time-entry'
 
-type NotifyType = 'success' | 'error' | 'warning' | 'info'
 type TimeTab = 'MINE' | 'ALL'
 
 const props = defineProps<{
   client: AxiosInstance
-  notify: (type: NotifyType, message: string) => void
-  /** The host router, for links out of the module. */
-  router: Router
+  notify: Notify
+  filters: TaskFilterState
+  statuses: TaskStatus[]
+  members: CompanyMember[]
+  projects: Project[]
 }>()
 
 /** How many rows the "can I see other members" probe asks for. */
@@ -33,8 +36,6 @@ const t = useTranslate()
 
 const tab = ref<TimeTab>('MINE')
 const canSeeAll = ref(false)
-const members = ref<CompanyMember[]>([])
-const projects = ref<Project[]>([])
 const modalOpen = ref(false)
 const editing = ref<TimeEntry | null>(null)
 const modalDate = ref(formatLocalDate(new Date()))
@@ -42,9 +43,24 @@ const reloadToken = ref(0)
 
 const weekStart = computed<number>(() => session.settings.week_start)
 
-const userId = computed<number | null>(() => session.userId)
+const projectId = computed<number | null>(() => idOf(props.filters.project))
+
+/**
+ * Whose week the grid shows.
+ *
+ * The member filter is the Tasks screen's, shared by all three views, so
+ * picking a colleague here is the same gesture as narrowing the list to them.
+ * With nobody picked it is the caller's own week, which is what a timesheet is
+ * for.
+ */
+const userId = computed<number | null>(() => idOf(props.filters.user) ?? session.userId)
 
 onMounted(() => void load())
+
+// Stopping a timer writes an entry into whichever day it belongs to.
+watch(taskVersion, () => {
+  reloadToken.value += 1
+})
 
 async function load(): Promise<void> {
   if (session.userId === null) {
@@ -52,10 +68,6 @@ async function load(): Promise<void> {
   }
 
   canSeeAll.value = session.settings.members_see_all_time || (await seesOtherMembers())
-
-  if (canSeeAll.value) {
-    await Promise.all([loadMembers(), loadProjects()])
-  }
 }
 
 /**
@@ -73,25 +85,6 @@ async function seesOtherMembers(): Promise<boolean> {
     return (response.data ?? []).some((entry) => entry.user_id !== session.userId)
   } catch {
     return false
-  }
-}
-
-async function loadMembers(): Promise<void> {
-  try {
-    members.value = await listTimeMembers(props.client)
-  } catch {
-    // The member filter falls back to ids; reading members needs view-project.
-    members.value = []
-  }
-}
-
-async function loadProjects(): Promise<void> {
-  try {
-    const response = await listProjects(props.client, { limit: 100, sort_by: 'name' })
-
-    projects.value = response.data ?? []
-  } catch {
-    projects.value = []
   }
 }
 
@@ -115,6 +108,7 @@ function onSaved(): void {
   editing.value = null
   props.notify('success', message)
   reloadToken.value += 1
+  bumpTaskVersion()
 }
 
 function onDeleted(): void {
@@ -122,6 +116,7 @@ function onDeleted(): void {
   editing.value = null
   props.notify('success', t('tasks_projects.time.deleted'))
   reloadToken.value += 1
+  bumpTaskVersion()
 }
 
 async function removeEntry(entry: TimeEntry): Promise<void> {
@@ -133,6 +128,7 @@ async function removeEntry(entry: TimeEntry): Promise<void> {
     await deleteTimeEntry(props.client, entry.id)
     props.notify('success', t('tasks_projects.time.deleted'))
     reloadToken.value += 1
+    bumpTaskVersion()
   } catch (error: unknown) {
     props.notify('error', errorMessage(error, t('tasks_projects.time.delete_failed')))
   }
@@ -146,46 +142,7 @@ function tabClass(value: TimeTab): string {
 </script>
 
 <template>
-  <BasePage>
-    <BasePageHeader :title="t('tasks_projects.time.title')">
-      <BaseBreadcrumb>
-        <BaseBreadcrumbItem :title="t('tasks_projects.general.home')" to="/admin/dashboard" />
-        <BaseBreadcrumbItem
-          :title="t('tasks_projects.projects.title')"
-          to="/admin/modules/tasks-projects"
-        />
-        <BaseBreadcrumbItem :title="t('tasks_projects.time.title')" to="#" active />
-      </BaseBreadcrumb>
-
-      <template #actions>
-        <div class="flex items-center justify-end space-x-5">
-          <span
-            v-if="timerStore.running !== null"
-            class="max-sm:hidden flex items-center gap-2 text-sm text-muted"
-          >
-            <BaseIcon name="ClockIcon" class="h-4 w-4 text-primary-500" />
-            {{ t('tasks_projects.timer.running') }}
-          </span>
-
-          <router-link to="/admin/modules/tasks-projects/billing">
-            <BaseButton variant="white">
-              <template #left="slotProps">
-                <BaseIcon name="BanknotesIcon" :class="slotProps.class" />
-              </template>
-              {{ t('tasks_projects.billing.invoice_time') }}
-            </BaseButton>
-          </router-link>
-
-          <BaseButton variant="primary" @click="openCreate()">
-            <template #left="slotProps">
-              <BaseIcon name="PlusIcon" :class="slotProps.class" />
-            </template>
-            {{ t('tasks_projects.time.add_entry') }}
-          </BaseButton>
-        </div>
-      </template>
-    </BasePageHeader>
-
+  <section>
     <nav v-if="canSeeAll" class="mt-4 flex gap-6 border-b border-line-default">
       <button
         type="button"
@@ -211,6 +168,7 @@ function tabClass(value: TimeTab): string {
       :client="client"
       :notify="notify"
       :user-id="userId"
+      :project-id="projectId"
       :week-start="weekStart"
       :reload-token="reloadToken"
       @add="openCreate"
@@ -222,7 +180,8 @@ function tabClass(value: TimeTab): string {
       :client="client"
       :notify="notify"
       :members="members"
-      :projects="projects"
+      :member-id="idOf(filters.user)"
+      :project-id="projectId"
       :reload-token="reloadToken"
       @edit="openEdit"
       @delete="removeEntry"
@@ -238,5 +197,5 @@ function tabClass(value: TimeTab): string {
       @saved="onSaved"
       @deleted="onDeleted"
     />
-  </BasePage>
+  </section>
 </template>

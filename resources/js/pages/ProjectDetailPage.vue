@@ -9,6 +9,7 @@ import { customerName, ensureLoaded } from '@/stores/customers'
 import { errorMessage } from '@/support/errors'
 import { formatDate } from '@/support/format'
 import { useTranslate } from '@/support/i18n'
+import { PATHS, ROUTES } from '@/support/page'
 import type { Notify } from '@/support/page'
 import type { Project, ProjectStatus } from '@/types/project'
 
@@ -26,7 +27,7 @@ const props = defineProps<{
   router: Router
 }>()
 
-const ROUTE = 'extension.page.tasks-projects.project'
+const ROUTE = ROUTES.project
 
 const t = useTranslate()
 
@@ -52,6 +53,15 @@ const tabs = computed<Tab[]>(() => [
 const currentRouteName = computed(() => String(props.router.currentRoute.value.name ?? ''))
 
 const title = computed(() => project.value?.name ?? t('tasks_projects.projects.title'))
+
+/**
+ * The board, opened on this project.
+ *
+ * The board lives under Tasks now and reads its project from the query string,
+ * which the Tasks screen shares with every view, so the link lands on the same
+ * screen a person would reach by picking the project there themselves.
+ */
+const boardLink = computed(() => ({ path: PATHS.board, query: { project: String(projectId.value) } }))
 
 /**
  * The contact name for the header, from the company-wide map rather than a
@@ -168,10 +178,7 @@ function statusLabel(status: ProjectStatus): string {
     <BasePageHeader :title="title">
       <BaseBreadcrumb>
         <BaseBreadcrumbItem :title="t('tasks_projects.general.home')" to="/admin/dashboard" />
-        <BaseBreadcrumbItem
-          :title="t('tasks_projects.projects.title')"
-          to="/admin/modules/tasks-projects"
-        />
+        <BaseBreadcrumbItem :title="t('tasks_projects.projects.title')" :to="PATHS.projects" />
         <BaseBreadcrumbItem :title="title" to="#" active />
       </BaseBreadcrumb>
 
@@ -198,7 +205,7 @@ function statusLabel(status: ProjectStatus): string {
 
       <template #actions>
         <div class="flex items-center justify-end space-x-5">
-          <router-link to="/admin/modules/tasks-projects/board">
+          <router-link :to="boardLink">
             <BaseButton variant="white">
               <template #left="slotProps">
                 <BaseIcon name="ViewColumnsIcon" :class="slotProps.class" />

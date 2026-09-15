@@ -28,20 +28,15 @@ const budgetPercent = computed(() => {
 })
 
 /**
- * Where the unbilled figure leads.
+ * Whether invoicing this project would mean anything.
  *
  * Only a project that belongs to a customer can be invoiced, and only when
- * something is waiting, so an internal project and a settled one both show the
- * amount without a way through. The customer rides along as a query parameter,
- * which the wizard reads to open on the right person.
+ * something is waiting, so an internal project and a settled one show the
+ * amount without offering the action.
  */
-const billingLink = computed<string | null>(() => {
-  const customerId = props.project?.customer_id ?? null
-
-  return customerId === null || (totals.value?.unbilled_amount ?? 0) <= 0
-    ? null
-    : `/admin/modules/tasks-projects/billing?customer_id=${customerId}`
-})
+const canInvoice = computed<boolean>(
+  () => props.project?.customer_id !== null && (totals.value?.unbilled_amount ?? 0) > 0,
+)
 
 const overBudgetMinutes = computed(() => {
   const budget = budgetMinutes.value
@@ -95,13 +90,20 @@ const overBudgetMinutes = computed(() => {
         <p class="mt-2 text-2xl font-semibold text-heading">
           <BaseFormatMoney :amount="totals.unbilled_amount" />
         </p>
-        <router-link
-          v-if="billingLink"
-          class="mt-1 block text-xs font-medium text-primary-500 hover:underline"
-          :to="billingLink"
+        <!-- Invoicing arrives in its own slice; the affordance is here so the
+             card does not change shape under people once it does. -->
+        <span
+          v-if="canInvoice"
+          class="mt-2 inline-flex"
+          :title="t('tasks_projects.project.invoice_soon')"
         >
-          {{ t('tasks_projects.billing.view_unbilled') }}
-        </router-link>
+          <BaseButton variant="primary-outline" size="sm" disabled>
+            <template #left="slotProps">
+              <BaseIcon name="BanknotesIcon" :class="slotProps.class" />
+            </template>
+            {{ t('tasks_projects.project.invoice_project') }}
+          </BaseButton>
+        </span>
       </div>
     </div>
 

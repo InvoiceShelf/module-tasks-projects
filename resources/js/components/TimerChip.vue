@@ -50,7 +50,8 @@ async function stop(): Promise<void> {
       <button
         type="button"
         class="hidden max-w-32 truncate hover:underline lg:block"
-        :aria-label="t('tasks_projects.timer.open_timesheet')"
+        :aria-label="t('tasks_projects.timer.open_task')"
+        :title="t('tasks_projects.timer.open_task')"
         @click="emit('open')"
       >
         {{ label }}

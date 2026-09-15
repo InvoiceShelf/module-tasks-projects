@@ -1,7 +1,7 @@
 import { reactive } from 'vue'
 import type { AxiosInstance } from 'axios'
 import { fetchCurrentUserId, fetchTimeSettings } from '@/api/time'
-import type { ModuleSettings } from '@/types/settings'
+import type { ModuleSettings, RoundingDirection } from '@/types/settings'
 
 /**
  * What the time screens need to know about the current session.
@@ -20,9 +20,19 @@ import type { ModuleSettings } from '@/types/settings'
 export const DEFAULT_SETTINGS: ModuleSettings = {
   default_rate: 0,
   rounding_minutes: 1,
+  rounding_direction: 'nearest',
   week_start: 1,
   members_see_all_time: false,
-  rounding_increments: [1, 6, 15, 30],
+  auto_start_tasks: false,
+  lock_invoiced_tasks: false,
+  hide_invoiced_on_board: false,
+  invoice_project_heading: false,
+  invoice_task_description: true,
+  invoice_entry_dates: true,
+  invoice_entry_times: false,
+  invoice_entry_hours: true,
+  invoice_entry_descriptions: false,
+  rounding_increments: [1, 5, 6, 15, 30, 60],
 }
 
 interface SessionState {
@@ -92,14 +102,53 @@ function normaliseSettings(settings: ModuleSettings | null): ModuleSettings {
   return {
     default_rate: numberOr(settings.default_rate, DEFAULT_SETTINGS.default_rate),
     rounding_minutes: numberOr(settings.rounding_minutes, DEFAULT_SETTINGS.rounding_minutes),
+    rounding_direction: directionOr(settings.rounding_direction),
     week_start: weekStartOr(settings.week_start),
     members_see_all_time: settings.members_see_all_time === true,
+    auto_start_tasks: flagOr(settings.auto_start_tasks, DEFAULT_SETTINGS.auto_start_tasks),
+    lock_invoiced_tasks: flagOr(settings.lock_invoiced_tasks, DEFAULT_SETTINGS.lock_invoiced_tasks),
+    hide_invoiced_on_board: flagOr(
+      settings.hide_invoiced_on_board,
+      DEFAULT_SETTINGS.hide_invoiced_on_board,
+    ),
+    invoice_project_heading: flagOr(
+      settings.invoice_project_heading,
+      DEFAULT_SETTINGS.invoice_project_heading,
+    ),
+    invoice_task_description: flagOr(
+      settings.invoice_task_description,
+      DEFAULT_SETTINGS.invoice_task_description,
+    ),
+    invoice_entry_dates: flagOr(settings.invoice_entry_dates, DEFAULT_SETTINGS.invoice_entry_dates),
+    invoice_entry_times: flagOr(settings.invoice_entry_times, DEFAULT_SETTINGS.invoice_entry_times),
+    invoice_entry_hours: flagOr(settings.invoice_entry_hours, DEFAULT_SETTINGS.invoice_entry_hours),
+    invoice_entry_descriptions: flagOr(
+      settings.invoice_entry_descriptions,
+      DEFAULT_SETTINGS.invoice_entry_descriptions,
+    ),
     rounding_increments: increments.length > 0 ? increments : DEFAULT_SETTINGS.rounding_increments,
   }
 }
 
 function numberOr(value: unknown, fallback: number): number {
   return typeof value === 'number' && Number.isFinite(value) ? value : fallback
+}
+
+/**
+ * A toggle the server sent, or the documented default.
+ *
+ * An older server omits these keys entirely, which is not the same answer as
+ * "off": a missing `invoice_task_description` still means the description is
+ * written, because that is what the module promises when nobody has chosen.
+ */
+function flagOr(value: unknown, fallback: boolean): boolean {
+  return typeof value === 'boolean' ? value : fallback
+}
+
+function directionOr(value: unknown): RoundingDirection {
+  return value === 'up' || value === 'down' || value === 'nearest'
+    ? value
+    : DEFAULT_SETTINGS.rounding_direction
 }
 
 function weekStartOr(value: unknown): number {

@@ -15,7 +15,7 @@ import {
   startOfWeek,
   weekDays,
 } from '@/support/time'
-import type { TimeEntry } from '@/types/time-entry'
+import type { TimeEntry, TimeEntryListParams } from '@/types/time-entry'
 
 type NotifyType = 'success' | 'error' | 'warning' | 'info'
 
@@ -33,6 +33,8 @@ const props = defineProps<{
   notify: (type: NotifyType, message: string) => void
   /** Whose week this is. Null while the host bootstrap has not answered. */
   userId: number | null
+  /** The project the screen above is filtered to, or null for all of them. */
+  projectId?: number | null
   /** 0 for Sunday through 6 for Saturday, from the module settings. */
   weekStart: number
   /** Bumped by the page whenever an entry was saved elsewhere. */
@@ -87,9 +89,11 @@ watch(
   },
 )
 
-watch([anchor, () => props.userId, () => props.reloadToken], () => void load(), {
-  immediate: true,
-})
+watch(
+  [anchor, () => props.userId, () => props.projectId, () => props.reloadToken],
+  () => void load(),
+  { immediate: true },
+)
 
 function totalOf(list: TimeEntry[]): number {
   return list.reduce((sum, entry) => sum + (entry.duration_minutes ?? 0), 0)
@@ -105,11 +109,17 @@ async function load(): Promise<void> {
   loading.value = true
 
   try {
-    const loaded = await listAllTimeEntries(props.client, {
+    const params: TimeEntryListParams = {
       user_id: props.userId,
       from: formatLocalDate(days.value[0]),
       to: formatLocalDate(days.value[days.value.length - 1]),
-    })
+    }
+
+    if (props.projectId) {
+      params.project_id = props.projectId
+    }
+
+    const loaded = await listAllTimeEntries(props.client, params)
 
     entries.value = loaded
     void ensureTaskNames(

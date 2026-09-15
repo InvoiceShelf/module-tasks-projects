@@ -19,7 +19,7 @@ const props = defineProps<{
 }>()
 
 const emit = defineEmits<{
-  (event: 'open-timesheet'): void
+  (event: 'open-week'): void
 }>()
 
 const SEARCH_DEBOUNCE_MS = 300
@@ -230,7 +230,7 @@ async function discard(): Promise<void> {
             <button
               type="button"
               class="text-xs text-primary-500 hover:underline"
-              @click="emit('open-timesheet')"
+              @click="emit('open-week')"
             >
               {{ t('tasks_projects.timer.open_timesheet') }}
             </button>

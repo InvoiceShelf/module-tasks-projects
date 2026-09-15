@@ -5,7 +5,14 @@ import type { Paginated, Wrapped } from '@/types/api'
 import type { BoardColumn, BoardParams } from '@/types/board'
 import type { Project } from '@/types/project'
 import type { ProjectMember, ProjectMemberInput } from '@/types/project-member'
-import type { Task, TaskInput, TaskListParams, TaskMoveInput } from '@/types/task'
+import type {
+  Task,
+  TaskBulkInput,
+  TaskBulkResult,
+  TaskInput,
+  TaskListParams,
+  TaskMoveInput,
+} from '@/types/task'
 import type { TaskStatus } from '@/types/task-status'
 import type { TimeEntry, TimeEntryListParams } from '@/types/time-entry'
 
@@ -20,6 +27,10 @@ export const BOARD_API = {
   tasks: `${BASE}/tasks`,
   task: (id: number): string => `${BASE}/tasks/${id}`,
   moveTask: (id: number): string => `${BASE}/tasks/${id}/move`,
+  startTask: (id: number): string => `${BASE}/tasks/${id}/start`,
+  stopTask: (id: number): string => `${BASE}/tasks/${id}/stop`,
+  taskTimeLog: (id: number): string => `${BASE}/tasks/${id}/time-log`,
+  bulkTasks: `${BASE}/tasks/bulk`,
   taskStatuses: `${BASE}/task-statuses`,
   timeEntries: `${BASE}/time-entries`,
   projectMembers: (projectId: number): string => `${BASE}/projects/${projectId}/members`,
@@ -71,6 +82,66 @@ export async function updateTask(
 
 export async function deleteTask(client: AxiosInstance, id: number): Promise<void> {
   await client.delete(BOARD_API.task(id))
+}
+
+/** One task with the time summary the list carries, for the task page. */
+export async function fetchTaskDetail(client: AxiosInstance, id: number): Promise<Task> {
+  const { data } = await client.get<Wrapped<Task>>(BOARD_API.task(id))
+
+  return data.data
+}
+
+/**
+ * Put the caller's clock on a task.
+ *
+ * Answers 409 `timer_already_running` when their timer is on another task,
+ * which is a question for the caller rather than a failure: the run control
+ * offers to stop the other one first.
+ */
+export async function startTask(
+  client: AxiosInstance,
+  id: number,
+  description: string | null = null,
+): Promise<TimeEntry> {
+  const body = description === null ? {} : { description }
+  const { data } = await client.post<Wrapped<TimeEntry>>(BOARD_API.startTask(id), body)
+
+  return data.data
+}
+
+/** Close the caller's running entry on a task. 409 `timer_mismatch` if it moved. */
+export async function stopTask(client: AxiosInstance, id: number): Promise<TimeEntry> {
+  const { data } = await client.post<Wrapped<TimeEntry>>(BOARD_API.stopTask(id))
+
+  return data.data
+}
+
+/**
+ * Every entry logged against one task, running first and then newest.
+ *
+ * A caller who may not see other members' time gets their own rows, so the
+ * grid renders either way and never has to ask which case it is in.
+ */
+export async function fetchTaskTimeLog(client: AxiosInstance, id: number): Promise<TimeEntry[]> {
+  const { data } = await client.get<Wrapped<TimeEntry[]>>(BOARD_API.taskTimeLog(id))
+
+  return data.data ?? []
+}
+
+/**
+ * Apply one action to a selection of tasks.
+ *
+ * The endpoint is partial by design: it reports how many it changed and names
+ * the ones it refused, so a locked task in the selection does not sink the
+ * rest of it.
+ */
+export async function bulkTasks(
+  client: AxiosInstance,
+  input: TaskBulkInput,
+): Promise<TaskBulkResult> {
+  const { data } = await client.post<TaskBulkResult>(BOARD_API.bulkTasks, input)
+
+  return { updated: data?.updated ?? 0, failed: data?.failed ?? [] }
 }
 
 /**
