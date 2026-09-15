@@ -27,6 +27,22 @@ const budgetPercent = computed(() => {
   return Math.min(100, Math.round((logged / budget) * 100))
 })
 
+/**
+ * Where the unbilled figure leads.
+ *
+ * Only a project that belongs to a customer can be invoiced, and only when
+ * something is waiting, so an internal project and a settled one both show the
+ * amount without a way through. The customer rides along as a query parameter,
+ * which the wizard reads to open on the right person.
+ */
+const billingLink = computed<string | null>(() => {
+  const customerId = props.project?.customer_id ?? null
+
+  return customerId === null || (totals.value?.unbilled_amount ?? 0) <= 0
+    ? null
+    : `/admin/modules/tasks-projects/billing?customer_id=${customerId}`
+})
+
 const overBudgetMinutes = computed(() => {
   const budget = budgetMinutes.value
   const logged = totals.value?.logged_minutes ?? 0
@@ -79,6 +95,13 @@ const overBudgetMinutes = computed(() => {
         <p class="mt-2 text-2xl font-semibold text-heading">
           <BaseFormatMoney :amount="totals.unbilled_amount" />
         </p>
+        <router-link
+          v-if="billingLink"
+          class="mt-1 block text-xs font-medium text-primary-500 hover:underline"
+          :to="billingLink"
+        >
+          {{ t('tasks_projects.billing.view_unbilled') }}
+        </router-link>
       </div>
     </div>
 

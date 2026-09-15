@@ -167,6 +167,15 @@ function tabClass(value: TimeTab): string {
             {{ t('tasks_projects.timer.running') }}
           </span>
 
+          <router-link to="/admin/modules/tasks-projects/billing">
+            <BaseButton variant="white">
+              <template #left="slotProps">
+                <BaseIcon name="BanknotesIcon" :class="slotProps.class" />
+              </template>
+              {{ t('tasks_projects.billing.invoice_time') }}
+            </BaseButton>
+          </router-link>
+
           <BaseButton variant="primary" @click="openCreate()">
             <template #left="slotProps">
               <BaseIcon name="PlusIcon" :class="slotProps.class" />
