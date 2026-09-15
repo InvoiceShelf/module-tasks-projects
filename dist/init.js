@@ -1307,7 +1307,7 @@ async function mr(e, t) {
 async function hr(e, t) {
 	let { data: n } = await e.post(ir.bulkTasks, t);
 	return {
-		updated: n?.updated ?? 0,
+		updated: n?.updated ?? [],
 		failed: n?.failed ?? []
 	};
 }
@@ -3679,9 +3679,10 @@ var K = {
 				try {
 					let n = await hr(d.client, e);
 					n.failed.length > 0 ? d.notify("warning", g("tasks_projects.tasks.bulk.partial", {
-						count: n.updated,
-						failed: n.failed.length
-					})) : n.updated === 0 ? d.notify("warning", g("tasks_projects.tasks.bulk.nothing")) : d.notify("success", g(`tasks_projects.tasks.bulk.${t}`, { count: n.updated })), ce(), V(), m("changed");
+						count: n.updated.length,
+						failed: n.failed.length,
+						ids: n.failed.map((e) => `#${e.id}`).join(", ")
+					})) : n.updated.length === 0 ? d.notify("warning", g("tasks_projects.tasks.bulk.nothing")) : d.notify("success", g(`tasks_projects.tasks.bulk.${t}`, { count: n.updated.length })), ce(), V(), m("changed");
 				} catch (e) {
 					d.notify("error", H(e, g("tasks_projects.tasks.bulk.failed")));
 				} finally {
@@ -5072,7 +5073,7 @@ var Gs = { en: { tasks_projects: {
 			delete_confirm: "Delete {count} tasks? Their time entries go with them.",
 			applied: "{count} tasks were updated.",
 			deleted: "{count} tasks were deleted.",
-			partial: "{count} tasks were updated, {failed} were refused.",
+			partial: "{count} tasks were updated, {failed} were refused: {ids}.",
 			nothing: "No task was changed.",
 			failed: "Unable to apply the change."
 		},
@@ -7840,174 +7841,181 @@ function jf(e) {
 }
 //#endregion
 //#region resources/js/components/QuickStartOverlay.vue?vue&type=script&setup=true&lang.ts
-var Mf = {
-	key: 0,
-	class: "fixed right-6 bottom-20 z-40 flex flex-col items-end gap-3"
-}, Nf = ["aria-label"], Pf = { class: "flex items-center justify-between border-b border-line-default px-4 py-3" }, Ff = { class: "text-sm font-semibold text-heading" }, If = ["aria-label"], Lf = {
+var Mf = ["aria-label"], Nf = { class: "flex items-center justify-between border-b border-line-default px-4 py-3" }, Pf = { class: "text-sm font-semibold text-heading" }, Ff = ["aria-label"], If = {
 	key: 0,
 	class: "space-y-4 px-4 py-4"
-}, Rf = { class: "truncate text-sm font-medium text-heading" }, zf = { class: "mt-1 text-2xl font-semibold tabular-nums text-primary-500" }, Bf = {
+}, Lf = { class: "truncate text-sm font-medium text-heading" }, Rf = { class: "mt-1 text-2xl font-semibold tabular-nums text-primary-500" }, zf = {
 	key: 0,
 	class: "mt-1 text-xs text-muted"
-}, Vf = { class: "flex items-center gap-2" }, Hf = {
+}, Bf = { class: "flex items-center gap-2" }, Vf = {
 	key: 1,
 	class: "space-y-3 px-4 py-4"
-}, Uf = { class: "block" }, Wf = { class: "sr-only" }, Gf = ["placeholder"], Kf = {
+}, Hf = { class: "block" }, Uf = { class: "sr-only" }, Wf = ["placeholder"], Gf = {
 	key: 0,
 	class: "text-xs text-muted"
-}, qf = {
+}, Kf = {
 	key: 1,
 	class: "max-h-48 space-y-1 overflow-y-auto"
-}, Jf = ["onClick"], Yf = {
+}, qf = ["onClick"], Jf = {
 	key: 2,
 	class: "text-xs text-muted"
-}, Xf = ["placeholder", "aria-label"], Zf = { class: "flex items-center justify-between" }, Qf = ["title", "aria-label"], $f = {
+}, Yf = ["placeholder", "aria-label"], Xf = { class: "flex items-center justify-between" }, Zf = ["title", "aria-label"], Qf = {
 	key: 0,
 	class: "tabular-nums"
-}, ep = 300, tp = /* @__PURE__ */ l({
+}, $f = "[aria-label=\"Open AI Assistant\"]", ep = "/admin/settings", tp = 300, np = /* @__PURE__ */ l({
 	__name: "QuickStartOverlay",
 	props: {
 		client: { type: [Function, Object] },
 		notify: { type: Function },
-		enabled: { type: Boolean }
+		enabled: { type: Boolean },
+		router: {}
 	},
 	emits: ["open-week"],
 	setup(l, { emit: u }) {
-		let d = l, p = u, h = B(), g = y(!1), v = y(""), T = y([]), A = y(!1), j = y(null), M = y(""), N, P = n(() => ({
+		let d = l, p = u, g = B(), v = y(!1), T = y(""), A = y([]), j = y(!1), M = y(null), N = y(""), P = y(window.location.pathname), F = y(!1), I, L, R = n(() => ({
 			notify: d.notify,
-			t: h
-		})), F = n(() => Ze(K.running?.task_id ?? null)), I = n(() => Na(K.elapsedSeconds));
+			t: g
+		})), z = n(() => Ze(K.running?.task_id ?? null)), ee = n(() => Na(K.elapsedSeconds)), te = n(() => P.value.startsWith(ep)), ne = n(() => F.value ? "bottom-36" : "bottom-20");
 		E(() => d.enabled, (e) => {
-			e || z();
-		}), E(g, (e) => {
-			e && K.running === null && L();
-		}), E(v, () => {
-			clearTimeout(N), N = setTimeout(() => void L(), ep);
-		}), m(() => clearTimeout(N));
-		async function L() {
-			A.value = !0;
+			e || ae();
+		}), h(() => {
+			P.value = d.router.currentRoute.value.path, L = d.router.afterEach((e) => {
+				P.value = e.path;
+			}), F.value = document.querySelector($f) !== null;
+		}), E(v, (e) => {
+			e && K.running === null && re();
+		}), E(T, () => {
+			clearTimeout(I), I = setTimeout(() => void re(), tp);
+		}), m(() => {
+			clearTimeout(I), L?.();
+		});
+		async function re() {
+			j.value = !0;
 			try {
-				let e = await Ve(d.client, v.value);
-				T.value = e, e.forEach(Qe);
+				let e = await Ve(d.client, T.value);
+				A.value = e, e.forEach(Qe);
 			} catch (e) {
-				T.value = [], d.notify("error", H(e, h("tasks_projects.time.tasks_failed")));
+				A.value = [], d.notify("error", H(e, g("tasks_projects.time.tasks_failed")));
 			} finally {
-				A.value = !1;
+				j.value = !1;
 			}
 		}
-		function R(e) {
-			j.value = e, Qe(e);
+		function ie(e) {
+			M.value = e, Qe(e);
 		}
-		function z() {
-			g.value = !1, v.value = "", T.value = [], j.value = null, M.value = "";
+		function ae() {
+			v.value = !1, T.value = "", A.value = [], M.value = null, N.value = "";
 		}
-		async function ee() {
-			let e = j.value;
-			e !== null && await K.start(d.client, e.id, M.value.trim() || null, P.value) !== null && (d.notify("success", h("tasks_projects.timer.started", { name: e.name })), z());
+		async function oe() {
+			let e = M.value;
+			e !== null && await K.start(d.client, e.id, N.value.trim() || null, R.value) !== null && (d.notify("success", g("tasks_projects.timer.started", { name: e.name })), ae());
 		}
-		async function te() {
-			let e = F.value, t = await K.stop(d.client, P.value);
-			t !== null && (d.notify("success", h("tasks_projects.timer.stopped", {
+		async function se() {
+			let e = z.value, t = await K.stop(d.client, R.value);
+			t !== null && (d.notify("success", g("tasks_projects.timer.stopped", {
 				name: e,
 				duration: Pa(t.duration_minutes)
-			})), z());
+			})), ae());
 		}
-		async function ne() {
-			window.confirm(h("tasks_projects.timer.discard_confirm")) && await K.discard(d.client, P.value) && (d.notify("success", h("tasks_projects.timer.discarded")), z());
+		async function ce() {
+			window.confirm(g("tasks_projects.timer.discard_confirm")) && await K.discard(d.client, R.value) && (d.notify("success", g("tasks_projects.timer.discarded")), ae());
 		}
 		return (n, u) => {
 			let d = x("BaseIcon"), m = x("BaseButton");
-			return _(), r(t, { to: "body" }, [l.enabled ? (_(), a("div", Mf, [g.value ? (_(), a("section", {
+			return _(), r(t, { to: "body" }, [l.enabled && !te.value ? (_(), a("div", {
+				key: 0,
+				class: f(["fixed right-6 z-40 flex flex-col items-end gap-3", ne.value])
+			}, [v.value ? (_(), a("section", {
 				key: 0,
 				class: "w-80 max-w-[calc(100vw-3rem)] rounded-xl border border-line-default bg-surface shadow-2xl",
-				"aria-label": C(h)("tasks_projects.timer.panel_title"),
-				onKeydown: k(z, ["esc"])
-			}, [o("header", Pf, [o("h2", Ff, S(C(h)("tasks_projects.timer.panel_title")), 1), o("button", {
+				"aria-label": C(g)("tasks_projects.timer.panel_title"),
+				onKeydown: k(ae, ["esc"])
+			}, [o("header", Nf, [o("h2", Pf, S(C(g)("tasks_projects.timer.panel_title")), 1), o("button", {
 				type: "button",
 				class: "rounded p-1 text-subtle hover:bg-hover hover:text-heading",
-				"aria-label": C(h)("tasks_projects.timer.close"),
-				onClick: z
+				"aria-label": C(g)("tasks_projects.timer.close"),
+				onClick: ae
 			}, [c(d, {
 				name: "XMarkIcon",
 				class: "h-5 w-5"
-			})], 8, If)]), C(K).running === null ? (_(), a("div", Hf, [
-				o("label", Uf, [o("span", Wf, S(C(h)("tasks_projects.timer.search_tasks")), 1), O(o("input", {
-					"onUpdate:modelValue": u[0] ||= (e) => v.value = e,
+			})], 8, Ff)]), C(K).running === null ? (_(), a("div", Vf, [
+				o("label", Hf, [o("span", Uf, S(C(g)("tasks_projects.timer.search_tasks")), 1), O(o("input", {
+					"onUpdate:modelValue": u[0] ||= (e) => T.value = e,
 					type: "search",
 					autocomplete: "off",
 					class: "w-full rounded-md border border-line-default bg-surface px-3 py-2 text-sm text-body outline-hidden focus:border-primary-400 focus:ring-1 focus:ring-primary-400",
-					placeholder: C(h)("tasks_projects.timer.search_tasks")
-				}, null, 8, Gf), [[w, v.value]])]),
-				A.value ? (_(), a("p", Kf, S(C(h)("tasks_projects.general.search")), 1)) : T.value.length > 0 ? (_(), a("ul", qf, [(_(!0), a(e, null, b(T.value, (e) => (_(), a("li", { key: e.id }, [o("button", {
+					placeholder: C(g)("tasks_projects.timer.search_tasks")
+				}, null, 8, Wf), [[w, T.value]])]),
+				j.value ? (_(), a("p", Gf, S(C(g)("tasks_projects.general.search")), 1)) : A.value.length > 0 ? (_(), a("ul", Kf, [(_(!0), a(e, null, b(A.value, (e) => (_(), a("li", { key: e.id }, [o("button", {
 					type: "button",
-					class: f(["w-full truncate rounded-md px-2 py-2 text-left text-sm hover:bg-hover", j.value?.id === e.id ? "bg-hover-strong font-medium text-heading" : "text-body"]),
-					onClick: (t) => R(e)
-				}, S(e.name), 11, Jf)]))), 128))])) : (_(), a("p", Yf, S(C(h)("tasks_projects.timer.no_tasks")), 1)),
+					class: f(["w-full truncate rounded-md px-2 py-2 text-left text-sm hover:bg-hover", M.value?.id === e.id ? "bg-hover-strong font-medium text-heading" : "text-body"]),
+					onClick: (t) => ie(e)
+				}, S(e.name), 11, qf)]))), 128))])) : (_(), a("p", Jf, S(C(g)("tasks_projects.timer.no_tasks")), 1)),
 				O(o("input", {
-					"onUpdate:modelValue": u[1] ||= (e) => M.value = e,
+					"onUpdate:modelValue": u[1] ||= (e) => N.value = e,
 					type: "text",
 					class: "w-full rounded-md border border-line-default bg-surface px-3 py-2 text-sm text-body outline-hidden focus:border-primary-400 focus:ring-1 focus:ring-primary-400",
-					placeholder: C(h)("tasks_projects.timer.description_placeholder"),
-					"aria-label": C(h)("tasks_projects.time.fields.description")
-				}, null, 8, Xf), [[w, M.value]]),
-				o("div", Zf, [o("button", {
+					placeholder: C(g)("tasks_projects.timer.description_placeholder"),
+					"aria-label": C(g)("tasks_projects.time.fields.description")
+				}, null, 8, Yf), [[w, N.value]]),
+				o("div", Xf, [o("button", {
 					type: "button",
 					class: "text-xs text-primary-500 hover:underline",
 					onClick: u[2] ||= (e) => p("open-week")
-				}, S(C(h)("tasks_projects.timer.open_timesheet")), 1), c(m, {
+				}, S(C(g)("tasks_projects.timer.open_timesheet")), 1), c(m, {
 					variant: "primary",
-					disabled: j.value === null || C(K).busy,
-					onClick: ee
+					disabled: M.value === null || C(K).busy,
+					onClick: oe
 				}, {
 					left: D((e) => [c(d, {
 						name: "PlayIcon",
 						class: f(e.class)
 					}, null, 8, ["class"])]),
-					default: D(() => [s(" " + S(C(h)("tasks_projects.timer.start")), 1)]),
+					default: D(() => [s(" " + S(C(g)("tasks_projects.timer.start")), 1)]),
 					_: 1
 				}, 8, ["disabled"])])
-			])) : (_(), a("div", Lf, [o("div", null, [
-				o("p", Rf, S(F.value), 1),
-				o("p", zf, S(I.value), 1),
-				C(K).running.description ? (_(), a("p", Bf, S(C(K).running.description), 1)) : i("", !0)
-			]), o("div", Vf, [c(m, {
+			])) : (_(), a("div", If, [o("div", null, [
+				o("p", Lf, S(z.value), 1),
+				o("p", Rf, S(ee.value), 1),
+				C(K).running.description ? (_(), a("p", zf, S(C(K).running.description), 1)) : i("", !0)
+			]), o("div", Bf, [c(m, {
 				variant: "primary",
 				disabled: C(K).busy,
-				onClick: te
+				onClick: se
 			}, {
 				left: D((e) => [c(d, {
 					name: "StopIcon",
 					class: f(e.class)
 				}, null, 8, ["class"])]),
-				default: D(() => [s(" " + S(C(h)("tasks_projects.timer.stop")), 1)]),
+				default: D(() => [s(" " + S(C(g)("tasks_projects.timer.stop")), 1)]),
 				_: 1
 			}, 8, ["disabled"]), c(m, {
 				variant: "primary-outline",
 				disabled: C(K).busy,
-				onClick: ne
+				onClick: ce
 			}, {
-				default: D(() => [s(S(C(h)("tasks_projects.timer.discard")), 1)]),
+				default: D(() => [s(S(C(g)("tasks_projects.timer.discard")), 1)]),
 				_: 1
-			}, 8, ["disabled"])])]))], 40, Nf)) : i("", !0), o("button", {
+			}, 8, ["disabled"])])]))], 40, Mf)) : i("", !0), o("button", {
 				type: "button",
 				class: "flex items-center gap-2 rounded-full bg-btn-primary px-4 py-3 text-sm font-medium text-white shadow-lg hover:bg-btn-primary-hover",
-				title: C(h)("tasks_projects.timer.quick_start"),
-				"aria-label": C(h)("tasks_projects.timer.quick_start"),
-				onClick: u[3] ||= (e) => g.value = !g.value
+				title: C(g)("tasks_projects.timer.quick_start"),
+				"aria-label": C(g)("tasks_projects.timer.quick_start"),
+				onClick: u[3] ||= (e) => v.value = !v.value
 			}, [c(d, {
 				name: C(K).running === null ? "ClockIcon" : "StopIcon",
 				class: "h-5 w-5 text-white"
-			}, null, 8, ["name"]), C(K).running === null ? i("", !0) : (_(), a("span", $f, S(I.value), 1))], 8, Qf)])) : i("", !0)]);
+			}, null, 8, ["name"]), C(K).running === null ? i("", !0) : (_(), a("span", Qf, S(ee.value), 1))], 8, Zf)], 2)) : i("", !0)]);
 		};
 	}
-}), np = {
+}), rp = {
 	key: 0,
 	class: "relative float-left m-0 ml-2"
-}, rp = ["title"], ip = ["aria-label", "title"], ap = { class: "font-medium tabular-nums" }, op = [
+}, ip = ["title"], ap = ["aria-label", "title"], op = { class: "font-medium tabular-nums" }, sp = [
 	"disabled",
 	"title",
 	"aria-label"
-], sp = /* @__PURE__ */ l({
+], cp = /* @__PURE__ */ l({
 	__name: "TimerChip",
 	props: {
 		client: { type: [Function, Object] },
@@ -8028,7 +8036,7 @@ var Mf = {
 		}
 		return (e, t) => {
 			let n = x("BaseIcon");
-			return C(K).running === null ? i("", !0) : (_(), a("li", np, [o("div", {
+			return C(K).running === null ? i("", !0) : (_(), a("li", rp, [o("div", {
 				class: "flex h-8 items-center gap-2 rounded-lg bg-white/20 px-2 text-sm text-white md:h-9 md:px-3",
 				title: C(l)("tasks_projects.timer.running")
 			}, [
@@ -8039,8 +8047,8 @@ var Mf = {
 					"aria-label": C(l)("tasks_projects.timer.open_task"),
 					title: C(l)("tasks_projects.timer.open_task"),
 					onClick: t[0] ||= (e) => s("open")
-				}, S(u.value), 9, ip),
-				o("span", ap, S(d.value), 1),
+				}, S(u.value), 9, ap),
+				o("span", op, S(d.value), 1),
 				o("button", {
 					type: "button",
 					class: "rounded p-1 hover:bg-white/20 disabled:opacity-50",
@@ -8051,11 +8059,11 @@ var Mf = {
 				}, [c(n, {
 					name: "StopIcon",
 					class: "h-4 w-4 text-white"
-				})], 8, op)
-			], 8, rp)]));
+				})], 8, sp)
+			], 8, ip)]));
 		};
 	}
-}), cp = { en: { tasks_projects: {
+}), lp = { en: { tasks_projects: {
 	time: {
 		title: "Time",
 		my_time: "My time",
@@ -8163,6 +8171,16 @@ var Mf = {
 		general_title: "General",
 		general_description: "The default hourly rate, the rounding increment, the first day of the week and who may see other members time.",
 		open_module_settings: "Open module settings",
+		default_rate: "Default rate / hour",
+		week_start: "First day of the week",
+		weekday_0: "Sunday",
+		weekday_1: "Monday",
+		weekday_2: "Tuesday",
+		weekday_3: "Wednesday",
+		weekday_4: "Thursday",
+		weekday_5: "Friday",
+		weekday_6: "Saturday",
+		members_see_all_time: "Members see other members' time",
 		behaviour_title: "Task behaviour",
 		behaviour_description: "What happens when a task is created, invoiced or shown on the board. Change these in the module settings form.",
 		rounding_direction: "Rounding",
@@ -8208,47 +8226,47 @@ var Mf = {
 		reorder_failed: "Unable to save the new order.",
 		forbidden: "Your role does not allow managing the board columns."
 	}
-} } }, lp = {
+} } }, up = {
 	key: 0,
 	class: "text-sm text-muted"
-}, up = { key: 1 }, dp = {
+}, dp = { key: 1 }, fp = {
 	key: 0,
 	class: "flex items-center gap-2 text-sm text-muted"
-}, fp = {
+}, pp = {
 	key: 1,
 	class: "text-sm text-muted"
-}, pp = {
+}, mp = {
 	key: 2,
 	class: "divide-y divide-line-light"
-}, mp = {
+}, hp = {
 	key: 0,
 	class: "space-y-3"
-}, hp = { class: "flex flex-wrap items-center gap-2" }, gp = ["aria-label", "onClick"], _p = { class: "flex flex-wrap items-center gap-6" }, vp = { class: "flex items-center gap-2 text-sm text-body" }, yp = { class: "flex items-center gap-2 text-sm text-body" }, bp = { class: "flex gap-3" }, xp = {
+}, gp = { class: "flex flex-wrap items-center gap-2" }, _p = ["aria-label", "onClick"], vp = { class: "flex flex-wrap items-center gap-6" }, yp = { class: "flex items-center gap-2 text-sm text-body" }, bp = { class: "flex items-center gap-2 text-sm text-body" }, xp = { class: "flex gap-3" }, Sp = {
 	key: 1,
 	class: "flex items-center gap-3"
-}, Sp = { class: "min-w-0 flex-1 truncate text-sm font-medium text-heading" }, Cp = { class: "flex items-center gap-1" }, wp = [
-	"disabled",
-	"title",
-	"aria-label",
-	"onClick"
-], Tp = [
+}, Cp = { class: "min-w-0 flex-1 truncate text-sm font-medium text-heading" }, wp = { class: "flex items-center gap-1" }, Tp = [
 	"disabled",
 	"title",
 	"aria-label",
 	"onClick"
 ], Ep = [
-	"title",
-	"aria-label",
-	"onClick"
-], Dp = [
 	"disabled",
 	"title",
 	"aria-label",
 	"onClick"
-], Op = {
+], Dp = [
+	"title",
+	"aria-label",
+	"onClick"
+], Op = [
+	"disabled",
+	"title",
+	"aria-label",
+	"onClick"
+], kp = {
 	key: 3,
 	class: "mt-4 space-y-3 rounded-lg border border-line-default p-3"
-}, kp = { class: "flex flex-wrap items-center gap-2" }, Ap = ["aria-label", "onClick"], jp = { class: "flex flex-wrap items-center gap-6" }, Mp = { class: "flex items-center gap-2 text-sm text-body" }, Np = { class: "flex items-center gap-2 text-sm text-body" }, Pp = { class: "flex gap-3" }, Fp = /* @__PURE__ */ l({
+}, Ap = { class: "flex flex-wrap items-center gap-2" }, jp = ["aria-label", "onClick"], Mp = { class: "flex flex-wrap items-center gap-6" }, Np = { class: "flex items-center gap-2 text-sm text-body" }, Pp = { class: "flex items-center gap-2 text-sm text-body" }, Fp = { class: "flex gap-3" }, Ip = /* @__PURE__ */ l({
 	__name: "TaskStatusEditor",
 	props: {
 		client: { type: [Function, Object] },
@@ -8341,10 +8359,10 @@ var Mf = {
 		}
 		return (t, n) => {
 			let l = x("BaseSpinner"), h = x("BaseInput"), v = x("BaseInputGroup"), y = x("BaseSwitch"), j = x("BaseButton"), F = x("BaseBadge"), z = x("BaseIcon");
-			return _(), a("div", null, [w.value ? (_(), a("p", lp, S(C(d)("tasks_projects.settings.forbidden")), 1)) : (_(), a("div", up, [g.value ? (_(), a("div", dp, [c(l, { class: "h-4 w-4 text-primary-500" })])) : A.value ? (_(), a("p", fp, S(C(d)("tasks_projects.settings.no_statuses")), 1)) : (_(), a("ul", pp, [(_(!0), a(e, null, b(m.value, (t, l) => (_(), a("li", {
+			return _(), a("div", null, [w.value ? (_(), a("p", up, S(C(d)("tasks_projects.settings.forbidden")), 1)) : (_(), a("div", dp, [g.value ? (_(), a("div", fp, [c(l, { class: "h-4 w-4 text-primary-500" })])) : A.value ? (_(), a("p", pp, S(C(d)("tasks_projects.settings.no_statuses")), 1)) : (_(), a("ul", mp, [(_(!0), a(e, null, b(m.value, (t, l) => (_(), a("li", {
 				key: t.id,
 				class: "py-3"
-			}, [E.value === t.id ? (_(), a("div", mp, [
+			}, [E.value === t.id ? (_(), a("div", hp, [
 				c(v, {
 					label: C(d)("tasks_projects.settings.status_name"),
 					required: ""
@@ -8358,30 +8376,30 @@ var Mf = {
 					_: 1
 				}, 8, ["label"]),
 				c(v, { label: C(d)("tasks_projects.settings.colour") }, {
-					default: D(() => [o("div", hp, [(_(), a(e, null, b(u, (e) => o("button", {
+					default: D(() => [o("div", gp, [(_(), a(e, null, b(u, (e) => o("button", {
 						key: e,
 						type: "button",
 						class: f(["h-7 w-7 rounded-full border-2 transition", k.colour === e ? "border-heading" : "border-line-default"]),
 						style: p({ backgroundColor: e }),
 						"aria-label": e,
 						onClick: (t) => k.colour = e
-					}, null, 14, gp)), 64)), o("button", {
+					}, null, 14, _p)), 64)), o("button", {
 						type: "button",
 						class: "rounded-md border border-line-default px-2 py-1 text-xs text-muted hover:bg-hover",
 						onClick: n[1] ||= (e) => k.colour = ""
 					}, S(C(d)("tasks_projects.settings.colour_none")), 1)])]),
 					_: 1
 				}, 8, ["label"]),
-				o("div", _p, [o("label", vp, [c(y, {
+				o("div", vp, [o("label", yp, [c(y, {
 					modelValue: k.is_default,
 					"onUpdate:modelValue": n[2] ||= (e) => k.is_default = e,
 					class: "flex"
-				}, null, 8, ["modelValue"]), s(" " + S(C(d)("tasks_projects.settings.is_default")), 1)]), o("label", yp, [c(y, {
+				}, null, 8, ["modelValue"]), s(" " + S(C(d)("tasks_projects.settings.is_default")), 1)]), o("label", bp, [c(y, {
 					modelValue: k.is_closed,
 					"onUpdate:modelValue": n[3] ||= (e) => k.is_closed = e,
 					class: "flex"
 				}, null, 8, ["modelValue"]), s(" " + S(C(d)("tasks_projects.settings.is_closed")), 1)])]),
-				o("div", bp, [c(j, {
+				o("div", xp, [c(j, {
 					variant: "primary",
 					size: "sm",
 					disabled: T.value,
@@ -8397,12 +8415,12 @@ var Mf = {
 					default: D(() => [s(S(C(d)("tasks_projects.general.cancel")), 1)]),
 					_: 1
 				})])
-			])) : (_(), a("div", xp, [
+			])) : (_(), a("div", Sp, [
 				o("span", {
 					class: f(["inline-block h-3 w-3 shrink-0 rounded-full", t.colour ? "" : "bg-line-default"]),
 					style: p(t.colour ? { backgroundColor: t.colour } : void 0)
 				}, null, 6),
-				o("span", Sp, S(t.name), 1),
+				o("span", Cp, S(t.name), 1),
 				t.is_default ? (_(), r(F, {
 					key: 0,
 					class: "rounded-full bg-primary-50! text-primary-500!"
@@ -8417,7 +8435,7 @@ var Mf = {
 					default: D(() => [s(S(C(d)("tasks_projects.settings.is_closed")), 1)]),
 					_: 1
 				})) : i("", !0),
-				o("div", Cp, [
+				o("div", wp, [
 					o("button", {
 						type: "button",
 						class: "rounded p-1 text-subtle hover:bg-hover hover:text-heading disabled:opacity-40",
@@ -8428,7 +8446,7 @@ var Mf = {
 					}, [c(z, {
 						name: "ChevronUpIcon",
 						class: "h-4 w-4"
-					})], 8, wp),
+					})], 8, Tp),
 					o("button", {
 						type: "button",
 						class: "rounded p-1 text-subtle hover:bg-hover hover:text-heading disabled:opacity-40",
@@ -8439,7 +8457,7 @@ var Mf = {
 					}, [c(z, {
 						name: "ChevronDownIcon",
 						class: "h-4 w-4"
-					})], 8, Tp),
+					})], 8, Ep),
 					o("button", {
 						type: "button",
 						class: "rounded p-1 text-subtle hover:bg-hover hover:text-heading",
@@ -8449,7 +8467,7 @@ var Mf = {
 					}, [c(z, {
 						name: "PencilIcon",
 						class: "h-4 w-4"
-					})], 8, Ep),
+					})], 8, Dp),
 					o("button", {
 						type: "button",
 						class: "rounded p-1 text-subtle hover:bg-hover hover:text-alert-error-text",
@@ -8460,9 +8478,9 @@ var Mf = {
 					}, [c(z, {
 						name: "TrashIcon",
 						class: "h-4 w-4"
-					})], 8, Dp)
+					})], 8, Op)
 				])
-			]))]))), 128))])), O.value ? (_(), a("div", Op, [
+			]))]))), 128))])), O.value ? (_(), a("div", kp, [
 				c(v, {
 					label: C(d)("tasks_projects.settings.status_name"),
 					required: ""
@@ -8476,26 +8494,26 @@ var Mf = {
 					_: 1
 				}, 8, ["label"]),
 				c(v, { label: C(d)("tasks_projects.settings.colour") }, {
-					default: D(() => [o("div", kp, [(_(), a(e, null, b(u, (e) => o("button", {
+					default: D(() => [o("div", Ap, [(_(), a(e, null, b(u, (e) => o("button", {
 						key: e,
 						type: "button",
 						class: f(["h-7 w-7 rounded-full border-2 transition", k.colour === e ? "border-heading" : "border-line-default"]),
 						style: p({ backgroundColor: e }),
 						"aria-label": e,
 						onClick: (t) => k.colour = e
-					}, null, 14, Ap)), 64))])]),
+					}, null, 14, jp)), 64))])]),
 					_: 1
 				}, 8, ["label"]),
-				o("div", jp, [o("label", Mp, [c(y, {
+				o("div", Mp, [o("label", Np, [c(y, {
 					modelValue: k.is_default,
 					"onUpdate:modelValue": n[5] ||= (e) => k.is_default = e,
 					class: "flex"
-				}, null, 8, ["modelValue"]), s(" " + S(C(d)("tasks_projects.settings.is_default")), 1)]), o("label", Np, [c(y, {
+				}, null, 8, ["modelValue"]), s(" " + S(C(d)("tasks_projects.settings.is_default")), 1)]), o("label", Pp, [c(y, {
 					modelValue: k.is_closed,
 					"onUpdate:modelValue": n[6] ||= (e) => k.is_closed = e,
 					class: "flex"
 				}, null, 8, ["modelValue"]), s(" " + S(C(d)("tasks_projects.settings.is_closed")), 1)])]),
-				o("div", Pp, [c(j, {
+				o("div", Fp, [c(j, {
 					variant: "primary",
 					size: "sm",
 					disabled: T.value,
@@ -8527,7 +8545,7 @@ var Mf = {
 			}))]))]);
 		};
 	}
-}), Ip = { class: "space-y-6" }, Lp = { class: "divide-y divide-line-light" }, Rp = { class: "text-sm text-muted" }, zp = { class: "text-sm font-medium text-heading" }, Bp = { class: "divide-y divide-line-light" }, Vp = { class: "text-sm text-muted" }, Hp = { class: "text-sm font-medium text-heading" }, Up = /* @__PURE__ */ l({
+}), Lp = { class: "space-y-6" }, Rp = { class: "divide-y divide-line-light" }, zp = { class: "text-sm text-muted" }, Bp = { class: "text-sm font-medium text-heading" }, Vp = { class: "divide-y divide-line-light" }, Hp = { class: "text-sm text-muted" }, Up = { class: "text-sm font-medium text-heading" }, Wp = { class: "divide-y divide-line-light" }, Gp = { class: "text-sm text-muted" }, Kp = { class: "text-sm font-medium text-heading" }, qp = /* @__PURE__ */ l({
 	__name: "TimeSettingsPage",
 	props: {
 		client: { type: [Function, Object] },
@@ -8540,6 +8558,22 @@ var Mf = {
 			return r(e ? "tasks_projects.settings.on" : "tasks_projects.settings.off");
 		}
 		let u = n(() => [
+			{
+				key: "default_rate",
+				label: r("tasks_projects.settings.default_rate"),
+				value: ot(i.value.default_rate)
+			},
+			{
+				key: "week_start",
+				label: r("tasks_projects.settings.week_start"),
+				value: r(`tasks_projects.settings.weekday_${i.value.week_start}`)
+			},
+			{
+				key: "members_see_all_time",
+				label: r("tasks_projects.settings.members_see_all_time"),
+				value: l(i.value.members_see_all_time)
+			}
+		]), d = n(() => [
 			{
 				key: "rounding_direction",
 				label: r("tasks_projects.settings.rounding_direction"),
@@ -8565,7 +8599,7 @@ var Mf = {
 				label: r("tasks_projects.settings.hide_invoiced_on_board"),
 				value: l(i.value.hide_invoiced_on_board)
 			}
-		]), d = n(() => [
+		]), p = n(() => [
 			"invoice_project_heading",
 			"invoice_task_description",
 			"invoice_entry_dates",
@@ -8578,14 +8612,14 @@ var Mf = {
 			value: l(i.value[e])
 		})));
 		return (n, i) => {
-			let l = x("BaseIcon"), p = x("BaseButton"), m = x("router-link"), h = x("BaseSettingCard");
-			return _(), a("div", Ip, [
-				c(h, {
+			let l = x("BaseIcon"), m = x("BaseButton"), h = x("router-link"), g = x("BaseSettingCard");
+			return _(), a("div", Lp, [
+				c(g, {
 					title: C(r)("tasks_projects.settings.general_title"),
 					description: C(r)("tasks_projects.settings.general_description")
 				}, {
-					action: D(() => [c(m, { to: C(W).settings }, {
-						default: D(() => [c(p, {
+					action: D(() => [c(h, { to: C(W).settings }, {
+						default: D(() => [c(m, {
 							variant: "primary-outline",
 							size: "sm"
 						}, {
@@ -8598,33 +8632,37 @@ var Mf = {
 						})]),
 						_: 1
 					}, 8, ["to"])]),
+					default: D(() => [o("dl", Rp, [(_(!0), a(e, null, b(u.value, (e) => (_(), a("div", {
+						key: e.key,
+						class: "flex justify-between gap-4 py-2.5"
+					}, [o("dt", zp, S(e.label), 1), o("dd", Bp, S(e.value), 1)]))), 128))])]),
 					_: 1
 				}, 8, ["title", "description"]),
-				c(h, {
+				c(g, {
 					title: C(r)("tasks_projects.settings.behaviour_title"),
 					description: C(r)("tasks_projects.settings.behaviour_description")
 				}, {
-					default: D(() => [o("dl", Lp, [(_(!0), a(e, null, b(u.value, (e) => (_(), a("div", {
+					default: D(() => [o("dl", Vp, [(_(!0), a(e, null, b(d.value, (e) => (_(), a("div", {
 						key: e.key,
 						class: "flex justify-between gap-4 py-2.5"
-					}, [o("dt", Rp, S(e.label), 1), o("dd", zp, S(e.value), 1)]))), 128))])]),
+					}, [o("dt", Hp, S(e.label), 1), o("dd", Up, S(e.value), 1)]))), 128))])]),
 					_: 1
 				}, 8, ["title", "description"]),
-				c(h, {
+				c(g, {
 					title: C(r)("tasks_projects.settings.invoice_title"),
 					description: C(r)("tasks_projects.settings.invoice_description")
 				}, {
-					default: D(() => [o("dl", Bp, [(_(!0), a(e, null, b(d.value, (e) => (_(), a("div", {
+					default: D(() => [o("dl", Wp, [(_(!0), a(e, null, b(p.value, (e) => (_(), a("div", {
 						key: e.key,
 						class: "flex justify-between gap-4 py-2.5"
-					}, [o("dt", Vp, S(e.label), 1), o("dd", Hp, S(e.value), 1)]))), 128))])]),
+					}, [o("dt", Gp, S(e.label), 1), o("dd", Kp, S(e.value), 1)]))), 128))])]),
 					_: 1
 				}, 8, ["title", "description"]),
-				c(h, {
+				c(g, {
 					title: C(r)("tasks_projects.settings.statuses_title"),
 					description: C(r)("tasks_projects.settings.statuses_description")
 				}, {
-					default: D(() => [c(Fp, {
+					default: D(() => [c(Ip, {
 						client: t.client,
 						notify: t.notify
 					}, null, 8, ["client", "notify"])]),
@@ -8636,8 +8674,8 @@ var Mf = {
 });
 //#endregion
 //#region resources/js/registrations/time.ts
-function Wp(e) {
-	e.addMessages(cp);
+function Jp(e) {
+	e.addMessages(lp);
 	let t = (t, n) => {
 		e.notify(t, n);
 	}, n = () => {
@@ -8650,18 +8688,19 @@ function Wp(e) {
 		id: `${U}.timer-chip`,
 		priority: 30,
 		visible: () => K.running !== null,
-		component: l({ setup: () => () => d(sp, {
+		component: l({ setup: () => () => d(cp, {
 			client: e.client,
 			notify: t,
 			onOpen: r
 		}) })
 	}), e.registerCompanyLayoutOverlay({
 		id: `${U}.quick-start`,
-		component: l({ setup: () => () => d(tp, {
+		component: l({ setup: () => () => d(np, {
 			key: xa.companySession,
 			client: e.client,
 			notify: t,
 			enabled: !xa.adminMode,
+			router: e.router,
 			onOpenWeek: n
 		}) })
 	}), e.registerCompanySettingsPage({
@@ -8670,28 +8709,28 @@ function Wp(e) {
 		icon: "ClockIcon",
 		path: U,
 		priority: 70,
-		component: sn(e, Up)
+		component: sn(e, qp)
 	}), e.on("bootstrap:completed", ({ adminMode: t }) => {
-		Gp(e, t);
+		Yp(e, t);
 	}), e.on("company:changing", () => {
-		Kp();
+		Xp();
 	}), e.on("company:changed", ({ companyId: t }) => {
-		Gp(e, t === null);
+		Yp(e, t === null);
 	});
 }
-async function Gp(e, t) {
+async function Yp(e, t) {
 	if (wa(t), t) {
-		Kp();
+		Xp();
 		return;
 	}
 	await Sa(e.client), await K.refresh(e.client);
 }
-function Kp() {
+function Xp() {
 	K.reset(), rt(), Ca();
 }
 //#endregion
 //#region resources/js/init.ts
 window.InvoiceShelf.booting((e, t, n) => {
-	n.addMessages(j), Af(n), Yo(n), Wp(n), nr(n), Ws(n);
+	n.addMessages(j), Af(n), Yo(n), Jp(n), nr(n), Ws(n);
 });
 //#endregion
