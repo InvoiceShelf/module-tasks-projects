@@ -323,7 +323,10 @@ async function remove(): Promise<void> {
 
           <!-- Invoicing arrives in its own slice; the button is here so the
                header does not change shape under people once it does. -->
-          <span :title="t('tasks_projects.tasks.invoice_soon')" class="inline-flex">
+          <span
+            :title="t('tasks_projects.tasks.invoice_soon')"
+            class="inline-flex cursor-not-allowed opacity-60"
+          >
             <BaseButton variant="white" disabled>
               <template #left="slotProps">
                 <BaseIcon name="BanknotesIcon" :class="slotProps.class" />

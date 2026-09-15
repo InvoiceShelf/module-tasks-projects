@@ -2,6 +2,7 @@
 import { computed, reactive, ref, watch } from 'vue'
 import type { AxiosInstance } from 'axios'
 import { createTask, deleteTask, updateTask } from '@/api/board'
+import { customerName, ensureLoaded } from '@/stores/customers'
 import { errorMessage, fieldErrors } from '@/support/errors'
 import { errorCode } from '@/support/http'
 import {
@@ -156,6 +157,12 @@ function reset(): void {
   customerId.value = task?.customer_id ?? null
   errors.value = {}
   expanded.value = false
+
+  // The field names the contact rather than its id, and the map is shared with
+  // every other screen, so the first form to need it is the one that asks.
+  if (customerId.value !== null) {
+    void ensureLoaded(props.client)
+  }
 }
 
 function onDueDate(value: string | Date): void {
@@ -306,7 +313,7 @@ async function remove(): Promise<void> {
             :label="t('tasks_projects.tasks.fields.customer')"
             :help-text="t('tasks_projects.tasks.fields.customer_help')"
           >
-            <BaseInput :model-value="`#${customerId}`" type="text" disabled />
+            <BaseInput :model-value="customerName(customerId)" type="text" disabled />
           </BaseInputGroup>
 
           <BaseInputGroup

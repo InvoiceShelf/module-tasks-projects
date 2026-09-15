@@ -65,7 +65,10 @@ watch(status, (option) => {
 
     <!-- Invoicing arrives in its own slice; the affordance is here so the bar
          does not move under people once it does. -->
-    <span :title="t('tasks_projects.tasks.invoice_soon')" class="inline-flex">
+    <span
+      :title="t('tasks_projects.tasks.invoice_soon')"
+      class="inline-flex cursor-not-allowed opacity-60"
+    >
       <BaseButton variant="primary-outline" size="sm" disabled>
         <template #left="slotProps">
           <BaseIcon name="BanknotesIcon" :class="slotProps.class" />
