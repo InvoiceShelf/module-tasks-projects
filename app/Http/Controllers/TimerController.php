@@ -7,6 +7,7 @@ namespace Modules\TasksProjects\Http\Controllers;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Modules\TasksProjects\Application\TimerService;
+use Modules\TasksProjects\Http\Requests\StartTaskTimerRequest;
 use Modules\TasksProjects\Http\Requests\StartTimerRequest;
 use Modules\TasksProjects\Http\Resources\TimeEntryResource;
 use Modules\TasksProjects\Support\Abilities;
@@ -17,6 +18,13 @@ use Modules\TasksProjects\Support\Authorizes;
  *
  * A second start is a conflict rather than a validation error, because the
  * first timer is still perfectly valid; the UI offers to stop it.
+ *
+ * The same timer is reachable two ways. `timer/start` and `timer/stop` name the
+ * task in the body and are what the timesheet and the header chip use; the
+ * `tasks/{id}/start` and `tasks/{id}/stop` pair below addresses the task in the
+ * URL, which is what a play button on a row or a card needs: it stops that task
+ * or nothing at all, so a stale row can never stop a clock the user has since
+ * moved elsewhere.
  */
 final class TimerController extends Controller
 {
@@ -59,6 +67,31 @@ final class TimerController extends Controller
         $this->authorize($context, Abilities::VIEW_OWN_TIME);
 
         return new TimeEntryResource($this->timer->stop($context->companyId, $context->userId));
+    }
+
+    /** Start the caller's clock on one task, straight from its row or card. */
+    public function startOnTask(StartTaskTimerRequest $request, int $id): TimeEntryResource
+    {
+        $context = $this->context($request);
+        $this->authorize($context, Abilities::VIEW_TASK);
+        $this->authorize($context, Abilities::VIEW_OWN_TIME);
+
+        return new TimeEntryResource($this->timer->start(
+            $context->companyId,
+            $context->userId,
+            $id,
+            $request->validated()['description'] ?? null,
+        ));
+    }
+
+    /** Stop the caller's clock, but only while it is running on this task. */
+    public function stopOnTask(Request $request, int $id): TimeEntryResource
+    {
+        $context = $this->context($request);
+        $this->authorize($context, Abilities::VIEW_TASK);
+        $this->authorize($context, Abilities::VIEW_OWN_TIME);
+
+        return new TimeEntryResource($this->timer->stopOn($context->companyId, $context->userId, $id));
     }
 
     /** Throw the running entry away without recording any time. */

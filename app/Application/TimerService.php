@@ -9,6 +9,7 @@ use Illuminate\Database\QueryException;
 use Illuminate\Support\Carbon;
 use Modules\TasksProjects\Application\Concerns\DetectsUniqueViolations;
 use Modules\TasksProjects\Application\Exceptions\TimerAlreadyRunning;
+use Modules\TasksProjects\Application\Exceptions\TimerMismatch;
 use Modules\TasksProjects\Models\Task;
 use Modules\TasksProjects\Models\TimeEntry;
 use Modules\TasksProjects\Support\ModuleSettings;
@@ -93,6 +94,7 @@ final class TimerService
         $entry->duration_minutes = Rounding::roundMinutes(
             max(0, (int) round($startedAt->diffInSeconds($endedAt, true) / 60)),
             $this->settings->roundingMinutes($companyId),
+            $this->settings->roundingDirection($companyId),
         );
 
         $task = $this->tasks->findForCompany($companyId, (int) $entry->task_id);
@@ -101,6 +103,31 @@ final class TimerService
         $entry->save();
 
         return $entry;
+    }
+
+    /**
+     * Stop the clock the caller is running on one particular task.
+     *
+     * Stopping is addressed to a task rather than to "whatever is running", so
+     * a stale row or a second tab cannot stop a timer the user has since moved
+     * elsewhere. Nothing running and something else running are the same
+     * mismatch to the caller, who reloads the timer either way.
+     *
+     * @throws TimerMismatch when the caller's timer is not on this task
+     */
+    public function stopOn(int $companyId, int $userId, int $taskId): TimeEntry
+    {
+        $task = $this->tasks->findForCompany($companyId, $taskId);
+        $running = $this->running($companyId, $userId);
+
+        if ($running === null || (int) $running->task_id !== (int) $task->id) {
+            throw TimerMismatch::forTask(
+                (int) $task->id,
+                $running === null ? null : (int) $running->task_id,
+            );
+        }
+
+        return $this->stop($companyId, $userId);
     }
 
     /** Throw away the running entry without recording any time. */
