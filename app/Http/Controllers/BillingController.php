@@ -30,11 +30,11 @@ final class BillingController extends Controller
     }
 
     /**
-     * Who has unbilled time, before the wizard asks for anyone's entries.
+     * Who has unbilled time, before anyone's entries are asked for.
      *
-     * One row per customer and currency, so the first step can be a list of
-     * people worth invoicing rather than a customer picker over the whole
-     * address book.
+     * One row per customer and currency, so the unbilled time page can open on
+     * a list of people worth invoicing rather than a customer picker over the
+     * whole address book.
      */
     public function customers(UnbilledCustomersRequest $request): JsonResponse
     {

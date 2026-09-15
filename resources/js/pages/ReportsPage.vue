@@ -251,6 +251,15 @@ function clearRange(): void {
               {{ t('tasks_projects.projects.title') }}
             </BaseButton>
           </router-link>
+
+          <router-link :to="PATHS.billing">
+            <BaseButton variant="primary-outline">
+              <template #left="slotProps">
+                <BaseIcon name="BanknotesIcon" :class="slotProps.class" />
+              </template>
+              {{ t('tasks_projects.billing.title') }}
+            </BaseButton>
+          </router-link>
         </div>
       </template>
     </BasePageHeader>

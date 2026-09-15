@@ -2,7 +2,8 @@
 
 The official Tasks, Projects and Time Tracking module for InvoiceShelf 3.x. It adds projects hung
 off a customer, tasks that move across a configurable Kanban board, time recorded by hand or by a
-running timer, and a billing wizard that turns unbilled hours into invoice lines.
+running timer, and invoicing that turns unbilled hours into a draft invoice from wherever the
+work is: a task, a selection of tasks, a whole project, or the unbilled time page.
 
 The module is `AGPL-3.0-only`.
 

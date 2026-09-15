@@ -26,6 +26,7 @@ export const PATHS = {
   projects: `${ROOT}/projects`,
   project: (id: number | string): string => `${ROOT}/projects/${id}`,
   reports: `${ROOT}/reports`,
+  billing: `${ROOT}/billing`,
   settings: '/admin/settings/modules',
   customer: (id: number): string => `/admin/customers/${id}/view`,
 } as const

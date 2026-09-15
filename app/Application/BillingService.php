@@ -101,7 +101,7 @@ final class BillingService
      * Which customers have unbilled billable time, and how much of it.
      *
      * The same rule `unbilled()` applies to one customer, applied to all of
-     * them at once: the wizard's first step needs to know who is worth opening
+     * them at once: the unbilled time page needs to know who is worth opening
      * before it asks for anyone's entries. A customer whose work spans two
      * currencies gets a row per currency, because money in two denominations
      * cannot be added up and `prepare()` refuses such a selection anyway.
@@ -163,7 +163,7 @@ final class BillingService
      * Every key the host's invoice writer reads is present, including the ones
      * this module never sets: a line carries its zeroed discount and tax fields
      * so `DocumentItemService::createItems` never reaches for a missing index,
-     * and `notes` and `template_name` are placeholders the wizard fills in from
+     * and `notes` and `template_name` are placeholders the browser fills in from
      * the company's own defaults before it posts.
      *
      * @param  'task'|'project'|'member'|'summary'  $grouping

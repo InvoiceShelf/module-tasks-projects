@@ -275,6 +275,15 @@ function statusLabel(status: ProjectStatus): string {
             </BaseButton>
           </router-link>
 
+          <router-link :to="PATHS.billing">
+            <BaseButton variant="white">
+              <template #left="slotProps">
+                <BaseIcon name="BanknotesIcon" :class="slotProps.class" />
+              </template>
+              {{ t('tasks_projects.billing.title') }}
+            </BaseButton>
+          </router-link>
+
           <BaseButton variant="primary-outline" @click="toggleFilter">
             {{ t('tasks_projects.general.filter') }}
             <template #right="slotProps">
