@@ -15,6 +15,13 @@ use InvoiceShelf\Modules\Contracts\Host\ModuleAuthorization;
 use InvoiceShelf\Modules\Contracts\Host\SettingsStore;
 use InvoiceShelf\Modules\InvoiceShelfModulesServiceProvider;
 use InvoiceShelf\Modules\Registry;
+use Modules\TasksProjects\Application\BoardOrderingService;
+use Modules\TasksProjects\Application\ProjectService;
+use Modules\TasksProjects\Application\TaskLock;
+use Modules\TasksProjects\Application\TaskNumberSequence;
+use Modules\TasksProjects\Application\TaskService;
+use Modules\TasksProjects\Application\TaskStatusService;
+use Modules\TasksProjects\Application\TaskTimeSummary;
 use Modules\TasksProjects\Http\DomainExceptionRenderer;
 use Modules\TasksProjects\Models\Project;
 use Modules\TasksProjects\Models\ProjectMember;
@@ -96,6 +103,18 @@ abstract class TestCase extends Orchestra
     protected function moduleSettings(): ModuleSettings
     {
         return new ModuleSettings($this->settings);
+    }
+
+    /** A TaskService wired with the collaborators the container gives it. */
+    protected function taskService(?TaskStatusService $statuses = null): TaskService
+    {
+        return new TaskService(
+            new TaskNumberSequence,
+            new BoardOrderingService,
+            $statuses ?? new TaskStatusService,
+            new ProjectService($this->companyData),
+            new TaskLock($this->moduleSettings(), new TaskTimeSummary),
+        );
     }
 
     /**

@@ -18,6 +18,18 @@ final class EntriesAlreadyInvoiced extends TasksProjectsException
         return self::forEntries([$entryId]);
     }
 
+    /**
+     * An edit that would move time an invoice was already raised for.
+     *
+     * @param  list<string>  $fields
+     */
+    public static function forLockedFields(int $entryId, array $fields): self
+    {
+        return new self(
+            "Time entry {$entryId} is already on an invoice: ".implode(', ', $fields).' cannot be changed.',
+        );
+    }
+
     public static function forOtherInvoice(int $entryId, int $invoiceId): self
     {
         return new self("Time entry {$entryId} is already stamped with invoice {$invoiceId}.");

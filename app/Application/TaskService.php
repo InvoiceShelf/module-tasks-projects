@@ -4,8 +4,10 @@ declare(strict_types=1);
 
 namespace Modules\TasksProjects\Application;
 
+use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Database\Eloquent\ModelNotFoundException;
+use Illuminate\Database\Query\Builder as QueryBuilder;
 use Illuminate\Database\QueryException;
 use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\DB;
@@ -47,10 +49,11 @@ final class TaskService
         private readonly BoardOrderingService $board,
         private readonly TaskStatusService $statuses,
         private readonly ProjectService $projects,
+        private readonly TaskLock $lock,
     ) {}
 
     /**
-     * @param  array{project_id?: int, assignee_id?: int, task_status_id?: int, customer_id?: int, due_before?: string, due_after?: string, search?: string, sort_by?: string, sort_order?: string}  $filters
+     * @param  array{project_id?: int, assignee_id?: int, task_status_id?: int, customer_id?: int, invoiced?: bool, due_before?: string, due_after?: string, search?: string, sort_by?: string, sort_order?: string}  $filters
      * @return Collection<int, Task>
      */
     public function listFor(int $companyId, array $filters = []): Collection
@@ -73,6 +76,10 @@ final class TaskService
 
         if (isset($filters['search']) && $filters['search'] !== '') {
             $query->where('name', 'like', '%'.$filters['search'].'%');
+        }
+
+        if (isset($filters['invoiced'])) {
+            $this->filterByInvoiced($query, $companyId, (bool) $filters['invoiced']);
         }
 
         $sorts = $this->sorts();
@@ -165,6 +172,7 @@ final class TaskService
     {
         return DB::transaction(function () use ($companyId, $id, $attributes): Task {
             $task = $this->findForCompany($companyId, $id);
+            $this->lock->guard($companyId, (int) $task->id);
 
             if (array_key_exists('project_id', $attributes)) {
                 $project = $attributes['project_id'] === null
@@ -201,6 +209,7 @@ final class TaskService
     {
         DB::transaction(function () use ($companyId, $id): void {
             $task = $this->findForCompany($companyId, $id);
+            $this->lock->guard($companyId, (int) $task->id);
 
             $invoiced = TimeEntry::query()
                 ->forCompany($companyId)
@@ -224,6 +233,7 @@ final class TaskService
     {
         return DB::transaction(function () use ($companyId, $taskId, $statusId, $beforeId, $afterId): Task {
             $task = $this->findForCompany($companyId, $taskId);
+            $this->lock->guard($companyId, (int) $task->id);
             $status = $this->statuses->findForCompany($companyId, $statusId);
 
             $position = $this->board->positionFor($companyId, (int) $status->id, $beforeId, $afterId);
@@ -248,6 +258,50 @@ final class TaskService
         }
 
         $task->closed_at = null;
+    }
+
+    /**
+     * Narrow the list to tasks whose billable time has, or has not, reached an
+     * invoice.
+     *
+     * The state belongs to the entries, so it is asked of them rather than
+     * cached on the task: uninvoiced means at least one billable entry is still
+     * unbilled, and invoiced means a stamped entry exists and no unbilled one
+     * does. Both are `exists` subqueries, which MySQL, PostgreSQL and SQLite
+     * all plan off the `(company_id, task_id)` index and all spell the same.
+     *
+     * @param  Builder<Task>  $query
+     */
+    private function filterByInvoiced(Builder $query, int $companyId, bool $invoiced): void
+    {
+        if (! $invoiced) {
+            $query->whereExists($this->billableEntries($companyId, stamped: false));
+
+            return;
+        }
+
+        $query->whereExists($this->billableEntries($companyId, stamped: true))
+            ->whereNotExists($this->billableEntries($companyId, stamped: false));
+    }
+
+    /** A correlated subquery over the stopped, billable entries of the task. */
+    private function billableEntries(int $companyId, bool $stamped): callable
+    {
+        $entries = (new TimeEntry)->getTable();
+        $tasks = (new Task)->getTable();
+
+        return static function (QueryBuilder $sub) use ($companyId, $stamped, $entries, $tasks): void {
+            $sub->selectRaw('1')
+                ->from($entries)
+                ->whereColumn($entries.'.task_id', $tasks.'.id')
+                ->where($entries.'.company_id', $companyId)
+                ->whereNull($entries.'.running_user_id')
+                ->where($entries.'.billable', true);
+
+            $stamped
+                ? $sub->whereNotNull($entries.'.invoice_id')
+                : $sub->whereNull($entries.'.invoice_id');
+        };
     }
 
     /** @param array<string, mixed> $attributes */

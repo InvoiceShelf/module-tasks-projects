@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Modules\TasksProjects\Tests\Feature;
 
+use Modules\TasksProjects\Application\Rounding;
 use Modules\TasksProjects\Models\TimeEntry;
 use Modules\TasksProjects\Support\Abilities;
 use Modules\TasksProjects\Support\Authorizes;
@@ -199,6 +200,94 @@ final class TimeEntriesApiTest extends TestCase
             ])
             ->assertCreated()
             ->assertJsonPath('data.user_id', self::OTHER_USER);
+    }
+
+    public function test_an_invoiced_entry_refuses_a_change_to_its_time_or_its_task(): void
+    {
+        $task = $this->taskOnProjectAt(6000);
+        $elsewhere = (int) $this->makeTask(self::COMPANY, ['name' => 'Another task'])->id;
+        $entry = $this->makeEntry(self::COMPANY, $task, ['invoice_id' => 77, 'invoice_item_id' => 88]);
+
+        $refused = [
+            ['duration_minutes' => 240],
+            ['started_at' => '2026-09-01 08:00:00'],
+            ['ended_at' => '2026-09-01 12:00:00'],
+            ['billable' => false],
+            ['task_id' => $elsewhere],
+        ];
+
+        foreach ($refused as $payload) {
+            $this->asCompany(self::COMPANY)
+                ->putJson('/api/v1/tasks-projects/time-entries/'.$entry->id, $payload)
+                ->assertStatus(422)
+                ->assertJsonPath('error', 'entries_already_invoiced');
+        }
+
+        $stored = TimeEntry::query()->findOrFail($entry->id);
+        self::assertSame(60, (int) $stored->duration_minutes);
+        self::assertSame(10000, (int) $stored->amount);
+        self::assertTrue((bool) $stored->billable);
+        self::assertSame($task, (int) $stored->task_id);
+    }
+
+    public function test_an_invoiced_entry_still_takes_a_new_description(): void
+    {
+        $task = $this->taskOnProjectAt(6000);
+        $entry = $this->makeEntry(self::COMPANY, $task, ['invoice_id' => 77, 'invoice_item_id' => 88]);
+
+        $this->asCompany(self::COMPANY)
+            ->putJson('/api/v1/tasks-projects/time-entries/'.$entry->id, ['description' => 'Typo fix'])
+            ->assertOk()
+            ->assertJsonPath('data.description', 'Typo fix')
+            ->assertJsonPath('data.duration_minutes', 60)
+            ->assertJsonPath('data.amount', 10000);
+    }
+
+    public function test_an_invoiced_entry_accepts_a_form_that_posts_its_own_values_back(): void
+    {
+        $task = $this->taskOnProjectAt(6000);
+        $entry = $this->makeEntry(self::COMPANY, $task, ['invoice_id' => 77, 'invoice_item_id' => 88]);
+
+        $this->asCompany(self::COMPANY)
+            ->putJson('/api/v1/tasks-projects/time-entries/'.$entry->id, [
+                'task_id' => $task,
+                'started_at' => $entry->started_at->toIso8601String(),
+                'ended_at' => $entry->ended_at->toIso8601String(),
+                'duration_minutes' => 60,
+                'billable' => true,
+                'description' => 'Same row, new note',
+            ])
+            ->assertOk()
+            ->assertJsonPath('data.description', 'Same row, new note');
+    }
+
+    public function test_the_company_rounding_direction_is_applied_when_the_entry_is_saved(): void
+    {
+        $this->settings->putCompany(self::COMPANY, ModuleSettings::PREFIX.'rounding_minutes', 15);
+        $this->settings->putCompany(self::COMPANY, ModuleSettings::PREFIX.'rounding_direction', Rounding::DOWN);
+        $task = $this->taskOnProjectAt(6000);
+
+        $this->asCompany(self::COMPANY)
+            ->postJson('/api/v1/tasks-projects/time-entries', [
+                'task_id' => $task,
+                'started_at' => '2026-09-15 09:00:00',
+                'ended_at' => '2026-09-15 09:20:00',
+            ])
+            ->assertCreated()
+            ->assertJsonPath('data.duration_minutes', 15)
+            ->assertJsonPath('data.amount', 1500);
+
+        $this->settings->putCompany(self::COMPANY, ModuleSettings::PREFIX.'rounding_direction', Rounding::UP);
+
+        $this->asCompany(self::COMPANY)
+            ->postJson('/api/v1/tasks-projects/time-entries', [
+                'task_id' => $task,
+                'started_at' => '2026-09-15 09:00:00',
+                'ended_at' => '2026-09-15 09:20:00',
+            ])
+            ->assertCreated()
+            ->assertJsonPath('data.duration_minutes', 30)
+            ->assertJsonPath('data.amount', 3000);
     }
 
     public function test_an_invoiced_entry_cannot_be_deleted(): void

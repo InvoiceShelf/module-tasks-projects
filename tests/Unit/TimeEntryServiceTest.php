@@ -5,13 +5,8 @@ declare(strict_types=1);
 namespace Modules\TasksProjects\Tests\Unit;
 
 use Illuminate\Database\Eloquent\ModelNotFoundException;
-use Modules\TasksProjects\Application\BoardOrderingService;
 use Modules\TasksProjects\Application\Exceptions\EntriesAlreadyInvoiced;
-use Modules\TasksProjects\Application\ProjectService;
 use Modules\TasksProjects\Application\RateResolver;
-use Modules\TasksProjects\Application\TaskNumberSequence;
-use Modules\TasksProjects\Application\TaskService;
-use Modules\TasksProjects\Application\TaskStatusService;
 use Modules\TasksProjects\Application\TimeEntryService;
 use Modules\TasksProjects\Models\Project;
 use Modules\TasksProjects\Models\TimeEntry;
@@ -33,7 +28,7 @@ final class TimeEntryServiceTest extends TestCase
         $this->entries = new TimeEntryService(
             new RateResolver,
             $this->moduleSettings(),
-            new TaskService(new TaskNumberSequence, new BoardOrderingService, new TaskStatusService, new ProjectService($this->companyData)),
+            $this->taskService(),
         );
     }
 
