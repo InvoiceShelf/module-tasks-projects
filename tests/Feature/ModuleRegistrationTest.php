@@ -6,14 +6,16 @@ namespace Modules\TasksProjects\Tests\Feature;
 
 use InvoiceShelf\Modules\Contracts\Host\SettingsStore;
 use InvoiceShelf\Modules\Registry;
+use Modules\TasksProjects\Application\Rounding;
 use Modules\TasksProjects\Lifecycle\DataCleanup;
 use Modules\TasksProjects\Support\Abilities;
 use Modules\TasksProjects\Support\ModuleRegistration;
+use Modules\TasksProjects\Support\ModuleSettings;
 use Modules\TasksProjects\Tests\TestCase;
 
 final class ModuleRegistrationTest extends TestCase
 {
-    public function test_it_registers_a_local_script_style_sidebar_entry_and_settings_schema(): void
+    public function test_it_registers_a_local_script_and_style(): void
     {
         $modulePath = dirname(__DIR__, 2);
 
@@ -21,28 +23,104 @@ final class ModuleRegistrationTest extends TestCase
 
         self::assertSame(realpath($modulePath.'/dist/init.js'), Registry::scriptFor('tasks-projects'));
         self::assertSame(realpath($modulePath.'/dist/style.css'), Registry::styleFor('tasks-projects'));
+    }
+
+    public function test_it_registers_projects_and_tasks_as_two_entries_of_the_core_main_group(): void
+    {
+        ModuleRegistration::register(dirname(__DIR__, 2));
 
         self::assertSame([
-            'group' => 'modules',
-            'group_label' => 'navigation.modules',
-            'priority' => 10,
-            'title' => 'tasksprojects::menu.title',
+            'group' => 'main',
+            'group_label' => '',
+            'priority' => 40,
+            'title' => 'tasksprojects::menu.projects',
+            'link' => '/admin/modules/tasks-projects/projects',
+            'icon' => 'FolderIcon',
+        ], Registry::menuFor('tasks-projects'));
+
+        self::assertSame([
+            'group' => 'main',
+            'group_label' => '',
+            'priority' => 50,
+            'title' => 'tasksprojects::menu.tasks',
             'link' => '/admin/modules/tasks-projects',
             'icon' => 'ClipboardDocumentListIcon',
-        ], Registry::menuFor('tasks-projects'));
+        ], Registry::menuFor('tasks-projects.tasks'));
+
+        // The primary slug still answers, which is what the host's module page
+        // lookup uses; the second key only ever adds a row to the sidebar.
+        self::assertSame(
+            ['tasks-projects', 'tasks-projects.tasks'],
+            array_keys(Registry::allMenu()),
+        );
+    }
+
+    public function test_the_menu_titles_are_translation_keys_that_exist(): void
+    {
+        $menu = require dirname(__DIR__, 2).'/lang/en/menu.php';
+
+        self::assertSame('Projects', $menu['projects']);
+        self::assertSame('Tasks', $menu['tasks']);
+        self::assertArrayHasKey('title', $menu, 'The original key stays for compatibility.');
+    }
+
+    public function test_the_settings_schema_covers_every_stored_key(): void
+    {
+        ModuleRegistration::register(dirname(__DIR__, 2));
+
+        $settings = Registry::settingsFor('tasks-projects');
+
+        self::assertNotNull($settings);
+
+        $fields = array_column($settings->fields(), null, 'key');
+
+        self::assertSame([
+            'default_rate',
+            'rounding_minutes',
+            'rounding_direction',
+            'week_start',
+            'members_see_all_time',
+            'auto_start_tasks',
+            'lock_invoiced_tasks',
+            'hide_invoiced_on_board',
+            'invoice_project_heading',
+            'invoice_task_description',
+            'invoice_entry_dates',
+            'invoice_entry_times',
+            'invoice_entry_hours',
+            'invoice_entry_descriptions',
+        ], array_keys($fields));
+
+        self::assertSame(0, $fields['default_rate']['default']);
+        self::assertSame(
+            ['1' => '1', '5' => '5', '6' => '6', '15' => '15', '30' => '30', '60' => '60'],
+            $fields['rounding_minutes']['options'],
+        );
+        self::assertSame(ModuleSettings::DEFAULT_ROUNDING_MINUTES, $fields['rounding_minutes']['default']);
+        self::assertSame(Rounding::NEAREST, $fields['rounding_direction']['default']);
+        self::assertSame(
+            ['nearest', 'up', 'down'],
+            array_keys($fields['rounding_direction']['options']),
+        );
+        self::assertSame(ModuleSettings::DEFAULT_WEEK_START, $fields['week_start']['default']);
+
+        foreach (ModuleSettings::FLAGS as $key => $default) {
+            self::assertSame('switch', $fields[$key]['type'], "Setting {$key} is not a switch.");
+            self::assertSame($default, $fields[$key]['default'], "Setting {$key} has the wrong default.");
+        }
+    }
+
+    public function test_the_schema_and_the_cleanup_keys_never_drift_apart(): void
+    {
+        ModuleRegistration::register(dirname(__DIR__, 2));
 
         $settings = Registry::settingsFor('tasks-projects');
 
         self::assertNotNull($settings);
         self::assertSame(
-            ['default_rate', 'rounding_minutes', 'week_start', 'members_see_all_time'],
             array_column($settings->fields(), 'key'),
+            DataCleanup::settingKeys(),
         );
-        self::assertSame(0, $settings->fields()[0]['default']);
-        self::assertSame(1, $settings->fields()[1]['default']);
-        self::assertSame(['1' => '1', '6' => '6', '15' => '15', '30' => '30'], $settings->fields()[1]['options']);
-        self::assertSame(1, $settings->fields()[2]['default']);
-        self::assertFalse($settings->fields()[3]['default']);
     }
 
     public function test_it_contributes_the_whole_ability_catalogue_namespaced_by_slug(): void
@@ -84,14 +162,14 @@ final class ModuleRegistrationTest extends TestCase
         ], array_column($abilities, 'name'));
     }
 
-    public function test_billing_depends_on_seeing_all_time_and_on_the_host_invoice_ability(): void
+    public function test_billing_depends_on_seeing_all_time_and_on_both_host_invoice_abilities(): void
     {
         ModuleRegistration::register(dirname(__DIR__, 2));
 
         $abilities = array_column(Registry::abilitiesFor(Abilities::SLUG), 'depends_on', 'ability');
 
         self::assertSame(
-            ['tasks-projects:view-all-time', 'create-invoice'],
+            ['tasks-projects:view-all-time', 'create-invoice', 'edit-invoice'],
             $abilities['tasks-projects:invoice-tasks'],
         );
         self::assertSame(
@@ -137,15 +215,14 @@ final class ModuleRegistrationTest extends TestCase
         $cleanup->cleanup();
         $cleanup->cleanup();
 
-        self::assertSame([
-            'module.tasks-projects.default_rate',
-            'module.tasks-projects.rounding_minutes',
-            'module.tasks-projects.week_start',
-            'module.tasks-projects.members_see_all_time',
-            'module.tasks-projects.default_rate',
-            'module.tasks-projects.rounding_minutes',
-            'module.tasks-projects.week_start',
-            'module.tasks-projects.members_see_all_time',
-        ], $settings->removedCompanyKeys);
+        $expected = array_map(
+            static fn (string $key): string => ModuleSettings::PREFIX.$key,
+            DataCleanup::settingKeys(),
+        );
+
+        self::assertSame([...$expected, ...$expected], $settings->removedCompanyKeys);
+        self::assertContains(ModuleSettings::PREFIX.'rounding_direction', $settings->removedCompanyKeys);
+        self::assertContains(ModuleSettings::PREFIX.'lock_invoiced_tasks', $settings->removedCompanyKeys);
+        self::assertContains(ModuleSettings::PREFIX.'invoice_entry_hours', $settings->removedCompanyKeys);
     }
 }
