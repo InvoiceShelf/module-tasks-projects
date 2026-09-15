@@ -1,6 +1,8 @@
 import { defineComponent, h } from 'vue'
 import type { InvoiceShelfExtensionApi } from '@invoiceshelf/modules/frontend'
 import QuickStartOverlay from '@/components/QuickStartOverlay.vue'
+import StartTimerModal from '@/components/StartTimerModal.vue'
+import StopTimerModal from '@/components/StopTimerModal.vue'
 import TimerChip from '@/components/TimerChip.vue'
 import { timeMessages } from '@/messages/time'
 import TimeSettingsPage from '@/pages/TimeSettingsPage.vue'
@@ -15,7 +17,13 @@ import type { NotifyType } from '@/support/page'
  *
  * The timesheet itself is the Week view of the Tasks screen now, so this file
  * keeps what has no screen of its own: the header chip, the quick-start
- * launcher, the settings page and the lifecycle wiring.
+ * launcher, the two timer dialogs, the settings page and the lifecycle wiring.
+ *
+ * The dialogs are mounted once here rather than by each control that opens
+ * one, because a timer is started and stopped from a header, a launcher, a
+ * row, a card, a task page and a time log, and the question each of them asks
+ * is the same one. Unlike the launcher they are not hidden on any path: a
+ * clock running while someone is in the settings still has to be stoppable.
  *
  * Nothing in this function talks to the network. Pinia is not installed when
  * the boot callback runs, so the first read waits for `bootstrap:completed`,
@@ -27,10 +35,6 @@ export function registerTimeTracking(extensions: InvoiceShelfExtensionApi): void
 
   const notify = (type: NotifyType, message: string): void => {
     extensions.notify(type, message)
-  }
-
-  const openWeek = (): void => {
-    void extensions.router.push(PATHS.week)
   }
 
   /**
@@ -65,16 +69,35 @@ export function registerTimeTracking(extensions: InvoiceShelfExtensionApi): void
     component: defineComponent({
       setup: () => () =>
         h(QuickStartOverlay, {
-          // A company switch starts the launcher clean rather than carrying a
-          // half-typed search from the workspace the user just left, and it
-          // remounts the component so the AI assistant's launcher is looked
-          // for again on the new company's layout.
+          // A company switch starts the launcher clean rather than carrying
+          // the panel of the workspace the user just left, and it remounts the
+          // component so the AI assistant's launcher is looked for again on
+          // the new company's layout.
           key: session.companySession,
           client: extensions.client,
           notify,
           enabled: !session.adminMode,
           router: extensions.router,
-          onOpenWeek: openWeek,
+          onOpenTask: openRunningTask,
+        }),
+    }),
+  })
+
+  extensions.registerCompanyLayoutOverlay({
+    id: `${MODULE}.stop-timer`,
+    component: defineComponent({
+      setup: () => () => h(StopTimerModal, { key: session.companySession }),
+    }),
+  })
+
+  extensions.registerCompanyLayoutOverlay({
+    id: `${MODULE}.start-timer`,
+    component: defineComponent({
+      setup: () => () =>
+        h(StartTimerModal, {
+          key: session.companySession,
+          client: extensions.client,
+          notify,
         }),
     }),
   })
