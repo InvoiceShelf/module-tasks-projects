@@ -6,6 +6,7 @@ namespace Modules\TasksProjects\Application;
 
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Collection;
+use Illuminate\Database\Eloquent\ModelNotFoundException;
 use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\DB;
 use InvalidArgumentException;
@@ -13,6 +14,7 @@ use InvoiceShelf\Modules\Contracts\Host\CompanyDataReader;
 use Modules\TasksProjects\Application\Exceptions\EntriesAlreadyInvoiced;
 use Modules\TasksProjects\Application\Exceptions\MixedBillingSelection;
 use Modules\TasksProjects\Application\Exceptions\NotBillable;
+use Modules\TasksProjects\Application\Exceptions\NothingToInvoice;
 use Modules\TasksProjects\Application\Exceptions\UnknownTimeEntries;
 use Modules\TasksProjects\Models\Project;
 use Modules\TasksProjects\Models\Task;
@@ -20,6 +22,10 @@ use Modules\TasksProjects\Models\TimeEntry;
 
 /**
  * Turning unbilled time into invoice lines.
+ *
+ * What to bill arrives as a BillingSelection, so the three ways a screen can
+ * ask (these entries, these tasks, this project) meet in one place and produce
+ * the same ordered list of entries.
  *
  * The module never writes to the host invoice tables. `prepare()` returns the
  * exact body the host invoice endpoint expects, the browser posts it with the
@@ -35,6 +41,9 @@ final class BillingService
 
     /** The single line produced by the `summary` grouping. */
     public const SUMMARY_LABEL = 'Time';
+
+    /** The grouping a selection falls back to when the caller names none. */
+    public const DEFAULT_GROUPING = 'task';
 
     public function __construct(private readonly CompanyDataReader $companyData) {}
 
@@ -151,11 +160,10 @@ final class BillingService
      * and `notes` and `template_name` are placeholders the wizard fills in from
      * the company's own defaults before it posts.
      *
-     * @param  list<int>  $entryIds
      * @param  'task'|'project'|'member'|'summary'  $grouping
      * @return array{invoice_date: string, customer_id: int, currency_id: int|null, discount: int, discount_type: string, discount_val: int, tax: int, sub_total: int, total: int, notes: string|null, template_name: string|null, taxes: list<array<string, mixed>>, items: list<array{name: string, description: string|null, quantity: float, price: int, discount_type: string, discount: int, discount_val: int, tax: int, taxes: list<array<string, mixed>>, total: int}>, groups: list<array{entry_ids: list<int>}>}
      */
-    public function prepare(int $companyId, array $entryIds, string $grouping): array
+    public function prepare(int $companyId, BillingSelection $selection, string $grouping = self::DEFAULT_GROUPING): array
     {
         if (! in_array($grouping, self::GROUPINGS, true)) {
             throw new InvalidArgumentException(
@@ -163,15 +171,18 @@ final class BillingService
             );
         }
 
-        $entries = $this->selectionFor($companyId, $entryIds);
-        $customerId = $this->singleCustomerFor($companyId, $entries);
+        $entries = $this->resolveEntries($companyId, $selection);
+        $tasks = $this->tasksFor($companyId, $entries);
+        $customerId = $this->singleCustomerFor($tasks, $entries);
         $currencyId = $this->singleCurrencyFor($entries);
+
+        $labels = $this->labelsFor($companyId, $entries, $tasks);
 
         $items = [];
         $groups = [];
         $subTotal = 0;
 
-        foreach ($this->group($entries, $grouping, $this->labelsFor($companyId, $entries), false) as $row) {
+        foreach ($this->group($entries, $grouping, $labels, false) as $row) {
             $quantity = round($row['minutes'] / 60, 2);
             $price = $row['rate'] ?? ($quantity > 0.0 ? (int) round($row['amount'] / $quantity) : 0);
             $total = (int) round($quantity * $price);
@@ -208,6 +219,31 @@ final class BillingService
             'items' => $items,
             'groups' => $groups,
         ];
+    }
+
+    /**
+     * The entries a selection stands for, ordered by when the work started.
+     *
+     * An explicit list of entry ids is validated to the letter, because the
+     * caller ticked those boxes itself and a silently dropped row would be a
+     * silently dropped invoice line. A task or a project instead asks for
+     * "whatever is still unbilled here", so the same rule the unbilled list
+     * uses applies: stopped, billable, off an internal project, and free of a
+     * live invoice. Nothing left to bill is a refusal of its own rather than an
+     * empty invoice.
+     *
+     * @return Collection<int, TimeEntry>
+     */
+    public function resolveEntries(int $companyId, BillingSelection $selection): Collection
+    {
+        return match ($selection->kind) {
+            BillingSelection::ENTRIES => $this->selectionFor($companyId, $selection->ids),
+            BillingSelection::TASKS => $this->unbilledSelection($companyId, $this->ownTaskIds($companyId, $selection->ids)),
+            BillingSelection::PROJECT => $this->unbilledSelection($companyId, $this->projectTaskIds($companyId, $selection->projectId())),
+            default => throw new InvalidArgumentException(
+                "Billing selection '{$selection->kind}' is not one of ".implode(', ', BillingSelection::KINDS).'.',
+            ),
+        };
     }
 
     /**
@@ -418,15 +454,93 @@ final class BillingService
         return $entries;
     }
 
-    /** @param Collection<int, TimeEntry> $entries */
-    private function singleCustomerFor(int $companyId, Collection $entries): int
+    /**
+     * Everything still unbilled on these tasks, or a refusal if that is
+     * nothing.
+     *
+     * @param  list<int>  $taskIds
+     * @return Collection<int, TimeEntry>
+     */
+    private function unbilledSelection(int $companyId, array $taskIds): Collection
     {
+        $entries = $this->unbilledEntriesForTasks($companyId, $taskIds, null, null);
+
+        if ($entries->isEmpty()) {
+            throw NothingToInvoice::forSelection();
+        }
+
+        return $entries;
+    }
+
+    /**
+     * The named tasks, refusing any the company does not own.
+     *
+     * A task id from another company is a 404 rather than a quietly shorter
+     * invoice, which is the same answer `tasks/{id}` gives.
+     *
+     * @param  list<int>  $taskIds
+     * @return list<int>
+     */
+    private function ownTaskIds(int $companyId, array $taskIds): array
+    {
+        $found = array_map(intval(...), Task::query()
+            ->forCompany($companyId)
+            ->whereIn('id', $taskIds)
+            ->pluck('id')
+            ->all());
+
+        $missing = array_values(array_diff($taskIds, $found));
+        if ($missing !== []) {
+            throw (new ModelNotFoundException)->setModel(Task::class, $missing);
+        }
+
+        return array_values($found);
+    }
+
+    /**
+     * Every task filed under one of the company's projects.
+     *
+     * @return list<int>
+     */
+    private function projectTaskIds(int $companyId, int $projectId): array
+    {
+        $project = Project::query()->forCompany($companyId)->find($projectId);
+
+        if ($project === null) {
+            throw (new ModelNotFoundException)->setModel(Project::class, [$projectId]);
+        }
+
+        return array_values(array_map(intval(...), Task::query()
+            ->forCompany($companyId)
+            ->where('project_id', $project->id)
+            ->pluck('id')
+            ->all()));
+    }
+
+    /**
+     * The tasks these entries were logged against, keyed by id.
+     *
+     * @param  Collection<int, TimeEntry>  $entries
+     * @return Collection<int, Task>
+     */
+    private function tasksFor(int $companyId, Collection $entries): Collection
+    {
+        /** @var Collection<int, Task> $tasks */
         $tasks = Task::query()
             ->forCompany($companyId)
             ->whereIn('id', $entries->pluck('task_id')->unique()->all())
             ->get()
             ->keyBy('id');
 
+        return $tasks;
+    }
+
+    /**
+     * @param  Collection<int, Task>  $tasks  keyed by id
+     * @param  Collection<int, TimeEntry>  $entries
+     */
+    private function singleCustomerFor(Collection $tasks, Collection $entries): int
+    {
         $customerIds = [];
         foreach ($entries as $entry) {
             $customerId = $tasks->get((int) $entry->task_id)?->customer_id;
@@ -501,16 +615,19 @@ final class BillingService
      * company renders as a removed member rather than as a bare id.
      *
      * @param  Collection<int, TimeEntry>  $entries
+     * @param  Collection<int, Task>|null  $tasks  already loaded and keyed by id, when the caller has them
      * @return array{task: array<int, string>, project: array<int, string>, member: array<int, string>}
      */
-    private function labelsFor(int $companyId, Collection $entries): array
+    private function labelsFor(int $companyId, Collection $entries, ?Collection $tasks = null): array
     {
-        $tasks = Task::query()
-            ->forCompany($companyId)
-            ->whereIn('id', $entries->pluck('task_id')->unique()->all())
-            ->get();
+        $tasks ??= $this->tasksFor($companyId, $entries);
 
-        $projectIds = $entries->pluck('project_id')->filter(static fn (?int $id): bool => $id !== null)->unique()->all();
+        $projectIds = $entries
+            ->pluck('project_id')
+            ->merge($tasks->pluck('project_id'))
+            ->filter(static fn (?int $id): bool => $id !== null)
+            ->unique()
+            ->all();
         /** @var Collection<int, Project> $projects */
         $projects = $projectIds === []
             ? new Collection

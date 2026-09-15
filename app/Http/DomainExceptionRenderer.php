@@ -33,12 +33,22 @@ final class DomainExceptionRenderer
         $handler->renderable(static fn (TasksProjectsException $exception): JsonResponse => self::render($exception));
     }
 
+    /**
+     * The refusal's own context is merged in beside the message, never over
+     * it: a rule that carries ids adds keys, and can never rename the two the
+     * UI always reads.
+     */
     public static function render(TasksProjectsException $exception): JsonResponse
     {
-        return new JsonResponse([
+        $body = [
             'message' => $exception->getMessage(),
             'error' => self::errorKey($exception),
-        ], self::STATUSES[$exception::class] ?? Response::HTTP_UNPROCESSABLE_ENTITY);
+        ];
+
+        return new JsonResponse(
+            $body + $exception->context(),
+            self::STATUSES[$exception::class] ?? Response::HTTP_UNPROCESSABLE_ENTITY,
+        );
     }
 
     /** `TimerAlreadyRunning` becomes `timer_already_running`. */

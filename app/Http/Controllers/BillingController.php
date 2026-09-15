@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Modules\TasksProjects\Http\Controllers;
 
 use Illuminate\Http\JsonResponse;
+use Modules\TasksProjects\Application\BillingSelection;
 use Modules\TasksProjects\Application\BillingService;
 use Modules\TasksProjects\Http\Requests\ConfirmInvoiceRequest;
 use Modules\TasksProjects\Http\Requests\PrepareInvoiceRequest;
@@ -67,9 +68,12 @@ final class BillingController extends Controller
     /**
      * The body the browser posts to the host invoice endpoint.
      *
-     * Zero fractions are preserved so `quantity` stays the two-decimal number
-     * of hours the preview showed, rather than collapsing to an integer on the
-     * way out.
+     * The selection arrives in one of three shapes and leaves as one: entry
+     * ids, task ids or a project all become the same ordered list of entries,
+     * so the caller picks whichever shape its screen knows and reads the same
+     * answer back. Zero fractions are preserved so `quantity` stays the
+     * two-decimal number of hours the preview showed, rather than collapsing
+     * to an integer on the way out.
      */
     public function prepare(PrepareInvoiceRequest $request): JsonResponse
     {
@@ -80,11 +84,32 @@ final class BillingController extends Controller
 
         $payload = $this->billing->prepare(
             $context->companyId,
-            array_map(intval(...), $validated['entry_ids']),
-            $validated['grouping'],
+            $this->selectionFrom($validated),
+            $validated['grouping'] ?? BillingService::DEFAULT_GROUPING,
         );
 
         return response()->json(['data' => $payload], 200, [], JSON_PRESERVE_ZERO_FRACTION);
+    }
+
+    /**
+     * The one selection the request carries.
+     *
+     * The request rules have already refused a body that names two of them or
+     * none, so the order the shapes are tried in never decides anything.
+     *
+     * @param  array<string, mixed>  $validated
+     */
+    private function selectionFrom(array $validated): BillingSelection
+    {
+        if (isset($validated['task_ids'])) {
+            return BillingSelection::fromTaskIds(array_map(intval(...), $validated['task_ids']));
+        }
+
+        if (isset($validated['project_id'])) {
+            return BillingSelection::fromProject((int) $validated['project_id']);
+        }
+
+        return BillingSelection::fromEntryIds(array_map(intval(...), $validated['entry_ids']));
     }
 
     /** Stamp the entries with the invoice and line ids the host handed back. */
