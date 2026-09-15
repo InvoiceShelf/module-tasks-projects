@@ -4,6 +4,7 @@ import type { AxiosInstance } from 'axios'
 import type { Router } from 'vue-router'
 import TaskStatusEditor from '@/components/TaskStatusEditor.vue'
 import { session } from '@/stores/session'
+import { minorToMajor } from '@/support/format'
 import { useTranslate } from '@/support/i18n'
 import { PATHS } from '@/support/page'
 import type { Notify } from '@/support/page'
@@ -33,6 +34,25 @@ const settings = computed(() => session.settings)
 function onOff(value: boolean): string {
   return value ? t('tasks_projects.settings.on') : t('tasks_projects.settings.off')
 }
+
+/** The company-wide facts the general card promises: rate, week start, visibility. */
+const general = computed<SettingRow[]>(() => [
+  {
+    key: 'default_rate',
+    label: t('tasks_projects.settings.default_rate'),
+    value: minorToMajor(settings.value.default_rate),
+  },
+  {
+    key: 'week_start',
+    label: t('tasks_projects.settings.week_start'),
+    value: t(`tasks_projects.settings.weekday_${settings.value.week_start}`),
+  },
+  {
+    key: 'members_see_all_time',
+    label: t('tasks_projects.settings.members_see_all_time'),
+    value: onOff(settings.value.members_see_all_time),
+  },
+])
 
 /**
  * What the company has chosen, read back rather than edited.
@@ -107,6 +127,13 @@ const invoiceLines = computed<SettingRow[]>(() =>
           </BaseButton>
         </router-link>
       </template>
+
+      <dl class="divide-y divide-line-light">
+        <div v-for="row in general" :key="row.key" class="flex justify-between gap-4 py-2.5">
+          <dt class="text-sm text-muted">{{ row.label }}</dt>
+          <dd class="text-sm font-medium text-heading">{{ row.value }}</dd>
+        </div>
+      </dl>
     </BaseSettingCard>
 
     <BaseSettingCard

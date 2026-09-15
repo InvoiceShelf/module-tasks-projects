@@ -117,6 +117,16 @@ export const timeMessages = {
         general_description:
           'The default hourly rate, the rounding increment, the first day of the week and who may see other members time.',
         open_module_settings: 'Open module settings',
+        default_rate: 'Default rate / hour',
+        week_start: 'First day of the week',
+        weekday_0: 'Sunday',
+        weekday_1: 'Monday',
+        weekday_2: 'Tuesday',
+        weekday_3: 'Wednesday',
+        weekday_4: 'Thursday',
+        weekday_5: 'Friday',
+        weekday_6: 'Saturday',
+        members_see_all_time: "Members see other members' time",
         behaviour_title: 'Task behaviour',
         behaviour_description:
           'What happens when a task is created, invoiced or shown on the board. Change these in the module settings form.',
