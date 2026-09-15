@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import { ref } from 'vue'
 import type { AxiosInstance } from 'axios'
+import type { Router } from 'vue-router'
 import TaskList from '@/components/TaskList.vue'
 import type { TaskFilterState } from '@/support/filters'
 import type { Notify } from '@/support/page'
@@ -18,6 +19,8 @@ import type { TaskStatus } from '@/types/task-status'
 defineProps<{
   client: AxiosInstance
   notify: Notify
+  /** The host router, handed down so a row can invoice and navigate. */
+  router: Router
   filters: TaskFilterState
   statuses: TaskStatus[]
   members: CompanyMember[]
@@ -34,6 +37,7 @@ defineExpose({ openCreate: () => listRef.value?.openCreate() })
     ref="listRef"
     :client="client"
     :notify="notify"
+    :router="router"
     :filters="filters"
     :statuses="statuses"
     :members="members"

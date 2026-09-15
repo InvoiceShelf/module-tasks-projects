@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import { computed, ref, watch } from 'vue'
 import type { AxiosInstance } from 'axios'
+import type { Router } from 'vue-router'
 import { sortParams } from '@/api'
 import type { SortParams, TableSort } from '@/api'
 import { bulkTasks, deleteTask, listTasks } from '@/api/board'
@@ -10,12 +11,14 @@ import InvoicedBadge from '@/components/InvoicedBadge.vue'
 import TaskFormModal from '@/components/TaskFormModal.vue'
 import type { TaskDefaults } from '@/components/TaskFormModal.vue'
 import TaskRunControl from '@/components/TaskRunControl.vue'
+import { invoicingStore } from '@/stores/invoicing'
 import { bumpTaskVersion, taskTime, taskVersion } from '@/stores/tasks'
 import { errorMessage } from '@/support/errors'
 import { filterKey, taskListParams } from '@/support/filters'
 import type { TaskFilterState } from '@/support/filters'
 import { formatDate, isOverdue } from '@/support/format'
 import { useTranslate } from '@/support/i18n'
+import { invoiceTasks } from '@/support/invoicing'
 import { PATHS } from '@/support/page'
 import type { Notify } from '@/support/page'
 import { formatDuration } from '@/support/time'
@@ -41,6 +44,8 @@ const props = withDefaults(
   defineProps<{
     client: AxiosInstance
     notify: Notify
+    /** The host router: invoicing lands on the host's invoice page. */
+    router: Router
     /** What the screen above is filtered to. */
     filters: TaskFilterState
     statuses: TaskStatus[]
@@ -83,6 +88,10 @@ const busyId = ref<number | null>(null)
 const projectOptions = computed<SelectOption[]>(() =>
   props.projects.map((project) => ({ id: project.id, label: project.name })),
 )
+
+const invoicing = computed<boolean>(() => invoicingStore.busy)
+
+const canInvoice = computed<boolean>(() => invoicingStore.allowed)
 
 const filtered = computed<boolean>(
   () =>
@@ -229,6 +238,61 @@ function loggedOf(task: Task): string {
   return formatDuration(taskTime(task).logged_minutes)
 }
 
+/**
+ * Whether invoicing this row would mean anything.
+ *
+ * Only a task with billable time nobody has invoiced yet: one already on an
+ * invoice, and one with no billable time behind it, both leave the entry in the
+ * menu but greyed, with a title that says which of the two it is.
+ */
+function invoiceable(task: Task): boolean {
+  return taskTime(task).invoiced === 'uninvoiced'
+}
+
+function invoiceHint(task: Task): string {
+  return taskTime(task).invoiced === 'invoiced'
+    ? t('tasks_projects.tasks.already_invoiced')
+    : t('tasks_projects.tasks.nothing_to_invoice')
+}
+
+const deps = computed(() => ({
+  client: props.client,
+  router: props.router,
+  notify: props.notify,
+  t,
+}))
+
+async function onInvoiceTask(task: Task): Promise<void> {
+  if (invoicing.value) {
+    return
+  }
+
+  busyId.value = task.id
+
+  try {
+    await invoiceTasks(deps.value, { taskIds: [task.id] })
+  } finally {
+    busyId.value = null
+  }
+}
+
+/**
+ * Invoice the selection as one invoice.
+ *
+ * The server refuses a selection spanning two customers, which is the whole
+ * point of sending the ids together rather than looping: one invoice, or a
+ * message naming how many customers were mixed.
+ */
+async function onBulkInvoice(): Promise<void> {
+  if (invoicing.value || selected.value.length === 0) {
+    return
+  }
+
+  if (await invoiceTasks(deps.value, { taskIds: [...selected.value] })) {
+    clearSelection()
+  }
+}
+
 async function onDelete(task: Task): Promise<void> {
   if (!window.confirm(t('tasks_projects.tasks.delete_confirm', { name: task.name }))) {
     return
@@ -315,8 +379,11 @@ defineExpose({ openCreate, refresh })
       :count="selected.length"
       :statuses="statuses"
       :busy="bulkBusy"
+      :invoicing="invoicing"
+      :can-invoice="canInvoice"
       @status="onBulkStatus"
       @delete="onBulkDelete"
+      @invoice="onBulkInvoice"
       @clear="clearSelection"
       @select-page="selectPage"
     />
@@ -425,15 +492,27 @@ defineExpose({ openCreate, refresh })
               {{ t('tasks_projects.general.edit') }}
             </BaseDropdownItem>
 
-            <!-- Invoicing arrives in its own slice; the entry stays visible so
-                 the menu does not change shape under people once it does. -->
-            <div
-              class="group flex cursor-not-allowed items-center px-4 py-2 text-sm font-normal text-subtle"
-              :title="t('tasks_projects.tasks.invoice_soon')"
-            >
-              <BaseIcon name="BanknotesIcon" class="mr-3 h-5 w-5 text-subtle" />
-              {{ t('tasks_projects.tasks.invoice_task') }}
-            </div>
+            <template v-if="canInvoice">
+              <BaseDropdownItem
+                v-if="invoiceable(row.data) && !invoicing"
+                @click="onInvoiceTask(row.data)"
+              >
+                <BaseIcon
+                  name="BanknotesIcon"
+                  class="mr-3 h-5 w-5 text-subtle group-hover:text-muted"
+                />
+                {{ t('tasks_projects.tasks.invoice_task') }}
+              </BaseDropdownItem>
+
+              <div
+                v-else
+                class="group flex cursor-not-allowed items-center px-4 py-2 text-sm font-normal text-subtle"
+                :title="invoicing ? t('tasks_projects.billing.busy') : invoiceHint(row.data)"
+              >
+                <BaseIcon name="BanknotesIcon" class="mr-3 h-5 w-5 text-subtle" />
+                {{ t('tasks_projects.tasks.invoice_task') }}
+              </div>
+            </template>
 
             <BaseDropdownItem @click="onDelete(row.data)">
               <BaseIcon name="TrashIcon" class="mr-3 h-5 w-5 text-subtle group-hover:text-muted" />

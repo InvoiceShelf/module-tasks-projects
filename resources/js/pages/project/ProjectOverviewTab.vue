@@ -1,12 +1,26 @@
 <script setup lang="ts">
 import { computed } from 'vue'
+import type { AxiosInstance } from 'axios'
+import type { Router } from 'vue-router'
+import { invoicingStore } from '@/stores/invoicing'
 import { formatMinutes } from '@/support/format'
 import { useTranslate } from '@/support/i18n'
+import { invoiceTasks } from '@/support/invoicing'
+import type { Notify } from '@/support/page'
 import type { Project, ProjectTotals } from '@/types/project'
 
 const props = defineProps<{
+  client: AxiosInstance
+  notify: Notify
+  /** The host router: invoicing lands on the host's invoice page. */
+  router: Router
   /** Handed down by the project detail page, which owns the fetch. */
   project: Project | null
+}>()
+
+const emit = defineEmits<{
+  /** The unbilled figure moved, so the page above should read it again. */
+  (event: 'refresh'): void
 }>()
 
 const t = useTranslate()
@@ -35,8 +49,13 @@ const budgetPercent = computed(() => {
  * amount without offering the action.
  */
 const canInvoice = computed<boolean>(
-  () => props.project?.customer_id !== null && (totals.value?.unbilled_amount ?? 0) > 0,
+  () =>
+    invoicingStore.allowed &&
+    props.project?.customer_id !== null &&
+    (totals.value?.unbilled_amount ?? 0) > 0,
 )
+
+const invoicing = computed<boolean>(() => invoicingStore.busy)
 
 const overBudgetMinutes = computed(() => {
   const budget = budgetMinutes.value
@@ -44,6 +63,28 @@ const overBudgetMinutes = computed(() => {
 
   return budget && logged > budget ? logged - budget : 0
 })
+
+/**
+ * Invoice everything unbilled on this project, in one invoice.
+ *
+ * The project is the selection, not the tasks under it, so the server decides
+ * which of them still have billable time and refuses the whole thing when none
+ * do. Failing leaves the user here, where the numbers are re-read.
+ */
+async function invoice(): Promise<void> {
+  const project = props.project
+
+  if (project === null || !canInvoice.value || invoicing.value) {
+    return
+  }
+
+  if (!(await invoiceTasks(
+    { client: props.client, router: props.router, notify: props.notify, t },
+    { projectId: project.id },
+  ))) {
+    emit('refresh')
+  }
+}
 </script>
 
 <template>
@@ -90,20 +131,20 @@ const overBudgetMinutes = computed(() => {
         <p class="mt-2 text-2xl font-semibold text-heading">
           <BaseFormatMoney :amount="totals.unbilled_amount" />
         </p>
-        <!-- Invoicing arrives in its own slice; the affordance is here so the
-             card does not change shape under people once it does. -->
-        <span
+        <BaseButton
           v-if="canInvoice"
-          class="mt-2 inline-flex"
-          :title="t('tasks_projects.project.invoice_soon')"
+          class="mt-2"
+          variant="primary-outline"
+          size="sm"
+          :loading="invoicing"
+          :disabled="invoicing"
+          @click="invoice"
         >
-          <BaseButton variant="primary-outline" size="sm" disabled>
-            <template #left="slotProps">
-              <BaseIcon name="BanknotesIcon" :class="slotProps.class" />
-            </template>
-            {{ t('tasks_projects.project.invoice_project') }}
-          </BaseButton>
-        </span>
+          <template #left="slotProps">
+            <BaseIcon v-if="!invoicing" name="BanknotesIcon" :class="slotProps.class" />
+          </template>
+          {{ t('tasks_projects.project.invoice_project') }}
+        </BaseButton>
       </div>
     </div>
 

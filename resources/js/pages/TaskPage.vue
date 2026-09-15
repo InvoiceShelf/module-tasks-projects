@@ -5,15 +5,18 @@ import type { Router } from 'vue-router'
 import { listMembers, listProjects } from '@/api'
 import { deleteTask, fetchTaskDetail, listTaskStatuses, updateTask } from '@/api/board'
 import InvoicedBadge from '@/components/InvoicedBadge.vue'
+import InvoiceRetryBanner from '@/components/InvoiceRetryBanner.vue'
 import TaskFormModal from '@/components/TaskFormModal.vue'
 import TaskRunControl from '@/components/TaskRunControl.vue'
 import TimeLogGrid from '@/components/TimeLogGrid.vue'
 import { customerName, ensureLoaded } from '@/stores/customers'
+import { invoicingStore } from '@/stores/invoicing'
 import { bumpTaskVersion, rememberTask, taskTime, taskVersion } from '@/stores/tasks'
 import { errorMessage } from '@/support/errors'
 import { formatDate, formatMinutes } from '@/support/format'
 import { errorCode } from '@/support/http'
 import { useTranslate } from '@/support/i18n'
+import { invoiceTasks } from '@/support/invoicing'
 import { PATHS } from '@/support/page'
 import type { Notify } from '@/support/page'
 import type { SelectOption } from '@/types/board'
@@ -104,6 +107,23 @@ const statusOption = computed<SelectOption | null>({
     }
   },
 })
+
+const invoicing = computed<boolean>(() => invoicingStore.busy)
+
+/**
+ * Whether invoicing this task would mean anything.
+ *
+ * Only billable time nobody has invoiced yet: a task already on an invoice, or
+ * one with nothing billable behind it, keeps the button visible but refused,
+ * so the header does not change shape as work is logged against it.
+ */
+const invoiceable = computed<boolean>(() => time.value.invoiced === 'uninvoiced')
+
+const invoiceHint = computed<string>(() =>
+  time.value.invoiced === 'invoiced'
+    ? t('tasks_projects.tasks.already_invoiced')
+    : t('tasks_projects.tasks.nothing_to_invoice'),
+)
 
 const priorityLabel = computed<string | null>(() =>
   task.value?.priority
@@ -224,6 +244,19 @@ async function changeStatus(option: SelectOption): Promise<void> {
   }
 }
 
+async function invoice(): Promise<void> {
+  const record = task.value
+
+  if (record === null || !invoiceable.value || invoicing.value) {
+    return
+  }
+
+  await invoiceTasks(
+    { client: props.client, router: hostRouter, notify: props.notify, t },
+    { taskIds: [record.id] },
+  )
+}
+
 /** Leave for the list, which is where a task that no longer exists belongs. */
 function backToTasks(): void {
   void hostRouter.push(PATHS.tasks)
@@ -321,12 +354,19 @@ async function remove(): Promise<void> {
             size="md"
           />
 
-          <!-- Invoicing arrives in its own slice; the button is here so the
-               header does not change shape under people once it does. -->
-          <span :title="t('tasks_projects.tasks.invoice_soon')" class="inline-flex">
-            <BaseButton variant="white" disabled>
+          <span
+            v-if="invoicingStore.allowed"
+            class="inline-flex"
+            :title="invoiceable ? undefined : invoiceHint"
+          >
+            <BaseButton
+              variant="white"
+              :loading="invoicing"
+              :disabled="!invoiceable || invoicing"
+              @click="invoice"
+            >
               <template #left="slotProps">
-                <BaseIcon name="BanknotesIcon" :class="slotProps.class" />
+                <BaseIcon v-if="!invoicing" name="BanknotesIcon" :class="slotProps.class" />
               </template>
               {{ t('tasks_projects.tasks.invoice_task') }}
             </BaseButton>
@@ -350,6 +390,8 @@ async function remove(): Promise<void> {
         </div>
       </template>
     </BasePageHeader>
+
+    <InvoiceRetryBanner :client="client" :notify="notify" />
 
     <div v-if="loading && task === null" class="flex justify-center py-16">
       <BaseSpinner class="h-8 w-8 text-primary-500" />

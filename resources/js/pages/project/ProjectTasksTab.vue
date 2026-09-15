@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import { computed, onMounted, ref } from 'vue'
 import type { AxiosInstance } from 'axios'
+import type { Router } from 'vue-router'
 import { listMembers } from '@/api'
 import { listTaskStatuses } from '@/api/board'
 import TaskFilters from '@/components/TaskFilters.vue'
@@ -19,6 +20,8 @@ const props = defineProps<{
   id: string
   client: AxiosInstance
   notify: Notify
+  /** The host router, handed down so a row can invoice and navigate. */
+  router: Router
   project: Project | null
 }>()
 
@@ -92,6 +95,7 @@ function onChanged(): void {
       ref="listRef"
       :client="client"
       :notify="notify"
+      :router="router"
       :filters="filters"
       :statuses="statuses"
       :members="members"

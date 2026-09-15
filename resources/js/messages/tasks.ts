@@ -36,7 +36,8 @@ export const taskMessages = {
         invoiced: 'Invoiced',
         uninvoiced: 'Unbilled',
         invoice_task: 'Invoice task',
-        invoice_soon: 'Coming with invoicing',
+        already_invoiced: 'This task is already on an invoice.',
+        nothing_to_invoice: 'No unbilled billable time on this task.',
         locked: 'This task is on an invoice and cannot be changed.',
         views: {
           list: 'List',

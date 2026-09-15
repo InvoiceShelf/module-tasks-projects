@@ -4,11 +4,14 @@ import type { AxiosInstance } from 'axios'
 import type { Router } from 'vue-router'
 import { archiveProject, unarchiveProject } from '@/api'
 import { fetchProject } from '@/api/board'
+import InvoiceRetryBanner from '@/components/InvoiceRetryBanner.vue'
 import ProjectFormModal from '@/components/ProjectFormModal.vue'
 import { customerName, ensureLoaded } from '@/stores/customers'
+import { invoicingStore } from '@/stores/invoicing'
 import { errorMessage } from '@/support/errors'
 import { formatDate } from '@/support/format'
 import { useTranslate } from '@/support/i18n'
+import { invoiceTasks } from '@/support/invoicing'
 import { PATHS, ROUTES } from '@/support/page'
 import type { Notify } from '@/support/page'
 import type { Project, ProjectStatus } from '@/types/project'
@@ -30,6 +33,15 @@ const props = defineProps<{
 const ROUTE = ROUTES.project
 
 const t = useTranslate()
+
+/**
+ * The host router, held as a local.
+ *
+ * `push` on a prop reads to the linter as mutating an array, and the router is
+ * a stable singleton the host hands every module page, so naming it once is
+ * both clearer and quieter.
+ */
+const hostRouter = props.router
 
 const project = ref<Project | null>(null)
 const loading = ref(true)
@@ -69,6 +81,23 @@ const boardLink = computed(() => ({ path: PATHS.board, query: { project: String(
  * contact deleted since keeps its id as its label.
  */
 const customerLabel = computed(() => customerName(project.value?.customer_id ?? null))
+
+const invoicing = computed<boolean>(() => invoicingStore.busy)
+
+/**
+ * Whether invoicing this project would mean anything.
+ *
+ * Only a project that belongs to a customer and still has money waiting: an
+ * internal project and a settled one keep the header they have rather than
+ * offering an action the server would only refuse.
+ */
+const canInvoice = computed<boolean>(
+  () =>
+    invoicingStore.allowed &&
+    project.value !== null &&
+    project.value.customer_id !== null &&
+    (project.value.totals?.unbilled_amount ?? 0) > 0,
+)
 
 watch(projectId, () => {
   void load()
@@ -130,6 +159,28 @@ function onSaved(saved: Project): void {
   modalOpen.value = false
   props.notify('success', t('tasks_projects.projects.updated', { name: saved.name }))
   void load()
+}
+
+/**
+ * Invoice everything unbilled on this project.
+ *
+ * The same sequence the Overview tab runs, offered from the header so it is
+ * reachable from the Tasks, Time and Members tabs as well. Failing leaves the
+ * user here, with the totals read again.
+ */
+async function onInvoice(): Promise<void> {
+  const record = project.value
+
+  if (record === null || !canInvoice.value || invoicing.value) {
+    return
+  }
+
+  if (!(await invoiceTasks(
+    { client: props.client, router: hostRouter, notify: props.notify, t },
+    { projectId: record.id },
+  ))) {
+    await load()
+  }
 }
 
 async function onArchive(): Promise<void> {
@@ -215,6 +266,19 @@ function statusLabel(status: ProjectStatus): string {
           </router-link>
 
           <BaseButton
+            v-if="canInvoice"
+            variant="primary-outline"
+            :loading="invoicing"
+            :disabled="invoicing"
+            @click="onInvoice"
+          >
+            <template #left="slotProps">
+              <BaseIcon v-if="!invoicing" name="BanknotesIcon" :class="slotProps.class" />
+            </template>
+            {{ t('tasks_projects.project.invoice_project') }}
+          </BaseButton>
+
+          <BaseButton
             v-if="project"
             variant="primary-outline"
             :loading="busy"
@@ -237,6 +301,8 @@ function statusLabel(status: ProjectStatus): string {
         </div>
       </template>
     </BasePageHeader>
+
+    <InvoiceRetryBanner :client="client" :notify="notify" />
 
     <nav class="mt-6 flex overflow-x-auto border-b border-line-default">
       <router-link

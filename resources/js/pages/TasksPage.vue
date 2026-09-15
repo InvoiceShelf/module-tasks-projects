@@ -4,6 +4,7 @@ import type { AxiosInstance } from 'axios'
 import type { LocationQueryRaw, Router } from 'vue-router'
 import { listMembers, listProjects } from '@/api'
 import { listTaskStatuses } from '@/api/board'
+import InvoiceRetryBanner from '@/components/InvoiceRetryBanner.vue'
 import TaskFilters from '@/components/TaskFilters.vue'
 import TaskFormModal from '@/components/TaskFormModal.vue'
 import ViewSwitcher from '@/components/ViewSwitcher.vue'
@@ -174,6 +175,8 @@ function onSaved(task: Task): void {
         </div>
       </template>
     </BasePageHeader>
+
+    <InvoiceRetryBanner :client="client" :notify="notify" />
 
     <TaskFilters
       :model-value="filters"

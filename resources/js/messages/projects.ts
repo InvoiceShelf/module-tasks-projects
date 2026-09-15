@@ -17,7 +17,6 @@ export const projectMessages = {
         board: 'Board',
         tasks: 'Tasks',
         invoice_project: 'Invoice project',
-        invoice_soon: 'Coming with invoicing',
         tabs: {
           overview: 'Overview',
           tasks: 'Tasks',

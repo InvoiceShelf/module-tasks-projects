@@ -4,17 +4,25 @@ import { useTranslate } from '@/support/i18n'
 import type { SelectOption } from '@/types/board'
 import type { TaskStatus } from '@/types/task-status'
 
-const props = defineProps<{
-  /** How many tasks the selection holds. The bar hides at zero. */
-  count: number
-  statuses: TaskStatus[]
-  /** True while a bulk request is in flight. */
-  busy: boolean
-}>()
+const props = withDefaults(
+  defineProps<{
+    /** How many tasks the selection holds. The bar hides at zero. */
+    count: number
+    statuses: TaskStatus[]
+    /** True while a bulk request is in flight. */
+    busy: boolean
+    /** True while the invoicing sequence is running, anywhere in the module. */
+    invoicing?: boolean
+    /** False once the server has refused the ability to invoice. */
+    canInvoice?: boolean
+  }>(),
+  { invoicing: false, canInvoice: true },
+)
 
 const emit = defineEmits<{
   (event: 'status', statusId: number): void
   (event: 'delete'): void
+  (event: 'invoice'): void
   (event: 'clear'): void
   (event: 'select-page'): void
 }>()
@@ -63,16 +71,19 @@ watch(status, (option) => {
       {{ t('tasks_projects.tasks.bulk.delete') }}
     </BaseButton>
 
-    <!-- Invoicing arrives in its own slice; the affordance is here so the bar
-         does not move under people once it does. -->
-    <span :title="t('tasks_projects.tasks.invoice_soon')" class="inline-flex">
-      <BaseButton variant="primary-outline" size="sm" disabled>
-        <template #left="slotProps">
-          <BaseIcon name="BanknotesIcon" :class="slotProps.class" />
-        </template>
-        {{ t('tasks_projects.tasks.bulk.invoice') }}
-      </BaseButton>
-    </span>
+    <BaseButton
+      v-if="canInvoice"
+      variant="primary-outline"
+      size="sm"
+      :loading="invoicing"
+      :disabled="busy || invoicing"
+      @click="emit('invoice')"
+    >
+      <template #left="slotProps">
+        <BaseIcon v-if="!invoicing" name="BanknotesIcon" :class="slotProps.class" />
+      </template>
+      {{ t('tasks_projects.tasks.bulk.invoice') }}
+    </BaseButton>
 
     <button
       type="button"
