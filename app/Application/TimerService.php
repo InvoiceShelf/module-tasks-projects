@@ -45,13 +45,32 @@ final class TimerService
             ->first();
     }
 
-    /** @throws TimerAlreadyRunning when the user already has a timer in this company */
-    public function start(int $companyId, int $userId, int $taskId, ?string $description = null): TimeEntry
-    {
+    /**
+     * Put the caller's clock on a task.
+     *
+     * Starting the task the clock is already on is the same wish twice rather
+     * than a conflict, so it applies whatever the caller sent and answers the
+     * entry that is already running. That is what makes "create this task and
+     * start it" correct when `auto_start_tasks` started the clock on create.
+     *
+     * @throws TimerAlreadyRunning when the user's timer is on another task
+     */
+    public function start(
+        int $companyId,
+        int $userId,
+        int $taskId,
+        ?string $description = null,
+        ?bool $billable = null,
+    ): TimeEntry {
         $task = $this->tasks->findForCompany($companyId, $taskId);
+        $running = $this->running($companyId, $userId);
 
-        if ($this->running($companyId, $userId) !== null) {
-            throw TimerAlreadyRunning::forUser($userId, $companyId);
+        if ($running !== null) {
+            if ((int) $running->task_id !== (int) $task->id) {
+                throw TimerAlreadyRunning::forUser($userId, $companyId);
+            }
+
+            return $this->applyDetails($running, $description, $billable);
         }
 
         try {
@@ -64,7 +83,7 @@ final class TimerService
                 'ended_at' => null,
                 'duration_minutes' => 0,
                 'description' => $description,
-                'billable' => (bool) $task->billable,
+                'billable' => $billable ?? (bool) $task->billable,
                 'rate' => 0,
                 'amount' => 0,
                 'currency_id' => $this->currencyFor($task),
@@ -82,12 +101,22 @@ final class TimerService
     /**
      * Close the running entry: derive the elapsed minutes, round them to the
      * company increment, resolve the rate and cache the amount.
+     *
+     * The description and the billable flag are what the stop dialog collected,
+     * and each is applied only when it was sent: a client that stops without a
+     * body keeps whatever the start recorded.
      */
-    public function stop(int $companyId, int $userId): TimeEntry
-    {
+    public function stop(
+        int $companyId,
+        int $userId,
+        ?string $description = null,
+        ?bool $billable = null,
+    ): TimeEntry {
         $entry = $this->requireRunning($companyId, $userId);
         $endedAt = Carbon::now();
         $startedAt = $entry->started_at ?? $endedAt;
+
+        $this->writeDetails($entry, $description, $billable);
 
         $entry->ended_at = $endedAt;
         $entry->running_user_id = null;
@@ -115,8 +144,13 @@ final class TimerService
      *
      * @throws TimerMismatch when the caller's timer is not on this task
      */
-    public function stopOn(int $companyId, int $userId, int $taskId): TimeEntry
-    {
+    public function stopOn(
+        int $companyId,
+        int $userId,
+        int $taskId,
+        ?string $description = null,
+        ?bool $billable = null,
+    ): TimeEntry {
         $task = $this->tasks->findForCompany($companyId, $taskId);
         $running = $this->running($companyId, $userId);
 
@@ -127,13 +161,42 @@ final class TimerService
             );
         }
 
-        return $this->stop($companyId, $userId);
+        return $this->stop($companyId, $userId, $description, $billable);
     }
 
     /** Throw away the running entry without recording any time. */
     public function discard(int $companyId, int $userId): void
     {
         $this->requireRunning($companyId, $userId)->delete();
+    }
+
+    /** Apply the caller's details to a running entry and save if anything moved. */
+    private function applyDetails(TimeEntry $entry, ?string $description, ?bool $billable): TimeEntry
+    {
+        $this->writeDetails($entry, $description, $billable);
+
+        if ($entry->isDirty()) {
+            $entry->save();
+        }
+
+        return $entry;
+    }
+
+    /**
+     * Write onto an entry whatever the caller actually sent.
+     *
+     * Null is "the caller did not say", never "clear it", so a stop that
+     * carries only a description leaves the billable flag the start chose.
+     */
+    private function writeDetails(TimeEntry $entry, ?string $description, ?bool $billable): void
+    {
+        if ($description !== null) {
+            $entry->description = $description;
+        }
+
+        if ($billable !== null) {
+            $entry->billable = $billable;
+        }
     }
 
     private function requireRunning(int $companyId, int $userId): TimeEntry

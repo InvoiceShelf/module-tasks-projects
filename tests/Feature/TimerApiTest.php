@@ -49,15 +49,98 @@ final class TimerApiTest extends TestCase
             ->assertJsonPath('data.description', 'Fixing the importer');
     }
 
-    public function test_a_second_start_is_a_conflict(): void
+    public function test_a_start_on_another_task_is_a_conflict(): void
     {
         $task = $this->taskOnProjectAt(6000);
+        $other = (int) $this->makeTask(self::COMPANY, ['name' => 'Something else'])->id;
         $this->asCompany(self::COMPANY)->postJson('/api/v1/tasks-projects/timer/start', ['task_id' => $task])->assertCreated();
 
         $this->asCompany(self::COMPANY)
-            ->postJson('/api/v1/tasks-projects/timer/start', ['task_id' => $task])
+            ->postJson('/api/v1/tasks-projects/timer/start', ['task_id' => $other])
             ->assertStatus(409)
             ->assertJsonPath('error', 'timer_already_running');
+    }
+
+    public function test_starting_the_task_already_on_the_clock_updates_it_rather_than_conflicting(): void
+    {
+        Carbon::setTestNow('2026-09-15 09:00:00');
+        $task = $this->taskOnProjectAt(6000);
+
+        $started = $this->asCompany(self::COMPANY)->postJson('/api/v1/tasks-projects/timer/start', [
+            'task_id' => $task,
+            'description' => 'Reading the ticket',
+        ]);
+        $started->assertCreated();
+
+        // The clock keeps running from where it was; only the details change.
+        Carbon::setTestNow('2026-09-15 09:20:00');
+        $again = $this->asCompany(self::COMPANY)->postJson('/api/v1/tasks-projects/timer/start', [
+            'task_id' => $task,
+            'description' => 'Fixing the importer',
+            'billable' => false,
+        ]);
+
+        $again->assertOk();
+        $again->assertJsonPath('data.id', $started->json('data.id'));
+        $again->assertJsonPath('data.is_running', true);
+        $again->assertJsonPath('data.description', 'Fixing the importer');
+        $again->assertJsonPath('data.billable', false);
+        $again->assertJsonPath('data.started_at', $started->json('data.started_at'));
+
+        self::assertSame(1, TimeEntry::query()->forCompany(self::COMPANY)->count());
+    }
+
+    public function test_a_start_can_override_the_tasks_billable_flag(): void
+    {
+        $task = $this->taskOnProjectAt(6000);
+
+        $this->asCompany(self::COMPANY)
+            ->postJson('/api/v1/tasks-projects/timer/start', ['task_id' => $task, 'billable' => false])
+            ->assertCreated()
+            ->assertJsonPath('data.billable', false);
+    }
+
+    public function test_stopping_applies_the_description_and_the_billable_flag_it_carries(): void
+    {
+        $task = $this->taskOnProjectAt(6000);
+
+        Carbon::setTestNow('2026-09-15 09:00:00');
+        $this->asCompany(self::COMPANY)->postJson('/api/v1/tasks-projects/timer/start', [
+            'task_id' => $task,
+            'description' => 'Reading the ticket',
+        ])->assertCreated();
+
+        Carbon::setTestNow('2026-09-15 10:00:00');
+        $this->asCompany(self::COMPANY)
+            ->postJson('/api/v1/tasks-projects/timer/stop', [
+                'description' => 'Fixed the importer',
+                'billable' => false,
+            ])
+            ->assertOk()
+            ->assertJsonPath('data.description', 'Fixed the importer')
+            ->assertJsonPath('data.billable', false)
+            ->assertJsonPath('data.duration_minutes', 60)
+            // Non-billable time is still rated; what it is worth is the
+            // invoice's question, not the timesheet's.
+            ->assertJsonPath('data.amount', 6000);
+    }
+
+    public function test_stopping_without_details_keeps_what_the_start_recorded(): void
+    {
+        $task = $this->taskOnProjectAt(6000);
+
+        Carbon::setTestNow('2026-09-15 09:00:00');
+        $this->asCompany(self::COMPANY)->postJson('/api/v1/tasks-projects/timer/start', [
+            'task_id' => $task,
+            'description' => 'Reading the ticket',
+        ])->assertCreated();
+
+        Carbon::setTestNow('2026-09-15 10:00:00');
+        $this->asCompany(self::COMPANY)
+            ->postJson('/api/v1/tasks-projects/timer/stop')
+            ->assertOk()
+            ->assertJsonPath('data.description', 'Reading the ticket')
+            ->assertJsonPath('data.billable', true);
     }
 
     public function test_stopping_rounds_the_elapsed_time_and_freezes_the_rate(): void
@@ -235,6 +318,68 @@ final class TimerApiTest extends TestCase
             ->assertJsonPath('data.time.logged_minutes', 60)
             ->assertJsonPath('data.time.unbilled_amount', 6000)
             ->assertJsonPath('data.time.running', []);
+    }
+
+    public function test_a_task_start_on_the_running_task_applies_the_details_it_carries(): void
+    {
+        Carbon::setTestNow('2026-09-15 09:00:00');
+        $task = $this->taskOnProjectAt(6000);
+
+        $started = $this->asCompany(self::COMPANY)->postJson('/api/v1/tasks-projects/tasks/'.$task.'/start');
+        $started->assertCreated();
+
+        $again = $this->asCompany(self::COMPANY)->postJson('/api/v1/tasks-projects/tasks/'.$task.'/start', [
+            'description' => 'Carried on with it',
+            'billable' => false,
+        ]);
+
+        $again->assertOk();
+        $again->assertJsonPath('data.id', $started->json('data.id'));
+        $again->assertJsonPath('data.description', 'Carried on with it');
+        $again->assertJsonPath('data.billable', false);
+    }
+
+    public function test_stopping_a_task_carries_the_description_and_the_billable_flag(): void
+    {
+        $task = $this->taskOnProjectAt(6000);
+
+        Carbon::setTestNow('2026-09-15 09:00:00');
+        $this->asCompany(self::COMPANY)->postJson('/api/v1/tasks-projects/tasks/'.$task.'/start')->assertCreated();
+
+        Carbon::setTestNow('2026-09-15 10:00:00');
+        $this->asCompany(self::COMPANY)
+            ->postJson('/api/v1/tasks-projects/tasks/'.$task.'/stop', [
+                'description' => 'Wrote the importer test',
+                'billable' => false,
+            ])
+            ->assertOk()
+            ->assertJsonPath('data.description', 'Wrote the importer test')
+            ->assertJsonPath('data.billable', false)
+            ->assertJsonPath('data.duration_minutes', 60);
+    }
+
+    public function test_a_mismatched_stop_is_refused_before_it_writes_anything(): void
+    {
+        $running = $this->taskOnProjectAt(6000);
+        $idle = (int) $this->makeTask(self::COMPANY, ['name' => 'Idle'])->id;
+
+        $this->asCompany(self::COMPANY)->postJson('/api/v1/tasks-projects/tasks/'.$running.'/start', [
+            'description' => 'Reading the ticket',
+        ])->assertCreated();
+
+        $this->asCompany(self::COMPANY)
+            ->postJson('/api/v1/tasks-projects/tasks/'.$idle.'/stop', [
+                'description' => 'Should never land',
+                'billable' => false,
+            ])
+            ->assertStatus(409)
+            ->assertJsonPath('error', 'timer_mismatch');
+
+        $this->asCompany(self::COMPANY)
+            ->getJson('/api/v1/tasks-projects/timer')
+            ->assertJsonPath('data.task_id', $running)
+            ->assertJsonPath('data.description', 'Reading the ticket')
+            ->assertJsonPath('data.billable', true);
     }
 
     public function test_stopping_the_wrong_task_is_a_mismatch_rather_than_a_stop(): void

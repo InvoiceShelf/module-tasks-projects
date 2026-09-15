@@ -12,6 +12,7 @@ final class StartTimerRequest extends ModuleRequest
         return [
             'task_id' => ['required', 'integer', 'min:1'],
             'description' => ['nullable', 'string'],
+            'billable' => ['sometimes', 'boolean'],
         ];
     }
 }
