@@ -10,6 +10,7 @@ import { session } from '@/stores/session'
 import { errorMessage } from '@/support/errors'
 import { formatDate, toDateString } from '@/support/format'
 import { useTranslate } from '@/support/i18n'
+import { PATHS } from '@/support/page'
 import type { Notify } from '@/support/page'
 import { rangeFor, shareOf } from '@/support/reports'
 import type { RangePreset } from '@/support/reports'
@@ -223,10 +224,7 @@ function clearRange(): void {
     <BasePageHeader :title="t('tasks_projects.reports.title')">
       <BaseBreadcrumb>
         <BaseBreadcrumbItem :title="t('tasks_projects.general.home')" to="/admin/dashboard" />
-        <BaseBreadcrumbItem
-          :title="t('tasks_projects.projects.title')"
-          to="/admin/modules/tasks-projects"
-        />
+        <BaseBreadcrumbItem :title="t('tasks_projects.tasks.title')" :to="PATHS.tasks" />
         <BaseBreadcrumbItem :title="t('tasks_projects.reports.title')" to="#" active />
       </BaseBreadcrumb>
 
@@ -236,21 +234,21 @@ function clearRange(): void {
 
       <template #actions>
         <div class="flex items-center justify-end space-x-5">
-          <router-link to="/admin/modules/tasks-projects">
+          <router-link :to="PATHS.tasks">
+            <BaseButton variant="white">
+              <template #left="slotProps">
+                <BaseIcon name="ClipboardDocumentListIcon" :class="slotProps.class" />
+              </template>
+              {{ t('tasks_projects.tasks.title') }}
+            </BaseButton>
+          </router-link>
+
+          <router-link :to="PATHS.projects">
             <BaseButton variant="white">
               <template #left="slotProps">
                 <BaseIcon name="FolderIcon" :class="slotProps.class" />
               </template>
               {{ t('tasks_projects.projects.title') }}
-            </BaseButton>
-          </router-link>
-
-          <router-link to="/admin/modules/tasks-projects/board">
-            <BaseButton variant="white">
-              <template #left="slotProps">
-                <BaseIcon name="ViewColumnsIcon" :class="slotProps.class" />
-              </template>
-              {{ t('tasks_projects.board.title') }}
             </BaseButton>
           </router-link>
         </div>

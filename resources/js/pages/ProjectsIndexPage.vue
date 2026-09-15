@@ -9,6 +9,7 @@ import { customerName, ensureLoaded } from '@/stores/customers'
 import { errorMessage } from '@/support/errors'
 import { formatDate } from '@/support/format'
 import { useTranslate } from '@/support/i18n'
+import { PATHS } from '@/support/page'
 import type { Project, ProjectListParams, ProjectStatus } from '@/types/project'
 
 type NotifyType = 'success' | 'error' | 'warning' | 'info'
@@ -256,16 +257,16 @@ function statusLabel(status: ProjectStatus): string {
 
       <template #actions>
         <div class="flex items-center justify-end space-x-5">
-          <router-link to="/admin/modules/tasks-projects/board">
+          <router-link :to="PATHS.tasks">
             <BaseButton variant="white">
               <template #left="slotProps">
-                <BaseIcon name="ViewColumnsIcon" :class="slotProps.class" />
+                <BaseIcon name="ClipboardDocumentListIcon" :class="slotProps.class" />
               </template>
-              {{ t('tasks_projects.board.title') }}
+              {{ t('tasks_projects.tasks.title') }}
             </BaseButton>
           </router-link>
 
-          <router-link to="/admin/modules/tasks-projects/reports">
+          <router-link :to="PATHS.reports">
             <BaseButton variant="white">
               <template #left="slotProps">
                 <BaseIcon name="ChartBarIcon" :class="slotProps.class" />
@@ -337,10 +338,7 @@ function statusLabel(status: ProjectStatus): string {
             <span>
               <router-link
                 class="hover:text-primary-500"
-                :to="{
-                  name: 'extension.page.tasks-projects.project',
-                  params: { id: row.data.id },
-                }"
+                :to="PATHS.project(row.data.id)"
               >
                 {{ row.data.name }}
               </router-link>

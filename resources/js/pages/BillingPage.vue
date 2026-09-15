@@ -19,6 +19,7 @@ import { errorMessage, fieldErrors } from '@/support/errors'
 import { errorStatus } from '@/support/http'
 import { formatDate, formatMinutes, toDateString } from '@/support/format'
 import { useTranslate } from '@/support/i18n'
+import { PATHS } from '@/support/page'
 import type { Notify } from '@/support/page'
 import type {
   BillingGrouping,
@@ -654,16 +655,13 @@ function stepClass(index: number): string {
     <BasePageHeader :title="t('tasks_projects.billing.title')">
       <BaseBreadcrumb>
         <BaseBreadcrumbItem :title="t('tasks_projects.general.home')" to="/admin/dashboard" />
-        <BaseBreadcrumbItem
-          :title="t('tasks_projects.projects.title')"
-          to="/admin/modules/tasks-projects"
-        />
+        <BaseBreadcrumbItem :title="t('tasks_projects.tasks.title')" :to="PATHS.tasks" />
         <BaseBreadcrumbItem :title="t('tasks_projects.billing.title')" to="#" active />
       </BaseBreadcrumb>
 
       <template #actions>
         <div class="flex items-center justify-end space-x-5">
-          <router-link to="/admin/modules/tasks-projects/time">
+          <router-link :to="PATHS.week">
             <BaseButton variant="white">
               <template #left="slotProps">
                 <BaseIcon name="ClockIcon" :class="slotProps.class" />
