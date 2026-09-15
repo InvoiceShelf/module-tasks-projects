@@ -7070,7 +7070,7 @@ var Ld = { class: "flex items-start justify-between gap-2" }, Rd = { class: "tex
 					_: 1
 				}, 8, ["title", "description"])) : (_(), a("div", Xd, [(_(!0), a(e, null, b(d.value, (n) => (_(), a("section", {
 					key: n.status.id,
-					class: "w-72 shrink-0 rounded-xl border border-line-default bg-surface-secondary"
+					class: "w-64 shrink-0 rounded-xl border border-line-default bg-surface-secondary"
 				}, [
 					o("header", Zd, [o("div", Qd, [
 						o("span", {
