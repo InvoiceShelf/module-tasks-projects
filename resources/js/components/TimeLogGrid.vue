@@ -57,6 +57,23 @@ const summary = computed<TaskSummary>(() => ({
  */
 const addDisabled = computed<boolean>(() => timerStore.isRunningOn(props.task.id))
 
+const feedback = computed(() => ({ notify: props.notify, t }))
+
+/**
+ * Whether a running row is the caller's own clock.
+ *
+ * Another member's running entry is shown here and never stopped from this
+ * screen: their clock is theirs to close.
+ */
+function isMine(entry: TimeEntry): boolean {
+  return entry.is_running && timerStore.running?.id === entry.id
+}
+
+/** Stop from the log, naming the task, through the same dialog as everywhere. */
+function stop(): void {
+  void timerStore.stopWithPrompt(props.client, feedback.value, { taskId: props.task.id })
+}
+
 watch(() => props.task.id, () => void load(), { immediate: true })
 
 // A start or a stop anywhere writes an entry against this task.
@@ -268,6 +285,19 @@ async function remove(entry: TimeEntry): Promise<void> {
                   {{ t('tasks_projects.general.delete') }}
                 </BaseDropdownItem>
               </BaseDropdown>
+
+              <BaseButton
+                v-else-if="isMine(entry)"
+                variant="white"
+                size="sm"
+                :disabled="timerStore.busy"
+                @click="stop"
+              >
+                <template #left="slotProps">
+                  <BaseIcon name="StopIcon" :class="slotProps.class" />
+                </template>
+                {{ t('tasks_projects.timer.stop') }}
+              </BaseButton>
 
               <span v-else class="text-xs text-primary-500">
                 {{ t('tasks_projects.tasks.time_log.running') }}

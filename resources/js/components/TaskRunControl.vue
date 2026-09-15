@@ -7,7 +7,7 @@ import { timerStore, useNow } from '@/stores/timer'
 import { initials } from '@/support/format'
 import { useTranslate } from '@/support/i18n'
 import type { Notify } from '@/support/page'
-import { formatClock, formatDuration, secondsBetween } from '@/support/time'
+import { formatClock, secondsBetween } from '@/support/time'
 import type { CompanyMember } from '@/types/member'
 import type { Task, TaskRunningEntry } from '@/types/task'
 
@@ -88,23 +88,26 @@ async function start(): Promise<void> {
   }
 }
 
-async function stop(): Promise<void> {
-  const entry = await timerStore.stopOnTask(props.client, props.task.id, feedback.value)
-
-  if (entry !== null) {
-    props.notify(
-      'success',
-      t('tasks_projects.timer.stopped', {
-        name: props.task.name,
-        duration: formatDuration(entry.duration_minutes),
-      }),
-    )
-  }
+/**
+ * Stopping asks for the note first, naming this row's task.
+ *
+ * The task is named so a stale row cannot stop a clock that has since moved
+ * elsewhere: the mismatch is reported before the dialog opens rather than
+ * after the user has typed into it.
+ */
+function stop(): void {
+  void timerStore.stopWithPrompt(props.client, feedback.value, { taskId: props.task.id })
 }
 
-/** Close the clock wherever it is, then put it on this task. */
+/**
+ * Close the clock wherever it is, then put it on this task.
+ *
+ * The same dialog runs the first half, so the time being left behind is
+ * described before this task takes the clock. Backing out of it, or discarding
+ * that spell, leaves this task unstarted: the answer was not "start here".
+ */
 async function switchHere(): Promise<void> {
-  if ((await timerStore.stop(props.client, feedback.value)) !== null) {
+  if ((await timerStore.stopWithPrompt(props.client, feedback.value)) !== null) {
     await start()
   }
 }

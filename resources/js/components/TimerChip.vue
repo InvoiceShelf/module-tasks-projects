@@ -4,7 +4,7 @@ import type { AxiosInstance } from 'axios'
 import { taskLabel } from '@/stores/tasks'
 import { timerStore } from '@/stores/timer'
 import { useTranslate } from '@/support/i18n'
-import { formatClock, formatDuration } from '@/support/time'
+import { formatClock } from '@/support/time'
 
 type NotifyType = 'success' | 'error' | 'warning' | 'info'
 
@@ -23,19 +23,15 @@ const label = computed<string>(() => taskLabel(timerStore.running?.task_id ?? nu
 
 const elapsed = computed<string>(() => formatClock(timerStore.elapsedSeconds))
 
-async function stop(): Promise<void> {
-  const name = label.value
-  const entry = await timerStore.stop(props.client, { notify: props.notify, t })
-
-  if (entry !== null) {
-    props.notify(
-      'success',
-      t('tasks_projects.timer.stopped', {
-        name,
-        duration: formatDuration(entry.duration_minutes),
-      }),
-    )
-  }
+/**
+ * Stopping asks before it writes.
+ *
+ * The chip is the most convenient stop button on the screen, which is exactly
+ * why it should not be the one that silently files an hour with no note on it.
+ * The dialog, the discard and the message all live in the store.
+ */
+function stop(): void {
+  void timerStore.stopWithPrompt(props.client, { notify: props.notify, t })
 }
 </script>
 

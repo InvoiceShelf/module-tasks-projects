@@ -2,13 +2,10 @@
 import { computed, onBeforeUnmount, onMounted, ref, watch } from 'vue'
 import type { AxiosInstance } from 'axios'
 import type { Router } from 'vue-router'
-import { searchTasks } from '@/api/time'
-import { rememberTask, taskLabel } from '@/stores/tasks'
+import { taskLabel } from '@/stores/tasks'
 import { timerStore } from '@/stores/timer'
-import { errorMessage } from '@/support/errors'
 import { useTranslate } from '@/support/i18n'
-import { formatClock, formatDuration } from '@/support/time'
-import type { TaskSummary } from '@/types/task-summary'
+import { formatClock } from '@/support/time'
 
 type NotifyType = 'success' | 'error' | 'warning' | 'info'
 
@@ -28,19 +25,13 @@ const props = defineProps<{
 }>()
 
 const emit = defineEmits<{
-  (event: 'open-week'): void
+  (event: 'open-task'): void
 }>()
-
-const SEARCH_DEBOUNCE_MS = 300
 
 const t = useTranslate()
 
+/** Whether the running panel is open. There is nothing to show when idle. */
 const open = ref(false)
-const search = ref('')
-const results = ref<TaskSummary[]>([])
-const searching = ref(false)
-const picked = ref<TaskSummary | null>(null)
-const description = ref('')
 
 /** The current path, read from the host router and kept up to date on every navigation. */
 const currentPath = ref(window.location.pathname)
@@ -48,7 +39,6 @@ const currentPath = ref(window.location.pathname)
 /** Whether the AI assistant's launcher floats in the same corner as this one. */
 const aiAssistantFloats = ref(false)
 
-let searchTimer: ReturnType<typeof setTimeout> | undefined
 let stopWatchingRoute: (() => void) | undefined
 
 const feedback = computed(() => ({ notify: props.notify, t }))
@@ -57,12 +47,22 @@ const runningLabel = computed<string>(() => taskLabel(timerStore.running?.task_i
 
 const elapsed = computed<string>(() => formatClock(timerStore.elapsedSeconds))
 
+/** True while either timer dialog is on screen, which the launcher sits over. */
+const asking = computed<boolean>(
+  () => timerStore.stopPrompt !== null || timerStore.startPrompt !== null,
+)
+
 /**
  * Long settings forms, such as the status editor, run the full height of the
  * page: a fixed launcher sitting on top of them hides the last rows and the
  * save button, so the launcher steps aside there rather than everywhere.
+ *
+ * It steps aside for its own dialogs too, because a floating button over a
+ * modal backdrop reads as something still to be pressed.
  */
-const hiddenHere = computed<boolean>(() => currentPath.value.startsWith(HIDDEN_PATH_PREFIX))
+const hiddenHere = computed<boolean>(
+  () => asking.value || currentPath.value.startsWith(HIDDEN_PATH_PREFIX),
+)
 
 /**
  * Clear the bottom of the AI assistant's own launcher when it floats in the
@@ -94,6 +94,16 @@ watch(
   },
 )
 
+// A stopped or discarded timer leaves the panel with nothing to say.
+watch(
+  () => timerStore.running,
+  (running) => {
+    if (running === null) {
+      close()
+    }
+  },
+)
+
 onMounted(() => {
   currentPath.value = props.router.currentRoute.value.path
   stopWatchingRoute = props.router.afterEach((to) => {
@@ -104,96 +114,37 @@ onMounted(() => {
   probeAiAssistant()
 })
 
-watch(open, (isOpen) => {
-  if (isOpen && timerStore.running === null) {
-    void runSearch()
-  }
-})
-
-watch(search, () => {
-  clearTimeout(searchTimer)
-  searchTimer = setTimeout(() => void runSearch(), SEARCH_DEBOUNCE_MS)
-})
-
 onBeforeUnmount(() => {
-  clearTimeout(searchTimer)
   stopWatchingRoute?.()
 })
 
-async function runSearch(): Promise<void> {
-  searching.value = true
-
-  try {
-    const tasks = await searchTasks(props.client, search.value)
-
-    results.value = tasks
-    tasks.forEach(rememberTask)
-  } catch (error: unknown) {
-    results.value = []
-    props.notify('error', errorMessage(error, t('tasks_projects.time.tasks_failed')))
-  } finally {
-    searching.value = false
-  }
-}
-
-function pick(task: TaskSummary): void {
-  picked.value = task
-  rememberTask(task)
-}
-
 function close(): void {
   open.value = false
-  search.value = ''
-  results.value = []
-  picked.value = null
-  description.value = ''
 }
 
-async function start(): Promise<void> {
-  const task = picked.value
+/**
+ * The circle does the obvious thing for the state it is in.
+ *
+ * Idle, it asks what to start: the project, the task, and what the time is
+ * for. Running, it opens the panel that says what is on the clock.
+ */
+function press(): void {
+  if (timerStore.running === null) {
+    void timerStore.startWithPrompt(props.client, feedback.value)
 
-  if (task === null) {
     return
   }
 
-  const entry = await timerStore.start(
-    props.client,
-    task.id,
-    description.value.trim() || null,
-    feedback.value,
-  )
-
-  if (entry !== null) {
-    props.notify('success', t('tasks_projects.timer.started', { name: task.name }))
-    close()
-  }
+  open.value = !open.value
 }
 
-async function stop(): Promise<void> {
-  const name = runningLabel.value
-  const entry = await timerStore.stop(props.client, feedback.value)
-
-  if (entry !== null) {
-    props.notify(
-      'success',
-      t('tasks_projects.timer.stopped', {
-        name,
-        duration: formatDuration(entry.duration_minutes),
-      }),
-    )
-    close()
-  }
+function stop(): void {
+  void timerStore.stopWithPrompt(props.client, feedback.value)
 }
 
-async function discard(): Promise<void> {
-  if (!window.confirm(t('tasks_projects.timer.discard_confirm'))) {
-    return
-  }
-
-  if (await timerStore.discard(props.client, feedback.value)) {
-    props.notify('success', t('tasks_projects.timer.discarded'))
-    close()
-  }
+function openTask(): void {
+  close()
+  emit('open-task')
 }
 </script>
 
@@ -204,15 +155,16 @@ async function discard(): Promise<void> {
       class="fixed right-6 z-40 flex flex-col items-end gap-3"
       :class="wrapperClass"
     >
+      <!-- Running: what is on the clock, and the two ways out of it. -->
       <section
-        v-if="open"
+        v-if="open && timerStore.running !== null"
         class="w-80 max-w-[calc(100vw-3rem)] rounded-xl border border-line-default bg-surface shadow-2xl"
         :aria-label="t('tasks_projects.timer.panel_title')"
         @keydown.esc="close"
       >
         <header class="flex items-center justify-between border-b border-line-default px-4 py-3">
           <h2 class="text-sm font-semibold text-heading">
-            {{ t('tasks_projects.timer.panel_title') }}
+            {{ t('tasks_projects.timer.running') }}
           </h2>
 
           <button
@@ -225,8 +177,7 @@ async function discard(): Promise<void> {
           </button>
         </header>
 
-        <!-- Running: show what is on the clock and how to end it. -->
-        <div v-if="timerStore.running !== null" class="space-y-4 px-4 py-4">
+        <div class="space-y-4 px-4 py-4">
           <div>
             <p class="truncate text-sm font-medium text-heading">{{ runningLabel }}</p>
             <p class="mt-1 text-2xl font-semibold tabular-nums text-primary-500">{{ elapsed }}</p>
@@ -235,76 +186,20 @@ async function discard(): Promise<void> {
             </p>
           </div>
 
-          <div class="flex items-center gap-2">
+          <div class="flex items-center justify-between">
+            <button
+              type="button"
+              class="text-xs text-primary-500 hover:underline"
+              @click="openTask"
+            >
+              {{ t('tasks_projects.timer.open_task') }}
+            </button>
+
             <BaseButton variant="primary" :disabled="timerStore.busy" @click="stop">
               <template #left="slotProps">
                 <BaseIcon name="StopIcon" :class="slotProps.class" />
               </template>
               {{ t('tasks_projects.timer.stop') }}
-            </BaseButton>
-
-            <BaseButton variant="primary-outline" :disabled="timerStore.busy" @click="discard">
-              {{ t('tasks_projects.timer.discard') }}
-            </BaseButton>
-          </div>
-        </div>
-
-        <!-- Idle: pick a task and say what the time is for. -->
-        <div v-else class="space-y-3 px-4 py-4">
-          <label class="block">
-            <span class="sr-only">{{ t('tasks_projects.timer.search_tasks') }}</span>
-            <input
-              v-model="search"
-              type="search"
-              autocomplete="off"
-              class="w-full rounded-md border border-line-default bg-surface px-3 py-2 text-sm text-body outline-hidden focus:border-primary-400 focus:ring-1 focus:ring-primary-400"
-              :placeholder="t('tasks_projects.timer.search_tasks')"
-            >
-          </label>
-
-          <p v-if="searching" class="text-xs text-muted">{{ t('tasks_projects.general.search') }}</p>
-
-          <ul v-else-if="results.length > 0" class="max-h-48 space-y-1 overflow-y-auto">
-            <li v-for="task in results" :key="task.id">
-              <button
-                type="button"
-                class="w-full truncate rounded-md px-2 py-2 text-left text-sm hover:bg-hover"
-                :class="picked?.id === task.id ? 'bg-hover-strong font-medium text-heading' : 'text-body'"
-                @click="pick(task)"
-              >
-                {{ task.name }}
-              </button>
-            </li>
-          </ul>
-
-          <p v-else class="text-xs text-muted">{{ t('tasks_projects.timer.no_tasks') }}</p>
-
-          <input
-            v-model="description"
-            type="text"
-            class="w-full rounded-md border border-line-default bg-surface px-3 py-2 text-sm text-body outline-hidden focus:border-primary-400 focus:ring-1 focus:ring-primary-400"
-            :placeholder="t('tasks_projects.timer.description_placeholder')"
-            :aria-label="t('tasks_projects.time.fields.description')"
-          >
-
-          <div class="flex items-center justify-between">
-            <button
-              type="button"
-              class="text-xs text-primary-500 hover:underline"
-              @click="emit('open-week')"
-            >
-              {{ t('tasks_projects.timer.open_timesheet') }}
-            </button>
-
-            <BaseButton
-              variant="primary"
-              :disabled="picked === null || timerStore.busy"
-              @click="start"
-            >
-              <template #left="slotProps">
-                <BaseIcon name="PlayIcon" :class="slotProps.class" />
-              </template>
-              {{ t('tasks_projects.timer.start') }}
             </BaseButton>
           </div>
         </div>
@@ -315,7 +210,7 @@ async function discard(): Promise<void> {
         class="flex items-center gap-2 rounded-full bg-btn-primary px-4 py-3 text-sm font-medium text-white shadow-lg hover:bg-btn-primary-hover"
         :title="t('tasks_projects.timer.quick_start')"
         :aria-label="t('tasks_projects.timer.quick_start')"
-        @click="open = !open"
+        @click="press"
       >
         <BaseIcon :name="timerStore.running === null ? 'ClockIcon' : 'StopIcon'" class="h-5 w-5 text-white" />
         <span v-if="timerStore.running !== null" class="tabular-nums">{{ elapsed }}</span>
