@@ -1,15 +1,12 @@
 import type { InvoiceShelfExtensionApi } from '@invoiceshelf/modules/frontend'
-import { boardMessages } from '@/messages/board'
-import BoardPage from '@/pages/BoardPage.vue'
+import { projectMessages } from '@/messages/projects'
 import ProjectDetailPage from '@/pages/ProjectDetailPage.vue'
+import ProjectsIndexPage from '@/pages/ProjectsIndexPage.vue'
 import ProjectMembersTab from '@/pages/project/ProjectMembersTab.vue'
 import ProjectOverviewTab from '@/pages/project/ProjectOverviewTab.vue'
 import ProjectTasksTab from '@/pages/project/ProjectTasksTab.vue'
 import ProjectTimeTab from '@/pages/project/ProjectTimeTab.vue'
-import TasksPage from '@/pages/TasksPage.vue'
-import { injectedPage } from '@/support/page'
-
-const MODULE = 'tasks-projects'
+import { MODULE, injectedPage } from '@/support/page'
 
 const ability = {
   viewProject: `${MODULE}:view-project`,
@@ -19,35 +16,29 @@ const ability = {
 } as const
 
 /**
- * The board, the task screens and the project detail.
+ * The project index and one project's detail tabs.
  *
- * They are registered from here rather than from `init.ts` so that a slice of
- * the module owns one file: adding a screen never means editing the same lines
+ * Projects sits beside Tasks rather than above it: a project groups work,
+ * bills it and holds a budget, but the day's question is "what am I doing",
+ * which is a task. So the index moved off the module root and onto its own
+ * path, and the sidebar carries both.
+ *
+ * Registered from here rather than from `init.ts` so that a slice of the
+ * module owns one file: adding a screen never means editing the same lines
  * another slice is editing. The strings come along for the ride, because the
  * host merges message bundles recursively.
  */
-export function registerBoardPages(extensions: InvoiceShelfExtensionApi): void {
-  extensions.addMessages(boardMessages)
+export function registerProjectPages(extensions: InvoiceShelfExtensionApi): void {
+  extensions.addMessages(projectMessages)
 
   extensions.registerPage({
-    id: 'board',
+    id: 'projects',
     module: MODULE,
-    path: 'board',
-    component: injectedPage(extensions, BoardPage),
+    path: 'projects',
+    component: injectedPage(extensions, ProjectsIndexPage),
     meta: {
-      ability: ability.viewTask,
-      title: 'tasks_projects.board.title',
-    },
-  })
-
-  extensions.registerPage({
-    id: 'tasks',
-    module: MODULE,
-    path: 'tasks',
-    component: injectedPage(extensions, TasksPage),
-    meta: {
-      ability: ability.viewTask,
-      title: 'tasks_projects.tasks.title',
+      ability: ability.viewProject,
+      title: 'tasks_projects.projects.title',
     },
   })
 

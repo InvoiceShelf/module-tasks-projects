@@ -1,28 +1,21 @@
 import { defineComponent, h } from 'vue'
-import type { Component } from 'vue'
 import type { InvoiceShelfExtensionApi } from '@invoiceshelf/modules/frontend'
 import QuickStartOverlay from '@/components/QuickStartOverlay.vue'
 import TimerChip from '@/components/TimerChip.vue'
 import { timeMessages } from '@/messages/time'
-import TimePage from '@/pages/TimePage.vue'
 import TimeSettingsPage from '@/pages/TimeSettingsPage.vue'
 import { refreshSession, resetSession, session, setAdminMode } from '@/stores/session'
 import { resetTaskNames } from '@/stores/tasks'
 import { timerStore } from '@/stores/timer'
-
-type NotifyType = 'success' | 'error' | 'warning' | 'info'
-
-const MODULE = 'tasks-projects'
-
-/** Where `registerPage` mounts the timesheet, for the links that lead to it. */
-const TIME_PATH = `/admin/modules/${MODULE}/time`
+import { MODULE, PATHS, injectedPage } from '@/support/page'
+import type { NotifyType } from '@/support/page'
 
 /**
- * Everything the time-tracking slice contributes to the host.
+ * What the time-tracking slice contributes to the host.
  *
- * Kept in one file so `init.ts` only ever gains a line per slice: the page, the
- * header chip, the quick-start launcher, the settings page and the lifecycle
- * wiring all start here.
+ * The timesheet itself is the Week view of the Tasks screen now, so this file
+ * keeps what has no screen of its own: the header chip, the quick-start
+ * launcher, the settings page and the lifecycle wiring.
  *
  * Nothing in this function talks to the network. Pinia is not installed when
  * the boot callback runs, so the first read waits for `bootstrap:completed`,
@@ -36,20 +29,22 @@ export function registerTimeTracking(extensions: InvoiceShelfExtensionApi): void
     extensions.notify(type, message)
   }
 
-  const openTimesheet = (): void => {
-    void extensions.router.push(TIME_PATH)
+  const openWeek = (): void => {
+    void extensions.router.push(PATHS.week)
   }
 
-  extensions.registerPage({
-    id: 'time',
-    module: MODULE,
-    path: 'time',
-    component: injected(extensions, TimePage),
-    meta: {
-      ability: `${MODULE}:view-own-time`,
-      title: 'tasks_projects.time.title',
-    },
-  })
+  /**
+   * The chip leads to the work, not to the timesheet.
+   *
+   * What someone wants when they look at a running clock is the thing it is
+   * running on: the task, its time log and the stop button beside them. The
+   * week grid is one click further, on the same screen's Week view.
+   */
+  const openRunningTask = (): void => {
+    const taskId = timerStore.runningTaskId
+
+    void extensions.router.push(taskId === null ? PATHS.week : PATHS.task(taskId))
+  }
 
   extensions.registerHeaderAction({
     id: `${MODULE}.timer-chip`,
@@ -60,7 +55,7 @@ export function registerTimeTracking(extensions: InvoiceShelfExtensionApi): void
         h(TimerChip, {
           client: extensions.client,
           notify,
-          onOpen: openTimesheet,
+          onOpen: openRunningTask,
         }),
     }),
   })
@@ -76,7 +71,7 @@ export function registerTimeTracking(extensions: InvoiceShelfExtensionApi): void
           client: extensions.client,
           notify,
           enabled: !session.adminMode,
-          onOpenTimesheet: openTimesheet,
+          onOpenWeek: openWeek,
         }),
     }),
   })
@@ -87,7 +82,7 @@ export function registerTimeTracking(extensions: InvoiceShelfExtensionApi): void
     icon: 'ClockIcon',
     path: MODULE,
     priority: 70,
-    component: injected(extensions, TimeSettingsPage),
+    component: injectedPage(extensions, TimeSettingsPage),
   })
 
   extensions.on('bootstrap:completed', ({ adminMode }) => {
@@ -122,26 +117,4 @@ function leave(): void {
   timerStore.reset()
   resetTaskNames()
   resetSession()
-}
-
-/**
- * Hand a page the host services it cannot reach on its own.
- *
- * The same wrapper `init.ts` uses for the projects page: a module bundle runs
- * on the host's Vue instance but not on its Pinia or router injections, so the
- * client, the notifier and the router arrive as props, and route params arrive
- * as attrs because the host registers module pages with `props: true`.
- */
-function injected(extensions: InvoiceShelfExtensionApi, page: Component): Component {
-  return defineComponent({
-    setup: (_props, { attrs }) => () =>
-      h(page, {
-        ...attrs,
-        client: extensions.client,
-        notify: (type: NotifyType, message: string): void => {
-          extensions.notify(type, message)
-        },
-        router: extensions.router,
-      }),
-  })
 }
