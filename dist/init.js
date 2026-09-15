@@ -2831,13 +2831,13 @@ var Xi = { class: "mt-4 flex flex-wrap items-end gap-3" }, Zi = {
 				let t = l.task, n = t ? await lr(l.client, t.id, e) : await cr(l.client, e);
 				u("saved", n);
 			} catch (e) {
-				w.value = at(e), l.notify("error", H(e, re(e, "save_failed")));
+				w.value = at(e), l.notify("error", re(e, "save_failed"));
 			} finally {
 				T.value = !1;
 			}
 		}
 		function re(e, t) {
-			return gt(e) === "task_locked" ? d("tasks_projects.tasks.locked") : d(`tasks_projects.tasks.${t}`);
+			return gt(e) === "task_locked" ? d("tasks_projects.tasks.locked") : H(e, d(`tasks_projects.tasks.${t}`));
 		}
 		async function ie() {
 			let e = l.task;
@@ -2846,7 +2846,7 @@ var Xi = { class: "mt-4 flex flex-wrap items-end gap-3" }, Zi = {
 				try {
 					await ur(l.client, e.id), u("deleted", e);
 				} catch (e) {
-					l.notify("error", H(e, re(e, "delete_failed")));
+					l.notify("error", re(e, "delete_failed"));
 				} finally {
 					O.value = !1;
 				}
@@ -5357,7 +5357,7 @@ var Ks = { en: { tasks_projects: {
 		}), R = n({
 			get: () => P.value.find((e) => e.id === m.value?.task_status_id) ?? null,
 			set: (e) => {
-				e !== null && oe(e);
+				e !== null && se(e);
 			}
 		}), z = n(() => M.busy), ee = n(() => j.value.invoiced === "uninvoiced"), te = n(() => j.value.invoiced === "invoiced" ? d("tasks_projects.tasks.already_invoiced") : d("tasks_projects.tasks.nothing_to_invoice")), ne = n(() => m.value?.priority ? d(`tasks_projects.tasks.priority.${m.value.priority.toLowerCase()}`) : null);
 		E(A, () => void re()), E(et, () => void re(!0)), h(() => {
@@ -5414,7 +5414,10 @@ var Ks = { en: { tasks_projects: {
 				...t
 			};
 		}
-		async function oe(e) {
+		function oe(e, t) {
+			return gt(e) === "task_locked" ? d("tasks_projects.tasks.locked") : H(e, d(t));
+		}
+		async function se(e) {
 			let t = m.value;
 			if (t === null || T.value || t.task_status_id === e.id) return;
 			let n = t.task_status_id;
@@ -5422,12 +5425,12 @@ var Ks = { en: { tasks_projects: {
 			try {
 				m.value = await lr(l.client, t.id, ae(t, { task_status_id: e.id })), l.notify("success", d("tasks_projects.tasks.detail.status_saved", { name: e.label })), V();
 			} catch (e) {
-				t.task_status_id = n, l.notify("error", H(e, gt(e) === "task_locked" ? d("tasks_projects.tasks.locked") : d("tasks_projects.tasks.detail.status_failed")));
+				t.task_status_id = n, l.notify("error", oe(e, "tasks_projects.tasks.detail.status_failed"));
 			} finally {
 				T.value = !1;
 			}
 		}
-		async function se() {
+		async function ce() {
 			let e = m.value;
 			e !== null && ee.value && !z.value && await bt({
 				client: l.client,
@@ -5436,20 +5439,20 @@ var Ks = { en: { tasks_projects: {
 				t: d
 			}, { taskIds: [e.id] });
 		}
-		function ce() {
+		function le() {
 			p.push(W.tasks);
 		}
-		function le(e) {
+		function ue(e) {
 			k.value = !1, m.value = e, Qe(e), l.notify("success", d("tasks_projects.tasks.updated", { name: e.name })), V();
 		}
-		async function ue() {
+		async function de() {
 			let e = m.value;
 			if (!(e === null || O.value) && window.confirm(d("tasks_projects.tasks.delete_confirm", { name: e.name }))) {
 				O.value = !0;
 				try {
-					await ur(l.client, e.id), l.notify("success", d("tasks_projects.tasks.deleted", { name: e.name })), V(), ce();
+					await ur(l.client, e.id), l.notify("success", d("tasks_projects.tasks.deleted", { name: e.name })), V(), le();
 				} catch (e) {
-					l.notify("error", H(e, gt(e) === "task_locked" ? d("tasks_projects.tasks.locked") : d("tasks_projects.tasks.delete_failed")));
+					l.notify("error", oe(e, "tasks_projects.tasks.delete_failed"));
 				} finally {
 					O.value = !1;
 				}
@@ -5481,7 +5484,7 @@ var Ks = { en: { tasks_projects: {
 								variant: "white",
 								loading: z.value,
 								disabled: !ee.value || z.value,
-								onClick: se
+								onClick: ce
 							}, {
 								left: D((e) => [z.value ? i("", !0) : (_(), r(b, {
 									key: 0,
@@ -5495,7 +5498,7 @@ var Ks = { en: { tasks_projects: {
 								variant: "primary-outline",
 								loading: O.value,
 								disabled: O.value,
-								onClick: ue
+								onClick: de
 							}, {
 								default: D(() => [s(S(C(d)("tasks_projects.general.delete")), 1)]),
 								_: 1
@@ -5615,8 +5618,8 @@ var Ks = { en: { tasks_projects: {
 						members: v.value,
 						projects: F.value,
 						onClose: l[2] ||= (e) => k.value = !1,
-						onSaved: le,
-						onDeleted: ce
+						onSaved: ue,
+						onDeleted: le
 					}, null, 8, [
 						"show",
 						"client",

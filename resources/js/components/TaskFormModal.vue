@@ -224,23 +224,26 @@ async function save(): Promise<void> {
     emit('saved', task)
   } catch (error: unknown) {
     errors.value = fieldErrors(error)
-    props.notify('error', errorMessage(error, fallbackFor(error, 'save_failed')))
+    props.notify('error', messageFor(error, 'save_failed'))
   } finally {
     saving.value = false
   }
 }
 
 /**
- * What to say when the server did not.
+ * What to say when a save or a delete is refused.
  *
  * A locked task is refused for a reason worth naming rather than as a generic
  * failure, so the caller understands that the invoice, not a bug, is in the
- * way.
+ * way. The module's own sentence wins over the server's, which states the rule
+ * for whoever called the API rather than for the person at the form.
  */
-function fallbackFor(error: unknown, key: 'save_failed' | 'delete_failed'): string {
-  return errorCode(error) === 'task_locked'
-    ? t('tasks_projects.tasks.locked')
-    : t(`tasks_projects.tasks.${key}`)
+function messageFor(error: unknown, key: 'save_failed' | 'delete_failed'): string {
+  if (errorCode(error) === 'task_locked') {
+    return t('tasks_projects.tasks.locked')
+  }
+
+  return errorMessage(error, t(`tasks_projects.tasks.${key}`))
 }
 
 async function remove(): Promise<void> {
@@ -260,7 +263,7 @@ async function remove(): Promise<void> {
     await deleteTask(props.client, task.id)
     emit('deleted', task)
   } catch (error: unknown) {
-    props.notify('error', errorMessage(error, fallbackFor(error, 'delete_failed')))
+    props.notify('error', messageFor(error, 'delete_failed'))
   } finally {
     removing.value = false
   }

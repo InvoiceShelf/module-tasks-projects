@@ -212,6 +212,21 @@ function payload(record: Task, overrides: Partial<TaskInput>): TaskInput {
   }
 }
 
+/**
+ * What to say when the server refused.
+ *
+ * A locked task is refused for a reason worth naming, and the module's own
+ * sentence says it better than the server's, which states the rule for whoever
+ * called the API rather than for the person looking at the task.
+ */
+function messageFor(error: unknown, fallbackKey: string): string {
+  if (errorCode(error) === 'task_locked') {
+    return t('tasks_projects.tasks.locked')
+  }
+
+  return errorMessage(error, t(fallbackKey))
+}
+
 async function changeStatus(option: SelectOption): Promise<void> {
   const record = task.value
 
@@ -230,15 +245,7 @@ async function changeStatus(option: SelectOption): Promise<void> {
     bumpTaskVersion()
   } catch (error: unknown) {
     record.task_status_id = previous
-    props.notify(
-      'error',
-      errorMessage(
-        error,
-        errorCode(error) === 'task_locked'
-          ? t('tasks_projects.tasks.locked')
-          : t('tasks_projects.tasks.detail.status_failed'),
-      ),
-    )
+    props.notify('error', messageFor(error, 'tasks_projects.tasks.detail.status_failed'))
   } finally {
     savingStatus.value = false
   }
@@ -289,15 +296,7 @@ async function remove(): Promise<void> {
     bumpTaskVersion()
     backToTasks()
   } catch (error: unknown) {
-    props.notify(
-      'error',
-      errorMessage(
-        error,
-        errorCode(error) === 'task_locked'
-          ? t('tasks_projects.tasks.locked')
-          : t('tasks_projects.tasks.delete_failed'),
-      ),
-    )
+    props.notify('error', messageFor(error, 'tasks_projects.tasks.delete_failed'))
   } finally {
     removing.value = false
   }
