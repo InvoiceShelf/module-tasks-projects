@@ -1,4 +1,4 @@
-const { Fragment: e, Teleport: t, computed: n, createBlock: r, createCommentVNode: i, createElementBlock: a, createElementVNode: o, createTextVNode: s, createVNode: c, defineComponent: l, getCurrentInstance: u, h: d, normalizeClass: f, normalizeStyle: p, onBeforeUnmount: m, onMounted: h, onScopeDispose: g, openBlock: _, reactive: v, ref: y, renderList: b, resolveComponent: x, toDisplayString: S, unref: C, vModelText: w, vShow: T, watch: E, withCtx: D, withDirectives: O, withKeys: k, withModifiers: A } = window.__invoiceshelf_vue;
+const { Fragment: e, Teleport: t, computed: n, createBlock: r, createCommentVNode: i, createElementBlock: a, createElementVNode: o, createTextVNode: s, createVNode: c, defineComponent: l, getCurrentInstance: u, h: d, nextTick: f, normalizeClass: p, normalizeStyle: m, onBeforeUnmount: h, onMounted: g, onScopeDispose: _, openBlock: v, reactive: y, ref: b, renderList: x, resolveComponent: S, toDisplayString: C, unref: w, vShow: T, watch: E, withCtx: D, withDirectives: O, withKeys: k, withModifiers: A } = window.__invoiceshelf_vue;
 //#region resources/js/messages.ts
 var j = { en: { tasks_projects: {
 	general: {
@@ -61,7 +61,7 @@ var j = { en: { tasks_projects: {
 		delete_failed: "Unable to delete the project.",
 		customers_failed: "Unable to load the customers."
 	}
-} } }, M = v({
+} } }, M = y({
 	busy: !1,
 	pending: null,
 	allowed: !0,
@@ -107,7 +107,7 @@ function B() {
 var te = { class: "flex w-full items-center justify-between" }, ne = { class: "space-y-5 px-6 py-6" }, re = { class: "text-sm text-muted" }, ie = { class: "flex justify-end space-x-3 border-t border-line-default px-6 py-4" }, ae = /* @__PURE__ */ l({
 	__name: "InvoiceNumberModal",
 	setup(e) {
-		let t = B(), i = y(""), a = n(() => M.prompt !== null), l = n(() => i.value.trim() !== "");
+		let t = B(), i = b(""), a = n(() => M.prompt !== null), l = n(() => i.value.trim() !== "");
 		E(() => M.prompt, (e) => {
 			i.value = e?.suggested ?? "";
 		});
@@ -118,18 +118,18 @@ var te = { class: "flex w-full items-center justify-between" }, ne = { class: "s
 			z(null);
 		}
 		return (e, n) => {
-			let f = x("BaseIcon"), p = x("BaseInput"), m = x("BaseInputGroup"), h = x("BaseButton"), g = x("BaseModal");
-			return _(), r(g, {
+			let f = S("BaseIcon"), p = S("BaseInput"), m = S("BaseInputGroup"), h = S("BaseButton"), g = S("BaseModal");
+			return v(), r(g, {
 				show: a.value,
 				onClose: d
 			}, {
-				header: D(() => [o("div", te, [o("span", null, S(C(t)("tasks_projects.billing.number.title")), 1), c(f, {
+				header: D(() => [o("div", te, [o("span", null, C(w(t)("tasks_projects.billing.number.title")), 1), c(f, {
 					name: "XMarkIcon",
 					class: "h-6 w-6 cursor-pointer text-subtle hover:text-body",
 					onClick: d
 				})])]),
-				default: D(() => [o("form", { onSubmit: A(u, ["prevent"]) }, [o("div", ne, [o("p", re, S(C(t)("tasks_projects.billing.number.description")), 1), c(m, {
-					label: C(t)("tasks_projects.billing.number.label"),
+				default: D(() => [o("form", { onSubmit: A(u, ["prevent"]) }, [o("div", ne, [o("p", re, C(w(t)("tasks_projects.billing.number.description")), 1), c(m, {
+					label: w(t)("tasks_projects.billing.number.label"),
 					required: ""
 				}, {
 					default: D(() => [c(p, {
@@ -145,14 +145,14 @@ var te = { class: "flex w-full items-center justify-between" }, ne = { class: "s
 					variant: "primary-outline",
 					onClick: d
 				}, {
-					default: D(() => [s(S(C(t)("tasks_projects.general.cancel")), 1)]),
+					default: D(() => [s(C(w(t)("tasks_projects.general.cancel")), 1)]),
 					_: 1
 				}), c(h, {
 					type: "submit",
 					variant: "primary",
 					disabled: !l.value
 				}, {
-					default: D(() => [s(S(C(t)("tasks_projects.billing.number.save")), 1)]),
+					default: D(() => [s(C(w(t)("tasks_projects.billing.number.save")), 1)]),
 					_: 1
 				}, 8, ["disabled"])])], 32)]),
 				_: 1
@@ -351,9 +351,9 @@ async function Ne(e, t) {
 	let { data: n } = await e.post(Se.timerStart, t);
 	return n.data;
 }
-async function Pe(e) {
-	let { data: t } = await e.post(Se.timerStop);
-	return t.data;
+async function Pe(e, t = {}) {
+	let { data: n } = await e.post(Se.timerStop, t);
+	return n.data;
 }
 async function Fe(e) {
 	await e.delete(Se.timer);
@@ -377,9 +377,9 @@ async function Be(e, t) {
 	let { data: n } = await e.post(Se.reorderTaskStatuses, { ids: t });
 	return n.data ?? [];
 }
-async function Ve(e, t, n = Ee) {
-	let r = { limit: n };
-	t.trim() !== "" && (r.search = t.trim());
+async function Ve(e, t, n = {}) {
+	let r = { limit: n.limit ?? Ee };
+	t.trim() !== "" && (r.search = t.trim()), typeof n.projectId == "number" && (r.project_id = n.projectId), n.invoiced !== void 0 && (r.invoiced = n.invoiced);
 	let { data: i } = await e.get(Se.tasks, { params: r });
 	return i.data ?? [];
 }
@@ -397,14 +397,14 @@ async function We(e) {
 }
 //#endregion
 //#region resources/js/stores/tasks.ts
-var Ge = v({}), Ke = /* @__PURE__ */ new Set(), qe = 5, Je = {
+var Ge = y({}), Ke = /* @__PURE__ */ new Set(), qe = 5, Je = {
 	logged_minutes: 0,
 	billable_minutes: 0,
 	unbilled_minutes: 0,
 	unbilled_amount: 0,
 	invoiced: "none",
 	running: []
-}, Ye = y(0), Xe = v({});
+}, Ye = b(0), Xe = y({});
 function Ze(e) {
 	return e === null ? "" : Ge[e] ?? `#${e}`;
 }
@@ -687,7 +687,7 @@ var Nt = {
 		notify: { type: Function }
 	},
 	setup(e) {
-		let t = e, r = B(), l = y(!1), u = n(() => M.pending);
+		let t = e, r = B(), l = b(!1), u = n(() => M.pending);
 		async function d() {
 			if (!l.value) {
 				l.value = !0;
@@ -702,10 +702,10 @@ var Nt = {
 			window.confirm(r("tasks_projects.billing.retry.dismiss_confirm")) && I();
 		}
 		return (e, t) => {
-			let n = x("BaseButton"), p = x("router-link");
-			return u.value ? (_(), a("div", Nt, [
-				o("p", Pt, S(C(r)("tasks_projects.billing.retry.title")), 1),
-				o("p", Ft, S(C(r)("tasks_projects.billing.retry.description", { number: u.value.invoiceNumber })), 1),
+			let n = S("BaseButton"), p = S("router-link");
+			return u.value ? (v(), a("div", Nt, [
+				o("p", Pt, C(w(r)("tasks_projects.billing.retry.title")), 1),
+				o("p", Ft, C(w(r)("tasks_projects.billing.retry.description", { number: u.value.invoiceNumber })), 1),
 				o("div", It, [
 					c(n, {
 						variant: "primary",
@@ -713,12 +713,12 @@ var Nt = {
 						disabled: l.value,
 						onClick: d
 					}, {
-						default: D(() => [s(S(C(r)("tasks_projects.billing.retry.action")), 1)]),
+						default: D(() => [s(C(w(r)("tasks_projects.billing.retry.action")), 1)]),
 						_: 1
 					}, 8, ["loading", "disabled"]),
-					c(p, { to: C(St)(u.value.invoiceId) }, {
+					c(p, { to: w(St)(u.value.invoiceId) }, {
 						default: D(() => [c(n, { variant: "white" }, {
-							default: D(() => [s(S(C(r)("tasks_projects.billing.retry.open_invoice")), 1)]),
+							default: D(() => [s(C(w(r)("tasks_projects.billing.retry.open_invoice")), 1)]),
 							_: 1
 						})]),
 						_: 1
@@ -727,7 +727,7 @@ var Nt = {
 						type: "button",
 						class: "text-sm font-medium text-muted hover:underline",
 						onClick: f
-					}, S(C(r)("tasks_projects.billing.retry.dismiss")), 1)
+					}, C(w(r)("tasks_projects.billing.retry.dismiss")), 1)
 				])
 			])) : i("", !0);
 		};
@@ -779,7 +779,7 @@ async function Yt(e, t = 100) {
 	let { data: n } = await e.get(Bt.customers, { params: { limit: t } });
 	return n.data;
 }
-var Xt = v({}), Zt = !1, Qt = null;
+var Xt = y({}), Zt = !1, Qt = null;
 function $t(e) {
 	return e === null ? "" : Xt[e] ?? `#${e}`;
 }
@@ -869,10 +869,10 @@ var cn = { class: "mt-2 text-sm text-muted" }, ln = { class: "flex flex-wrap ite
 			"project",
 			"member",
 			"summary"
-		], d = B(), p = y(!0), m = y([]), g = v({
+		], d = B(), f = b(!0), m = b([]), h = y({
 			from: "",
 			to: ""
-		}), w = y(null), T = y(null), O = y(!1), k = y("task"), A = y([]), j = n(() => M.busy), N = n(() => u.map((e) => ({
+		}), _ = b(null), T = b(null), O = b(!1), k = b("task"), A = b([]), j = n(() => M.busy), N = n(() => u.map((e) => ({
 			id: e,
 			label: d(`tasks_projects.billing.entries.group_by.${e}`)
 		}))), P = n({
@@ -880,20 +880,20 @@ var cn = { class: "mt-2 text-sm text-muted" }, ln = { class: "flex flex-wrap ite
 			set: (e) => {
 				k.value = e.id;
 			}
-		}), F = n(() => (T.value?.entries ?? []).filter((e) => e.currency_id === (w.value?.currency_id ?? null))), I = n(() => {
+		}), F = n(() => (T.value?.entries ?? []).filter((e) => e.currency_id === (_.value?.currency_id ?? null))), I = n(() => {
 			let e = {};
 			for (let t of F.value) e[t.id] = t;
 			return e;
-		}), L = n(() => (T.value?.groups?.[k.value] ?? []).filter((e) => e.currency_id === (w.value?.currency_id ?? null))), R = n(() => F.value.length), z = n(() => R.value > 0 && A.value.length === R.value), ee = n(() => A.value.reduce((e, t) => e + (I.value[t]?.minutes ?? 0), 0)), te = n(() => A.value.reduce((e, t) => e + (I.value[t]?.amount ?? 0), 0)), ne = n(() => {
+		}), L = n(() => (T.value?.groups?.[k.value] ?? []).filter((e) => e.currency_id === (_.value?.currency_id ?? null))), R = n(() => F.value.length), z = n(() => R.value > 0 && A.value.length === R.value), ee = n(() => A.value.reduce((e, t) => e + (I.value[t]?.minutes ?? 0), 0)), te = n(() => A.value.reduce((e, t) => e + (I.value[t]?.amount ?? 0), 0)), ne = n(() => {
 			let e = {};
-			return g.from !== "" && (e.from = g.from), g.to !== "" && (e.to = g.to), e;
+			return h.from !== "" && (e.from = h.from), h.to !== "" && (e.to = h.to), e;
 		});
-		E(() => [g.from, g.to], () => void ie()), h(() => void re());
+		E(() => [h.from, h.to], () => void ie()), g(() => void re());
 		async function re() {
-			p.value = !0, await Promise.all([ae(), en(l.client)]), p.value = !1;
+			f.value = !0, await Promise.all([ae(), en(l.client)]), f.value = !1;
 		}
 		async function ie() {
-			await ae(), w.value !== null && await fe(w.value);
+			await ae(), _.value !== null && await fe(_.value);
 		}
 		async function ae() {
 			try {
@@ -906,16 +906,16 @@ var cn = { class: "mt-2 text-sm text-muted" }, ln = { class: "flex flex-wrap ite
 			return $t(e);
 		}
 		function se() {
-			g.from = "", g.to = "";
+			h.from = "", h.to = "";
 		}
 		function ce(e) {
-			g.from = e ? dt(e) : "";
+			h.from = e ? dt(e) : "";
 		}
 		function le(e) {
-			g.to = e ? dt(e) : "";
+			h.to = e ? dt(e) : "";
 		}
 		async function fe(e) {
-			w.value = e, O.value = !0, T.value = null, A.value = [];
+			_.value = e, O.value = !0, T.value = null, A.value = [];
 			try {
 				T.value = await de(l.client, e.customer_id, ne.value), A.value = F.value.map((e) => e.id);
 			} catch (e) {
@@ -925,7 +925,7 @@ var cn = { class: "mt-2 text-sm text-muted" }, ln = { class: "flex flex-wrap ite
 			}
 		}
 		function pe() {
-			w.value = null, T.value = null, A.value = [], ae();
+			_.value = null, T.value = null, A.value = [], ae();
 		}
 		function me(e) {
 			return A.value.includes(e);
@@ -966,49 +966,49 @@ var cn = { class: "mt-2 text-sm text-muted" }, ln = { class: "flex flex-wrap ite
 			}) || await ie();
 		}
 		return (n, l) => {
-			let u = x("BaseBreadcrumbItem"), h = x("BaseBreadcrumb"), v = x("BaseIcon"), y = x("BaseButton"), T = x("router-link"), E = x("BasePageHeader"), k = x("BaseDatePicker"), M = x("BaseInputGroup"), F = x("BaseSpinner"), I = x("BaseFormatMoney"), B = x("BaseEmptyPlaceholder"), ne = x("BaseSelectInput"), re = x("BasePage");
-			return _(), r(re, null, {
+			let u = S("BaseBreadcrumbItem"), g = S("BaseBreadcrumb"), y = S("BaseIcon"), b = S("BaseButton"), T = S("router-link"), E = S("BasePageHeader"), k = S("BaseDatePicker"), M = S("BaseInputGroup"), F = S("BaseSpinner"), I = S("BaseFormatMoney"), B = S("BaseEmptyPlaceholder"), ne = S("BaseSelectInput"), re = S("BasePage");
+			return v(), r(re, null, {
 				default: D(() => [
-					c(E, { title: C(d)("tasks_projects.billing.title") }, {
-						actions: D(() => [o("div", ln, [c(T, { to: C(W).reports }, {
-							default: D(() => [c(y, { variant: "white" }, {
-								left: D((e) => [c(v, {
+					c(E, { title: w(d)("tasks_projects.billing.title") }, {
+						actions: D(() => [o("div", ln, [c(T, { to: w(W).reports }, {
+							default: D(() => [c(b, { variant: "white" }, {
+								left: D((e) => [c(y, {
 									name: "ChartBarIcon",
-									class: f(e.class)
+									class: p(e.class)
 								}, null, 8, ["class"])]),
-								default: D(() => [s(" " + S(C(d)("tasks_projects.reports.title")), 1)]),
+								default: D(() => [s(" " + C(w(d)("tasks_projects.reports.title")), 1)]),
 								_: 1
 							})]),
 							_: 1
-						}, 8, ["to"]), c(T, { to: C(W).projects }, {
-							default: D(() => [c(y, { variant: "white" }, {
-								left: D((e) => [c(v, {
+						}, 8, ["to"]), c(T, { to: w(W).projects }, {
+							default: D(() => [c(b, { variant: "white" }, {
+								left: D((e) => [c(y, {
 									name: "FolderIcon",
-									class: f(e.class)
+									class: p(e.class)
 								}, null, 8, ["class"])]),
-								default: D(() => [s(" " + S(C(d)("tasks_projects.projects.title")), 1)]),
+								default: D(() => [s(" " + C(w(d)("tasks_projects.projects.title")), 1)]),
 								_: 1
 							})]),
 							_: 1
 						}, 8, ["to"])])]),
-						default: D(() => [c(h, null, {
+						default: D(() => [c(g, null, {
 							default: D(() => [
 								c(u, {
-									title: C(d)("tasks_projects.general.home"),
+									title: w(d)("tasks_projects.general.home"),
 									to: "/admin/dashboard"
 								}, null, 8, ["title"]),
 								c(u, {
-									title: C(d)("tasks_projects.tasks.title"),
-									to: C(W).tasks
+									title: w(d)("tasks_projects.tasks.title"),
+									to: w(W).tasks
 								}, null, 8, ["title", "to"]),
 								c(u, {
-									title: C(d)("tasks_projects.billing.title"),
+									title: w(d)("tasks_projects.billing.title"),
 									to: "#",
 									active: ""
 								}, null, 8, ["title"])
 							]),
 							_: 1
-						}), o("p", cn, S(C(d)("tasks_projects.billing.subtitle")), 1)]),
+						}), o("p", cn, C(w(d)("tasks_projects.billing.subtitle")), 1)]),
 						_: 1
 					}, 8, ["title"]),
 					c(Lt, {
@@ -1017,59 +1017,59 @@ var cn = { class: "mt-2 text-sm text-muted" }, ln = { class: "flex flex-wrap ite
 					}, null, 8, ["client", "notify"]),
 					o("div", un, [
 						c(M, {
-							label: C(d)("tasks_projects.billing.customer.from"),
+							label: w(d)("tasks_projects.billing.customer.from"),
 							class: "w-full sm:w-48"
 						}, {
 							default: D(() => [c(k, {
-								"model-value": g.from,
+								"model-value": h.from,
 								"onUpdate:modelValue": ce
 							}, null, 8, ["model-value"])]),
 							_: 1
 						}, 8, ["label"]),
 						c(M, {
-							label: C(d)("tasks_projects.billing.customer.to"),
+							label: w(d)("tasks_projects.billing.customer.to"),
 							class: "w-full sm:w-48"
 						}, {
 							default: D(() => [c(k, {
-								"model-value": g.to,
+								"model-value": h.to,
 								"onUpdate:modelValue": le
 							}, null, 8, ["model-value"])]),
 							_: 1
 						}, 8, ["label"]),
-						g.from !== "" || g.to !== "" ? (_(), r(y, {
+						h.from !== "" || h.to !== "" ? (v(), r(b, {
 							key: 0,
 							variant: "primary-outline",
 							onClick: se
 						}, {
-							default: D(() => [s(S(C(d)("tasks_projects.billing.customer.clear_range")), 1)]),
+							default: D(() => [s(C(w(d)("tasks_projects.billing.customer.clear_range")), 1)]),
 							_: 1
 						})) : i("", !0)
 					]),
-					p.value ? (_(), a("div", dn, [c(F, { class: "h-8 w-8 text-primary-500" })])) : w.value === null ? (_(), a("section", fn, [
-						o("h2", pn, S(C(d)("tasks_projects.billing.customer.title")), 1),
-						o("p", mn, S(C(d)("tasks_projects.billing.customer.description")), 1),
-						m.value.length > 0 ? (_(), a("div", hn, [(_(!0), a(e, null, b(m.value, (e) => (_(), a("button", {
+					f.value ? (v(), a("div", dn, [c(F, { class: "h-8 w-8 text-primary-500" })])) : _.value === null ? (v(), a("section", fn, [
+						o("h2", pn, C(w(d)("tasks_projects.billing.customer.title")), 1),
+						o("p", mn, C(w(d)("tasks_projects.billing.customer.description")), 1),
+						m.value.length > 0 ? (v(), a("div", hn, [(v(!0), a(e, null, x(m.value, (e) => (v(), a("button", {
 							key: `${e.customer_id}-${e.currency_id ?? "none"}`,
 							type: "button",
 							class: "rounded-xl border border-line-default bg-surface p-5 text-left transition hover:border-primary-500",
 							onClick: (t) => fe(e)
 						}, [
-							o("p", _n, S(oe(e.customer_id)), 1),
-							o("p", vn, S(C(d)("tasks_projects.billing.customer.entries", { count: e.entries })) + " · " + S(C(ft)(e.minutes)), 1),
+							o("p", _n, C(oe(e.customer_id)), 1),
+							o("p", vn, C(w(d)("tasks_projects.billing.customer.entries", { count: e.entries })) + " · " + C(w(ft)(e.minutes)), 1),
 							o("p", yn, [c(I, { amount: e.amount }, null, 8, ["amount"])])
-						], 8, gn))), 128))])) : (_(), r(B, {
+						], 8, gn))), 128))])) : (v(), r(B, {
 							key: 1,
-							title: C(d)("tasks_projects.billing.customer.empty_title"),
-							description: C(d)("tasks_projects.billing.customer.empty_description")
+							title: w(d)("tasks_projects.billing.customer.empty_title"),
+							description: w(d)("tasks_projects.billing.customer.empty_description")
 						}, {
-							default: D(() => [c(v, {
+							default: D(() => [c(y, {
 								name: "BanknotesIcon",
 								class: "mt-5 mb-4 h-16 w-16 text-subtle"
 							})]),
 							_: 1
 						}, 8, ["title", "description"]))
-					])) : (_(), a("section", bn, [o("div", xn, [o("div", null, [o("h2", Sn, S(C(d)("tasks_projects.billing.entries.title")), 1), o("p", Cn, S(oe(w.value.customer_id)), 1)]), c(M, {
-						label: C(d)("tasks_projects.billing.entries.grouping"),
+					])) : (v(), a("section", bn, [o("div", xn, [o("div", null, [o("h2", Sn, C(w(d)("tasks_projects.billing.entries.title")), 1), o("p", Cn, C(oe(_.value.customer_id)), 1)]), c(M, {
+						label: w(d)("tasks_projects.billing.entries.grouping"),
 						class: "w-full sm:w-56"
 					}, {
 						default: D(() => [c(ne, {
@@ -1079,17 +1079,17 @@ var cn = { class: "mt-2 text-sm text-muted" }, ln = { class: "flex flex-wrap ite
 							"label-key": "label"
 						}, null, 8, ["modelValue", "options"])]),
 						_: 1
-					}, 8, ["label"])]), O.value ? (_(), a("div", wn, [c(F, { class: "h-8 w-8 text-primary-500" })])) : R.value > 0 ? (_(), a(e, { key: 1 }, [
+					}, 8, ["label"])]), O.value ? (v(), a("div", wn, [c(F, { class: "h-8 w-8 text-primary-500" })])) : R.value > 0 ? (v(), a(e, { key: 1 }, [
 						o("div", Tn, [o("label", En, [o("input", {
 							type: "checkbox",
 							class: "h-4 w-4 cursor-pointer rounded border-line-strong",
 							checked: z.value,
 							onChange: ge
-						}, null, 40, Dn), s(" " + S(C(d)("tasks_projects.billing.entries.select_all")), 1)]), o("p", On, S(C(d)("tasks_projects.billing.entries.selected", {
+						}, null, 40, Dn), s(" " + C(w(d)("tasks_projects.billing.entries.select_all")), 1)]), o("p", On, C(w(d)("tasks_projects.billing.entries.selected", {
 							count: A.value.length,
 							total: R.value
 						})), 1)]),
-						(_(!0), a(e, null, b(L.value, (t) => (_(), a("div", {
+						(v(!0), a(e, null, x(L.value, (t) => (v(), a("div", {
 							key: `${t.label}-${t.key ?? "none"}-${t.currency_id ?? "none"}`,
 							class: "mt-4 overflow-hidden rounded-xl border border-line-default"
 						}, [o("div", kn, [o("label", An, [o("input", {
@@ -1097,68 +1097,68 @@ var cn = { class: "mt-2 text-sm text-muted" }, ln = { class: "flex flex-wrap ite
 							class: "h-4 w-4 cursor-pointer rounded border-line-strong",
 							checked: _e(t),
 							onChange: (e) => ve(t)
-						}, null, 40, jn), s(" " + S(t.label), 1)]), o("p", Mn, [s(S(C(ft)(t.minutes)) + " · ", 1), c(I, { amount: t.amount }, null, 8, ["amount"])])]), o("div", Nn, [o("table", Pn, [o("thead", Fn, [o("tr", null, [
+						}, null, 40, jn), s(" " + C(t.label), 1)]), o("p", Mn, [s(C(w(ft)(t.minutes)) + " · ", 1), c(I, { amount: t.amount }, null, 8, ["amount"])])]), o("div", Nn, [o("table", Pn, [o("thead", Fn, [o("tr", null, [
 							l[1] ||= o("th", { class: "w-10" }, null, -1),
-							o("th", In, S(C(d)("tasks_projects.billing.entries.columns.date")), 1),
-							o("th", Ln, S(C(d)("tasks_projects.billing.entries.columns.task")), 1),
-							o("th", Rn, S(C(d)("tasks_projects.billing.entries.columns.project")), 1),
-							o("th", zn, S(C(d)("tasks_projects.billing.entries.columns.member")), 1),
-							o("th", Bn, S(C(d)("tasks_projects.billing.entries.columns.duration")), 1),
-							o("th", Vn, S(C(d)("tasks_projects.billing.entries.columns.amount")), 1)
-						])]), o("tbody", Hn, [(_(!0), a(e, null, b(ye(t), (e) => (_(), a("tr", { key: e.id }, [
+							o("th", In, C(w(d)("tasks_projects.billing.entries.columns.date")), 1),
+							o("th", Ln, C(w(d)("tasks_projects.billing.entries.columns.task")), 1),
+							o("th", Rn, C(w(d)("tasks_projects.billing.entries.columns.project")), 1),
+							o("th", zn, C(w(d)("tasks_projects.billing.entries.columns.member")), 1),
+							o("th", Bn, C(w(d)("tasks_projects.billing.entries.columns.duration")), 1),
+							o("th", Vn, C(w(d)("tasks_projects.billing.entries.columns.amount")), 1)
+						])]), o("tbody", Hn, [(v(!0), a(e, null, x(ye(t), (e) => (v(), a("tr", { key: e.id }, [
 							o("td", Un, [o("input", {
 								type: "checkbox",
 								class: "h-4 w-4 cursor-pointer rounded border-line-strong",
 								checked: me(e.id),
 								onChange: (t) => he(e.id)
 							}, null, 40, Wn)]),
-							o("td", Gn, S(C(ut)(e.date)), 1),
+							o("td", Gn, C(w(ut)(e.date)), 1),
 							o("td", Kn, [c(T, {
 								class: "text-heading hover:text-primary-500",
-								to: C(W).task(e.task_id)
+								to: w(W).task(e.task_id)
 							}, {
-								default: D(() => [s(S(e.task_name), 1)]),
+								default: D(() => [s(C(e.task_name), 1)]),
 								_: 2
-							}, 1032, ["to"]), o("span", qn, S(e.description || C(d)("tasks_projects.billing.entries.no_description")), 1)]),
-							o("td", Jn, S(e.project_name ?? "-"), 1),
-							o("td", Yn, S(e.user_name), 1),
-							o("td", Xn, S(C(ft)(e.minutes)), 1),
+							}, 1032, ["to"]), o("span", qn, C(e.description || w(d)("tasks_projects.billing.entries.no_description")), 1)]),
+							o("td", Jn, C(e.project_name ?? "-"), 1),
+							o("td", Yn, C(e.user_name), 1),
+							o("td", Xn, C(w(ft)(e.minutes)), 1),
 							o("td", Zn, [c(I, { amount: e.amount }, null, 8, ["amount"])])
 						]))), 128))])])])]))), 128)),
-						o("div", Qn, [o("p", $n, [s(S(C(d)("tasks_projects.billing.entries.selected_total", { hours: C(ft)(ee.value) })) + " · ", 1), c(I, { amount: te.value }, null, 8, ["amount"])]), o("div", er, [c(y, {
+						o("div", Qn, [o("p", $n, [s(C(w(d)("tasks_projects.billing.entries.selected_total", { hours: w(ft)(ee.value) })) + " · ", 1), c(I, { amount: te.value }, null, 8, ["amount"])]), o("div", er, [c(b, {
 							variant: "primary-outline",
 							disabled: j.value,
 							onClick: pe
 						}, {
-							default: D(() => [s(S(C(d)("tasks_projects.billing.back")), 1)]),
+							default: D(() => [s(C(w(d)("tasks_projects.billing.back")), 1)]),
 							_: 1
-						}, 8, ["disabled"]), c(y, {
+						}, 8, ["disabled"]), c(b, {
 							variant: "primary",
 							loading: j.value,
 							disabled: j.value || A.value.length === 0,
 							onClick: be
 						}, {
-							left: D((e) => [j.value ? i("", !0) : (_(), r(v, {
+							left: D((e) => [j.value ? i("", !0) : (v(), r(y, {
 								key: 0,
 								name: "DocumentPlusIcon",
-								class: f(e.class)
+								class: p(e.class)
 							}, null, 8, ["class"]))]),
-							default: D(() => [s(" " + S(C(d)("tasks_projects.billing.create")), 1)]),
+							default: D(() => [s(" " + C(w(d)("tasks_projects.billing.create")), 1)]),
 							_: 1
 						}, 8, ["loading", "disabled"])])])
-					], 64)) : (_(), r(B, {
+					], 64)) : (v(), r(B, {
 						key: 2,
-						title: C(d)("tasks_projects.billing.entries.empty_title"),
-						description: C(d)("tasks_projects.billing.entries.empty_description")
+						title: w(d)("tasks_projects.billing.entries.empty_title"),
+						description: w(d)("tasks_projects.billing.entries.empty_description")
 					}, {
-						actions: D(() => [c(y, {
+						actions: D(() => [c(b, {
 							variant: "primary",
 							onClick: pe
 						}, {
-							default: D(() => [s(S(C(d)("tasks_projects.billing.back")), 1)]),
+							default: D(() => [s(C(w(d)("tasks_projects.billing.back")), 1)]),
 							_: 1
 						})]),
-						default: D(() => [c(v, {
+						default: D(() => [c(y, {
 							name: "ClockIcon",
 							class: "mt-5 mb-4 h-16 w-16 text-subtle"
 						})]),
@@ -1292,13 +1292,15 @@ async function dr(e, t) {
 	let { data: n } = await e.get(ir.task(t));
 	return n.data;
 }
-async function fr(e, t, n = null) {
-	let r = n === null ? {} : { description: n }, { data: i } = await e.post(ir.startTask(t), r);
-	return i.data;
+async function fr(e, t, n = null, r) {
+	let i = {};
+	n !== null && (i.description = n), r !== void 0 && (i.billable = r);
+	let { data: a } = await e.post(ir.startTask(t), i);
+	return a.data;
 }
-async function pr(e, t) {
-	let { data: n } = await e.post(ir.stopTask(t));
-	return n.data;
+async function pr(e, t, n = {}) {
+	let { data: r } = await e.post(ir.stopTask(t), n);
+	return r.data;
 }
 async function mr(e, t) {
 	let { data: n } = await e.get(ir.taskTimeLog(t));
@@ -1355,7 +1357,7 @@ var Sr = { class: "flex w-full items-center justify-between" }, Cr = { class: "s
 			"#dc2626",
 			"#7c3aed",
 			"#64748b"
-		], m = B(), h = v({
+		], f = B(), h = y({
 			name: "",
 			identifier: "",
 			description: "",
@@ -1363,7 +1365,7 @@ var Sr = { class: "flex w-full items-center justify-between" }, Cr = { class: "s
 			defaultRate: "",
 			budgetHours: "",
 			dueDate: ""
-		}), g = y(null), w = y([]), T = y(!1), O = y({}), k = y(!1), j = n(() => l.project !== null), M = n(() => j.value ? m("tasks_projects.projects.edit_project") : m("tasks_projects.projects.new_project"));
+		}), g = b(null), _ = b([]), T = b(!1), O = b({}), k = b(!1), j = n(() => l.project !== null), M = n(() => j.value ? f("tasks_projects.projects.edit_project") : f("tasks_projects.projects.new_project"));
 		E(() => l.show, (e) => {
 			e && (N(), I());
 		}, { immediate: !0 });
@@ -1372,7 +1374,7 @@ var Sr = { class: "flex w-full items-center justify-between" }, Cr = { class: "s
 			h.name = e?.name ?? "", h.identifier = e?.identifier ?? "", h.description = e?.description ?? "", h.colour = e?.colour ?? "", h.defaultRate = ot(e?.default_rate ?? null), h.budgetHours = ct(e?.budget_minutes ?? null), h.dueDate = e?.due_date ?? "", O.value = {}, g.value = P(e?.customer_id ?? null);
 		}
 		function P(e) {
-			return e === null ? null : w.value.find((t) => t.id === e) ?? null;
+			return e === null ? null : _.value.find((t) => t.id === e) ?? null;
 		}
 		function F(e) {
 			return e.display_name || e.name || `#${e.id}`;
@@ -1380,12 +1382,12 @@ var Sr = { class: "flex w-full items-center justify-between" }, Cr = { class: "s
 		async function I() {
 			if (!T.value) try {
 				let e = await Yt(l.client);
-				w.value = e.map((e) => ({
+				_.value = e.map((e) => ({
 					id: e.id,
 					label: F(e)
 				})), T.value = !0, g.value = P(l.project?.customer_id ?? null);
 			} catch (e) {
-				l.notify("error", H(e, m("tasks_projects.projects.customers_failed")));
+				l.notify("error", H(e, f("tasks_projects.projects.customers_failed")));
 			}
 		}
 		function L() {
@@ -1406,7 +1408,7 @@ var Sr = { class: "flex w-full items-center justify-between" }, Cr = { class: "s
 		async function z() {
 			if (!k.value) {
 				if (h.name.trim() === "") {
-					O.value = { name: m("tasks_projects.projects.name_required") };
+					O.value = { name: f("tasks_projects.projects.name_required") };
 					return;
 				}
 				k.value = !0, O.value = {};
@@ -1414,19 +1416,19 @@ var Sr = { class: "flex w-full items-center justify-between" }, Cr = { class: "s
 					let e = l.project, t = e ? await Wt(l.client, e.id, L()) : await Ut(l.client, L());
 					u("saved", t);
 				} catch (e) {
-					O.value = at(e), l.notify("error", H(e, m("tasks_projects.projects.save_failed")));
+					O.value = at(e), l.notify("error", H(e, f("tasks_projects.projects.save_failed")));
 				} finally {
 					k.value = !1;
 				}
 			}
 		}
 		return (n, i) => {
-			let l = x("BaseIcon"), v = x("BaseInput"), y = x("BaseInputGroup"), T = x("BaseSelectInput"), E = x("BaseDatePicker"), N = x("BaseInputGrid"), P = x("BaseTextarea"), F = x("BaseButton"), I = x("BaseModal");
-			return _(), r(I, {
+			let l = S("BaseIcon"), y = S("BaseInput"), b = S("BaseInputGroup"), T = S("BaseSelectInput"), E = S("BaseDatePicker"), N = S("BaseInputGrid"), P = S("BaseTextarea"), F = S("BaseButton"), I = S("BaseModal");
+			return v(), r(I, {
 				show: t.show,
 				onClose: i[9] ||= (e) => u("close")
 			}, {
-				header: D(() => [o("div", Sr, [o("span", null, S(M.value), 1), c(l, {
+				header: D(() => [o("div", Sr, [o("span", null, C(M.value), 1), c(l, {
 					name: "XMarkIcon",
 					class: "h-6 w-6 cursor-pointer text-subtle hover:text-body",
 					onClick: i[0] ||= (e) => u("close")
@@ -1434,12 +1436,12 @@ var Sr = { class: "flex w-full items-center justify-between" }, Cr = { class: "s
 				default: D(() => [o("form", { onSubmit: A(z, ["prevent"]) }, [o("div", Cr, [
 					c(N, null, {
 						default: D(() => [
-							c(y, {
-								label: C(m)("tasks_projects.projects.fields.name"),
+							c(b, {
+								label: w(f)("tasks_projects.projects.fields.name"),
 								error: O.value.name,
 								required: ""
 							}, {
-								default: D(() => [c(v, {
+								default: D(() => [c(y, {
 									modelValue: h.name,
 									"onUpdate:modelValue": i[1] ||= (e) => h.name = e,
 									invalid: !!O.value.name,
@@ -1447,12 +1449,12 @@ var Sr = { class: "flex w-full items-center justify-between" }, Cr = { class: "s
 								}, null, 8, ["modelValue", "invalid"])]),
 								_: 1
 							}, 8, ["label", "error"]),
-							c(y, {
-								label: C(m)("tasks_projects.projects.fields.identifier"),
+							c(b, {
+								label: w(f)("tasks_projects.projects.fields.identifier"),
 								error: O.value.identifier,
-								"help-text": C(m)("tasks_projects.projects.fields.identifier_help")
+								"help-text": w(f)("tasks_projects.projects.fields.identifier_help")
 							}, {
-								default: D(() => [c(v, {
+								default: D(() => [c(y, {
 									modelValue: h.identifier,
 									"onUpdate:modelValue": i[2] ||= (e) => h.identifier = e,
 									invalid: !!O.value.identifier,
@@ -1465,16 +1467,16 @@ var Sr = { class: "flex w-full items-center justify-between" }, Cr = { class: "s
 								"error",
 								"help-text"
 							]),
-							c(y, {
-								label: C(m)("tasks_projects.projects.fields.customer"),
+							c(b, {
+								label: w(f)("tasks_projects.projects.fields.customer"),
 								error: O.value.customer_id,
-								"help-text": C(m)("tasks_projects.projects.fields.customer_help")
+								"help-text": w(f)("tasks_projects.projects.fields.customer_help")
 							}, {
 								default: D(() => [c(T, {
 									modelValue: g.value,
 									"onUpdate:modelValue": i[3] ||= (e) => g.value = e,
-									options: w.value,
-									placeholder: C(m)("tasks_projects.projects.fields.customer_placeholder"),
+									options: _.value,
+									placeholder: w(f)("tasks_projects.projects.fields.customer_placeholder"),
 									"label-key": "label"
 								}, null, 8, [
 									"modelValue",
@@ -1487,8 +1489,8 @@ var Sr = { class: "flex w-full items-center justify-between" }, Cr = { class: "s
 								"error",
 								"help-text"
 							]),
-							c(y, {
-								label: C(m)("tasks_projects.projects.fields.due_date"),
+							c(b, {
+								label: w(f)("tasks_projects.projects.fields.due_date"),
 								error: O.value.due_date
 							}, {
 								default: D(() => [c(E, {
@@ -1497,12 +1499,12 @@ var Sr = { class: "flex w-full items-center justify-between" }, Cr = { class: "s
 								}, null, 8, ["model-value"])]),
 								_: 1
 							}, 8, ["label", "error"]),
-							c(y, {
-								label: C(m)("tasks_projects.projects.fields.default_rate"),
+							c(b, {
+								label: w(f)("tasks_projects.projects.fields.default_rate"),
 								error: O.value.default_rate,
-								"help-text": C(m)("tasks_projects.projects.fields.default_rate_help")
+								"help-text": w(f)("tasks_projects.projects.fields.default_rate_help")
 							}, {
-								default: D(() => [c(v, {
+								default: D(() => [c(y, {
 									modelValue: h.defaultRate,
 									"onUpdate:modelValue": i[4] ||= (e) => h.defaultRate = e,
 									invalid: !!O.value.default_rate,
@@ -1516,11 +1518,11 @@ var Sr = { class: "flex w-full items-center justify-between" }, Cr = { class: "s
 								"error",
 								"help-text"
 							]),
-							c(y, {
-								label: C(m)("tasks_projects.projects.fields.budget_hours"),
+							c(b, {
+								label: w(f)("tasks_projects.projects.fields.budget_hours"),
 								error: O.value.budget_minutes
 							}, {
-								default: D(() => [c(v, {
+								default: D(() => [c(y, {
 									modelValue: h.budgetHours,
 									"onUpdate:modelValue": i[5] ||= (e) => h.budgetHours = e,
 									invalid: !!O.value.budget_minutes,
@@ -1533,26 +1535,26 @@ var Sr = { class: "flex w-full items-center justify-between" }, Cr = { class: "s
 						]),
 						_: 1
 					}),
-					c(y, {
-						label: C(m)("tasks_projects.projects.fields.colour"),
+					c(b, {
+						label: w(f)("tasks_projects.projects.fields.colour"),
 						error: O.value.colour
 					}, {
-						default: D(() => [o("div", wr, [(_(), a(e, null, b(d, (e) => o("button", {
+						default: D(() => [o("div", wr, [(v(), a(e, null, x(d, (e) => o("button", {
 							key: e,
 							type: "button",
-							class: f(["h-7 w-7 rounded-full border-2 transition", h.colour === e ? "border-heading" : "border-line-default"]),
-							style: p({ backgroundColor: e }),
+							class: p(["h-7 w-7 rounded-full border-2 transition", h.colour === e ? "border-heading" : "border-line-default"]),
+							style: m({ backgroundColor: e }),
 							"aria-label": e,
 							onClick: (t) => h.colour = h.colour === e ? "" : e
 						}, null, 14, Tr)), 64)), o("button", {
 							type: "button",
 							class: "rounded-md border border-line-default px-2 py-1 text-xs text-muted hover:bg-hover",
 							onClick: i[6] ||= (e) => h.colour = ""
-						}, S(C(m)("tasks_projects.projects.fields.colour_none")), 1)])]),
+						}, C(w(f)("tasks_projects.projects.fields.colour_none")), 1)])]),
 						_: 1
 					}, 8, ["label", "error"]),
-					c(y, {
-						label: C(m)("tasks_projects.projects.fields.description"),
+					c(b, {
+						label: w(f)("tasks_projects.projects.fields.description"),
 						error: O.value.description
 					}, {
 						default: D(() => [c(P, {
@@ -1568,7 +1570,7 @@ var Sr = { class: "flex w-full items-center justify-between" }, Cr = { class: "s
 					variant: "primary-outline",
 					onClick: i[8] ||= (e) => u("close")
 				}, {
-					default: D(() => [s(S(C(m)("tasks_projects.general.cancel")), 1)]),
+					default: D(() => [s(C(w(f)("tasks_projects.general.cancel")), 1)]),
 					_: 1
 				}), c(F, {
 					type: "submit",
@@ -1576,7 +1578,7 @@ var Sr = { class: "flex w-full items-center justify-between" }, Cr = { class: "s
 					loading: k.value,
 					disabled: k.value
 				}, {
-					default: D(() => [s(S(j.value ? C(m)("tasks_projects.general.update") : C(m)("tasks_projects.general.save")), 1)]),
+					default: D(() => [s(C(j.value ? w(f)("tasks_projects.general.update") : w(f)("tasks_projects.general.save")), 1)]),
 					_: 1
 				}, 8, ["loading", "disabled"])])], 32)]),
 				_: 1
@@ -1608,7 +1610,7 @@ var Sr = { class: "flex w-full items-center justify-between" }, Cr = { class: "s
 		router: {}
 	},
 	setup(t) {
-		let l = t, u = on.project, d = B(), p = l.router, m = y(null), g = y(!0), v = y(!1), w = y(!1), T = n(() => Number(l.id)), O = n(() => [
+		let l = t, u = on.project, d = B(), f = l.router, m = b(null), h = b(!0), _ = b(!1), y = b(!1), T = n(() => Number(l.id)), O = n(() => [
 			{
 				id: "overview",
 				label: d("tasks_projects.project.tabs.overview"),
@@ -1635,7 +1637,7 @@ var Sr = { class: "flex w-full items-center justify-between" }, Cr = { class: "s
 		})), N = n(() => $t(m.value?.customer_id ?? null)), P = n(() => M.busy), F = n(() => M.allowed && m.value !== null && m.value.customer_id !== null && (m.value.totals?.unbilled_amount ?? 0) > 0);
 		E(T, () => {
 			L();
-		}), E(k, (e) => I(e)), h(() => {
+		}), E(k, (e) => I(e)), g(() => {
 			I(k.value), L();
 		});
 		function I(e) {
@@ -1645,13 +1647,13 @@ var Sr = { class: "flex w-full items-center justify-between" }, Cr = { class: "s
 			});
 		}
 		async function L() {
-			g.value = !0;
+			h.value = !0;
 			try {
 				m.value = await _r(l.client, T.value), typeof m.value?.customer_id == "number" && await en(l.client);
 			} catch (e) {
 				l.notify("error", H(e, d("tasks_projects.project.load_failed")));
 			} finally {
-				g.value = !1;
+				h.value = !1;
 			}
 		}
 		function R(e) {
@@ -1664,27 +1666,27 @@ var Sr = { class: "flex w-full items-center justify-between" }, Cr = { class: "s
 			return k.value === e.name;
 		}
 		function ee(e) {
-			w.value = !1, l.notify("success", d("tasks_projects.projects.updated", { name: e.name })), L();
+			y.value = !1, l.notify("success", d("tasks_projects.projects.updated", { name: e.name })), L();
 		}
 		async function te() {
 			let e = m.value;
 			e !== null && F.value && !P.value && (await bt({
 				client: l.client,
-				router: p,
+				router: f,
 				notify: l.notify,
 				t: d
 			}, { projectId: e.id }) || await L());
 		}
 		async function ne() {
 			let e = m.value;
-			if (!(e === null || v.value)) {
-				v.value = !0;
+			if (!(e === null || _.value)) {
+				_.value = !0;
 				try {
 					e.status === "ARCHIVED" ? (await Kt(l.client, e.id), l.notify("success", d("tasks_projects.projects.unarchived", { name: e.name }))) : (await Gt(l.client, e.id), l.notify("success", d("tasks_projects.projects.archived", { name: e.name }))), await L();
 				} catch (e) {
 					l.notify("error", H(e, d("tasks_projects.projects.save_failed")));
 				} finally {
-					v.value = !1;
+					_.value = !1;
 				}
 			}
 		}
@@ -1695,69 +1697,69 @@ var Sr = { class: "flex w-full items-center justify-between" }, Cr = { class: "s
 			return d(e === "ACTIVE" ? "tasks_projects.projects.status.active" : "tasks_projects.projects.status.archived");
 		}
 		return (n, l) => {
-			let u = x("BaseBreadcrumbItem"), p = x("BaseBreadcrumb"), h = x("BaseBadge"), y = x("BaseIcon"), T = x("BaseButton"), E = x("router-link"), k = x("BasePageHeader"), M = x("BaseSpinner"), I = x("router-view"), B = x("BasePage");
-			return _(), r(B, null, {
+			let u = S("BaseBreadcrumbItem"), f = S("BaseBreadcrumb"), g = S("BaseBadge"), b = S("BaseIcon"), T = S("BaseButton"), E = S("router-link"), k = S("BasePageHeader"), M = S("BaseSpinner"), I = S("router-view"), B = S("BasePage");
+			return v(), r(B, null, {
 				default: D(() => [
 					c(k, { title: A.value }, {
 						actions: D(() => [o("div", Fr, [
 							c(E, { to: j.value }, {
 								default: D(() => [c(T, { variant: "white" }, {
-									left: D((e) => [c(y, {
+									left: D((e) => [c(b, {
 										name: "ViewColumnsIcon",
-										class: f(e.class)
+										class: p(e.class)
 									}, null, 8, ["class"])]),
-									default: D(() => [s(" " + S(C(d)("tasks_projects.project.board")), 1)]),
+									default: D(() => [s(" " + C(w(d)("tasks_projects.project.board")), 1)]),
 									_: 1
 								})]),
 								_: 1
 							}, 8, ["to"]),
-							F.value ? (_(), r(T, {
+							F.value ? (v(), r(T, {
 								key: 0,
 								variant: "primary-outline",
 								loading: P.value,
 								disabled: P.value,
 								onClick: te
 							}, {
-								left: D((e) => [P.value ? i("", !0) : (_(), r(y, {
+								left: D((e) => [P.value ? i("", !0) : (v(), r(b, {
 									key: 0,
 									name: "BanknotesIcon",
-									class: f(e.class)
+									class: p(e.class)
 								}, null, 8, ["class"]))]),
-								default: D(() => [s(" " + S(C(d)("tasks_projects.project.invoice_project")), 1)]),
+								default: D(() => [s(" " + C(w(d)("tasks_projects.project.invoice_project")), 1)]),
 								_: 1
 							}, 8, ["loading", "disabled"])) : i("", !0),
-							m.value ? (_(), r(T, {
+							m.value ? (v(), r(T, {
 								key: 1,
 								variant: "primary-outline",
-								loading: v.value,
-								disabled: v.value,
+								loading: _.value,
+								disabled: _.value,
 								onClick: ne
 							}, {
-								default: D(() => [s(S(m.value.status === "ARCHIVED" ? C(d)("tasks_projects.projects.unarchive") : C(d)("tasks_projects.projects.archive")), 1)]),
+								default: D(() => [s(C(m.value.status === "ARCHIVED" ? w(d)("tasks_projects.projects.unarchive") : w(d)("tasks_projects.projects.archive")), 1)]),
 								_: 1
 							}, 8, ["loading", "disabled"])) : i("", !0),
-							m.value ? (_(), r(T, {
+							m.value ? (v(), r(T, {
 								key: 2,
 								variant: "primary",
-								onClick: l[0] ||= (e) => w.value = !0
+								onClick: l[0] ||= (e) => y.value = !0
 							}, {
-								left: D((e) => [c(y, {
+								left: D((e) => [c(b, {
 									name: "PencilIcon",
-									class: f(e.class)
+									class: p(e.class)
 								}, null, 8, ["class"])]),
-								default: D(() => [s(" " + S(C(d)("tasks_projects.general.edit")), 1)]),
+								default: D(() => [s(" " + C(w(d)("tasks_projects.general.edit")), 1)]),
 								_: 1
 							})) : i("", !0)
 						])]),
-						default: D(() => [c(p, null, {
+						default: D(() => [c(f, null, {
 							default: D(() => [
 								c(u, {
-									title: C(d)("tasks_projects.general.home"),
+									title: w(d)("tasks_projects.general.home"),
 									to: "/admin/dashboard"
 								}, null, 8, ["title"]),
 								c(u, {
-									title: C(d)("tasks_projects.projects.title"),
-									to: C(W).projects
+									title: w(d)("tasks_projects.projects.title"),
+									to: w(W).projects
 								}, null, 8, ["title", "to"]),
 								c(u, {
 									title: A.value,
@@ -1766,14 +1768,14 @@ var Sr = { class: "flex w-full items-center justify-between" }, Cr = { class: "s
 								}, null, 8, ["title"])
 							]),
 							_: 1
-						}), m.value ? (_(), a("div", Or, [
-							c(h, { class: f(["rounded-full", re(m.value.status)]) }, {
-								default: D(() => [s(S(ie(m.value.status)), 1)]),
+						}), m.value ? (v(), a("div", Or, [
+							c(g, { class: p(["rounded-full", re(m.value.status)]) }, {
+								default: D(() => [s(C(ie(m.value.status)), 1)]),
 								_: 1
 							}, 8, ["class"]),
-							m.value.identifier ? (_(), a("span", kr, S(m.value.identifier), 1)) : i("", !0),
-							m.value.customer_id ? (_(), a("span", Ar, [s(S(C(d)("tasks_projects.project.customer")) + ": ", 1), o("span", jr, S(N.value), 1)])) : (_(), a("span", Mr, S(C(d)("tasks_projects.projects.internal")), 1)),
-							m.value.due_date ? (_(), a("span", Nr, [s(S(C(d)("tasks_projects.project.due_date")) + ": ", 1), o("span", Pr, S(C(ut)(m.value.due_date)), 1)])) : i("", !0)
+							m.value.identifier ? (v(), a("span", kr, C(m.value.identifier), 1)) : i("", !0),
+							m.value.customer_id ? (v(), a("span", Ar, [s(C(w(d)("tasks_projects.project.customer")) + ": ", 1), o("span", jr, C(N.value), 1)])) : (v(), a("span", Mr, C(w(d)("tasks_projects.projects.internal")), 1)),
+							m.value.due_date ? (v(), a("span", Nr, [s(C(w(d)("tasks_projects.project.due_date")) + ": ", 1), o("span", Pr, C(w(ut)(m.value.due_date)), 1)])) : i("", !0)
 						])) : i("", !0)]),
 						_: 1
 					}, 8, ["title"]),
@@ -1781,7 +1783,7 @@ var Sr = { class: "flex w-full items-center justify-between" }, Cr = { class: "s
 						client: t.client,
 						notify: t.notify
 					}, null, 8, ["client", "notify"]),
-					o("nav", Ir, [(_(!0), a(e, null, b(O.value, (e) => (_(), r(E, {
+					o("nav", Ir, [(v(!0), a(e, null, x(O.value, (e) => (v(), r(E, {
 						key: e.id,
 						to: R(e),
 						custom: ""
@@ -1789,22 +1791,22 @@ var Sr = { class: "flex w-full items-center justify-between" }, Cr = { class: "s
 						default: D(({ href: t, navigate: n }) => [o("a", {
 							href: t,
 							"aria-current": z(e) ? "page" : void 0,
-							class: f(["relative -mb-px flex items-center border-b-2 px-5 py-2.5 text-sm leading-5 font-medium whitespace-nowrap transition-colors focus:outline-hidden", z(e) ? "border-primary-400 text-heading" : "border-transparent text-muted hover:border-line-strong hover:text-body"]),
+							class: p(["relative -mb-px flex items-center border-b-2 px-5 py-2.5 text-sm leading-5 font-medium whitespace-nowrap transition-colors focus:outline-hidden", z(e) ? "border-primary-400 text-heading" : "border-transparent text-muted hover:border-line-strong hover:text-body"]),
 							onClick: n
-						}, S(e.label), 11, Lr)]),
+						}, C(e.label), 11, Lr)]),
 						_: 2
 					}, 1032, ["to"]))), 128))]),
-					g.value && m.value === null ? (_(), a("div", Rr, [c(M, { class: "h-8 w-8 text-primary-500" })])) : (_(), r(I, {
+					h.value && m.value === null ? (v(), a("div", Rr, [c(M, { class: "h-8 w-8 text-primary-500" })])) : (v(), r(I, {
 						key: 1,
 						project: m.value,
 						onRefresh: L
 					}, null, 8, ["project"])),
 					c(Dr, {
-						show: w.value,
+						show: y.value,
 						client: t.client,
 						notify: t.notify,
 						project: m.value,
-						onClose: l[1] ||= (e) => w.value = !1,
+						onClose: l[1] ||= (e) => y.value = !1,
 						onSaved: ee
 					}, null, 8, [
 						"show",
@@ -1842,7 +1844,7 @@ var Sr = { class: "flex w-full items-center justify-between" }, Cr = { class: "s
 			status: "status",
 			default_rate: "default_rate",
 			due_date: "due_date"
-		}, u = B(), d = y(null), h = y(!1), g = y(!0), b = y(0), w = y(!1), k = y(null), A = y(null), j = v({
+		}, u = B(), d = b(null), f = b(!1), g = b(!0), _ = b(0), x = b(!1), k = b(null), A = b(null), j = y({
 			search: "",
 			status: "ACTIVE"
 		}), M = n(() => [
@@ -1901,10 +1903,10 @@ var Sr = { class: "flex w-full items-center justify-between" }, Cr = { class: "s
 				sortable: !1,
 				tdClass: "text-right text-sm font-medium"
 			}
-		]), F = n(() => j.search.trim() !== "" || j.status !== "ACTIVE"), I = n(() => !g.value && b.value === 0 && !F.value), L;
+		]), F = n(() => j.search.trim() !== "" || j.status !== "ACTIVE"), I = n(() => !g.value && _.value === 0 && !F.value), L;
 		E(() => j.search, () => {
 			clearTimeout(L), L = setTimeout(() => z(), Xr);
-		}), E(() => j.status, () => z()), m(() => clearTimeout(L));
+		}), E(() => j.status, () => z()), h(() => clearTimeout(L));
 		async function R({ page: e, sort: n }) {
 			let r = {
 				page: e,
@@ -1914,7 +1916,7 @@ var Sr = { class: "flex w-full items-center justify-between" }, Cr = { class: "s
 			j.status !== "ALL" && (r.status = j.status), j.search.trim() !== "" && (r.search = j.search.trim()), g.value = !0;
 			try {
 				let e = await Ht(t.client, r);
-				return b.value = e.meta.total, e.data.some((e) => e.customer_id !== null) && en(t.client), {
+				return _.value = e.meta.total, e.data.some((e) => e.customer_id !== null) && en(t.client), {
 					data: e.data,
 					pagination: {
 						totalPages: e.meta.last_page,
@@ -1941,20 +1943,20 @@ var Sr = { class: "flex w-full items-center justify-between" }, Cr = { class: "s
 			d.value?.refresh(e);
 		}
 		function ee() {
-			h.value && te(), h.value = !h.value;
+			f.value && te(), f.value = !f.value;
 		}
 		function te() {
 			j.search = "", j.status = "ACTIVE";
 		}
 		function ne() {
-			k.value = null, w.value = !0;
+			k.value = null, x.value = !0;
 		}
 		function re(e) {
-			k.value = e, w.value = !0;
+			k.value = e, x.value = !0;
 		}
 		function ie(e) {
 			let n = k.value ? u("tasks_projects.projects.updated", { name: e.name }) : u("tasks_projects.projects.created", { name: e.name });
-			w.value = !1, k.value = null, t.notify("success", n), z();
+			x.value = !1, k.value = null, t.notify("success", n), z();
 		}
 		async function ae(e) {
 			A.value = e.id;
@@ -1985,78 +1987,78 @@ var Sr = { class: "flex w-full items-center justify-between" }, Cr = { class: "s
 			return u(e === "ACTIVE" ? "tasks_projects.projects.status.active" : "tasks_projects.projects.status.archived");
 		}
 		return (t, n) => {
-			let l = x("BaseBreadcrumbItem"), m = x("BaseBreadcrumb"), g = x("BaseIcon"), v = x("BaseButton"), y = x("router-link"), b = x("BasePageHeader"), E = x("BaseInput"), F = x("BaseInputGroup"), L = x("BaseSelectInput"), z = x("BaseFilterWrapper"), B = x("BaseEmptyPlaceholder"), le = x("BaseBadge"), ue = x("BaseFormatMoney"), de = x("BaseDropdownItem"), fe = x("BaseDropdown"), pe = x("BaseTable"), me = x("BasePage");
-			return _(), r(me, null, {
+			let l = S("BaseBreadcrumbItem"), h = S("BaseBreadcrumb"), g = S("BaseIcon"), _ = S("BaseButton"), y = S("router-link"), b = S("BasePageHeader"), E = S("BaseInput"), F = S("BaseInputGroup"), L = S("BaseSelectInput"), z = S("BaseFilterWrapper"), B = S("BaseEmptyPlaceholder"), le = S("BaseBadge"), ue = S("BaseFormatMoney"), de = S("BaseDropdownItem"), fe = S("BaseDropdown"), pe = S("BaseTable"), me = S("BasePage");
+			return v(), r(me, null, {
 				default: D(() => [
-					c(b, { title: C(u)("tasks_projects.projects.title") }, {
+					c(b, { title: w(u)("tasks_projects.projects.title") }, {
 						actions: D(() => [o("div", Br, [
-							c(y, { to: C(W).tasks }, {
-								default: D(() => [c(v, { variant: "white" }, {
+							c(y, { to: w(W).tasks }, {
+								default: D(() => [c(_, { variant: "white" }, {
 									left: D((e) => [c(g, {
 										name: "ClipboardDocumentListIcon",
-										class: f(e.class)
+										class: p(e.class)
 									}, null, 8, ["class"])]),
-									default: D(() => [s(" " + S(C(u)("tasks_projects.tasks.title")), 1)]),
+									default: D(() => [s(" " + C(w(u)("tasks_projects.tasks.title")), 1)]),
 									_: 1
 								})]),
 								_: 1
 							}, 8, ["to"]),
-							c(y, { to: C(W).reports }, {
-								default: D(() => [c(v, { variant: "white" }, {
+							c(y, { to: w(W).reports }, {
+								default: D(() => [c(_, { variant: "white" }, {
 									left: D((e) => [c(g, {
 										name: "ChartBarIcon",
-										class: f(e.class)
+										class: p(e.class)
 									}, null, 8, ["class"])]),
-									default: D(() => [s(" " + S(C(u)("tasks_projects.reports.title")), 1)]),
+									default: D(() => [s(" " + C(w(u)("tasks_projects.reports.title")), 1)]),
 									_: 1
 								})]),
 								_: 1
 							}, 8, ["to"]),
-							c(y, { to: C(W).billing }, {
-								default: D(() => [c(v, { variant: "white" }, {
+							c(y, { to: w(W).billing }, {
+								default: D(() => [c(_, { variant: "white" }, {
 									left: D((e) => [c(g, {
 										name: "BanknotesIcon",
-										class: f(e.class)
+										class: p(e.class)
 									}, null, 8, ["class"])]),
-									default: D(() => [s(" " + S(C(u)("tasks_projects.billing.title")), 1)]),
+									default: D(() => [s(" " + C(w(u)("tasks_projects.billing.title")), 1)]),
 									_: 1
 								})]),
 								_: 1
 							}, 8, ["to"]),
-							c(v, {
+							c(_, {
 								variant: "primary-outline",
 								onClick: ee
 							}, {
-								right: D((e) => [h.value ? (_(), r(g, {
+								right: D((e) => [f.value ? (v(), r(g, {
 									key: 1,
 									name: "XMarkIcon",
-									class: f(e.class)
-								}, null, 8, ["class"])) : (_(), r(g, {
+									class: p(e.class)
+								}, null, 8, ["class"])) : (v(), r(g, {
 									key: 0,
 									name: "FunnelIcon",
-									class: f(e.class)
+									class: p(e.class)
 								}, null, 8, ["class"]))]),
-								default: D(() => [s(S(C(u)("tasks_projects.general.filter")) + " ", 1)]),
+								default: D(() => [s(C(w(u)("tasks_projects.general.filter")) + " ", 1)]),
 								_: 1
 							}),
-							c(v, {
+							c(_, {
 								variant: "primary",
 								onClick: ne
 							}, {
 								left: D((e) => [c(g, {
 									name: "PlusIcon",
-									class: f(e.class)
+									class: p(e.class)
 								}, null, 8, ["class"])]),
-								default: D(() => [s(" " + S(C(u)("tasks_projects.projects.new_project")), 1)]),
+								default: D(() => [s(" " + C(w(u)("tasks_projects.projects.new_project")), 1)]),
 								_: 1
 							})
 						])]),
-						default: D(() => [c(m, null, {
+						default: D(() => [c(h, null, {
 							default: D(() => [c(l, {
-								title: C(u)("tasks_projects.general.home"),
+								title: w(u)("tasks_projects.general.home"),
 								to: "/admin/dashboard"
 							}, null, 8, ["title"]), c(l, {
-								title: C(u)("tasks_projects.projects.title"),
+								title: w(u)("tasks_projects.projects.title"),
 								to: "#",
 								active: ""
 							}, null, 8, ["title"])]),
@@ -2065,12 +2067,12 @@ var Sr = { class: "flex w-full items-center justify-between" }, Cr = { class: "s
 						_: 1
 					}, 8, ["title"]),
 					c(z, {
-						show: h.value,
+						show: f.value,
 						class: "mt-3",
 						onClear: te
 					}, {
 						default: D(() => [c(F, {
-							label: C(u)("tasks_projects.general.search"),
+							label: w(u)("tasks_projects.general.search"),
 							class: "mt-2 flex-1"
 						}, {
 							default: D(() => [c(E, {
@@ -2079,11 +2081,11 @@ var Sr = { class: "flex w-full items-center justify-between" }, Cr = { class: "s
 								type: "text",
 								name: "search",
 								autocomplete: "off",
-								placeholder: C(u)("tasks_projects.projects.search_placeholder")
+								placeholder: w(u)("tasks_projects.projects.search_placeholder")
 							}, null, 8, ["modelValue", "placeholder"])]),
 							_: 1
 						}, 8, ["label"]), c(F, {
-							label: C(u)("tasks_projects.projects.columns.status"),
+							label: w(u)("tasks_projects.projects.columns.status"),
 							class: "mt-2 flex-1"
 						}, {
 							default: D(() => [c(L, {
@@ -2097,18 +2099,18 @@ var Sr = { class: "flex w-full items-center justify-between" }, Cr = { class: "s
 						_: 1
 					}, 8, ["show"]),
 					O(c(B, {
-						title: C(u)("tasks_projects.projects.empty_title"),
-						description: C(u)("tasks_projects.projects.empty_description")
+						title: w(u)("tasks_projects.projects.empty_title"),
+						description: w(u)("tasks_projects.projects.empty_description")
 					}, {
-						actions: D(() => [c(v, {
+						actions: D(() => [c(_, {
 							variant: "primary",
 							onClick: ne
 						}, {
 							left: D((e) => [c(g, {
 								name: "PlusIcon",
-								class: f(e.class)
+								class: p(e.class)
 							}, null, 8, ["class"])]),
-							default: D(() => [s(" " + S(C(u)("tasks_projects.projects.new_project")), 1)]),
+							default: D(() => [s(" " + C(w(u)("tasks_projects.projects.new_project")), 1)]),
 							_: 1
 						})]),
 						default: D(() => [c(g, {
@@ -2125,25 +2127,25 @@ var Sr = { class: "flex w-full items-center justify-between" }, Cr = { class: "s
 						class: "mt-3"
 					}, {
 						"cell-name": D(({ row: e }) => [o("div", Hr, [o("span", {
-							class: f(["mr-3 inline-block h-2.5 w-2.5 shrink-0 rounded-full", e.data.colour ? "" : "bg-line-default"]),
-							style: p(e.data.colour ? { backgroundColor: e.data.colour } : void 0)
+							class: p(["mr-3 inline-block h-2.5 w-2.5 shrink-0 rounded-full", e.data.colour ? "" : "bg-line-default"]),
+							style: m(e.data.colour ? { backgroundColor: e.data.colour } : void 0)
 						}, null, 6), o("span", null, [c(y, {
 							class: "hover:text-primary-500",
-							to: C(W).project(e.data.id)
+							to: w(W).project(e.data.id)
 						}, {
-							default: D(() => [s(S(e.data.name), 1)]),
+							default: D(() => [s(C(e.data.name), 1)]),
 							_: 2
-						}, 1032, ["to"]), e.data.identifier ? (_(), a("span", Ur, S(e.data.identifier), 1)) : i("", !0)])])]),
-						"cell-status": D(({ row: e }) => [c(le, { class: f(["rounded-full", se(e.data.status)]) }, {
-							default: D(() => [s(S(ce(e.data.status)), 1)]),
+						}, 1032, ["to"]), e.data.identifier ? (v(), a("span", Ur, C(e.data.identifier), 1)) : i("", !0)])])]),
+						"cell-status": D(({ row: e }) => [c(le, { class: p(["rounded-full", se(e.data.status)]) }, {
+							default: D(() => [s(C(ce(e.data.status)), 1)]),
 							_: 2
 						}, 1032, ["class"])]),
-						"cell-customer": D(({ row: e }) => [e.data.customer_id ? (_(), a("span", Wr, S(C($t)(e.data.customer_id)), 1)) : (_(), a("span", Gr, S(C(u)("tasks_projects.projects.internal")), 1))]),
-						"cell-default_rate": D(({ row: e }) => [e.data.default_rate === null ? (_(), a("span", Kr, "-")) : (_(), r(ue, {
+						"cell-customer": D(({ row: e }) => [e.data.customer_id ? (v(), a("span", Wr, C(w($t)(e.data.customer_id)), 1)) : (v(), a("span", Gr, C(w(u)("tasks_projects.projects.internal")), 1))]),
+						"cell-default_rate": D(({ row: e }) => [e.data.default_rate === null ? (v(), a("span", Kr, "-")) : (v(), r(ue, {
 							key: 0,
 							amount: e.data.default_rate
 						}, null, 8, ["amount"]))]),
-						"cell-due_date": D(({ row: e }) => [e.data.due_date ? (_(), a("span", qr, S(C(ut)(e.data.due_date)), 1)) : (_(), a("span", Jr, "-"))]),
+						"cell-due_date": D(({ row: e }) => [e.data.due_date ? (v(), a("span", qr, C(w(ut)(e.data.due_date)), 1)) : (v(), a("span", Jr, "-"))]),
 						"cell-actions": D(({ row: e }) => [c(fe, { "content-loading": A.value === e.data.id }, {
 							activator: D(() => [c(g, {
 								name: "EllipsisHorizontalIcon",
@@ -2154,21 +2156,21 @@ var Sr = { class: "flex w-full items-center justify-between" }, Cr = { class: "s
 									default: D(() => [c(g, {
 										name: "PencilIcon",
 										class: "mr-3 h-5 w-5 text-subtle group-hover:text-muted"
-									}), s(" " + S(C(u)("tasks_projects.general.edit")), 1)]),
+									}), s(" " + C(w(u)("tasks_projects.general.edit")), 1)]),
 									_: 1
 								}, 8, ["onClick"]),
 								c(de, { onClick: (t) => ae(e.data) }, {
 									default: D(() => [c(g, {
 										name: e.data.status === "ARCHIVED" ? "ArrowPathIcon" : "ArchiveBoxIcon",
 										class: "mr-3 h-5 w-5 text-subtle group-hover:text-muted"
-									}, null, 8, ["name"]), s(" " + S(e.data.status === "ARCHIVED" ? C(u)("tasks_projects.projects.unarchive") : C(u)("tasks_projects.projects.archive")), 1)]),
+									}, null, 8, ["name"]), s(" " + C(e.data.status === "ARCHIVED" ? w(u)("tasks_projects.projects.unarchive") : w(u)("tasks_projects.projects.archive")), 1)]),
 									_: 2
 								}, 1032, ["onClick"]),
 								c(de, { onClick: (t) => oe(e.data) }, {
 									default: D(() => [c(g, {
 										name: "TrashIcon",
 										class: "mr-3 h-5 w-5 text-subtle group-hover:text-muted"
-									}), s(" " + S(C(u)("tasks_projects.general.delete")), 1)]),
+									}), s(" " + C(w(u)("tasks_projects.general.delete")), 1)]),
 									_: 1
 								}, 8, ["onClick"])
 							]),
@@ -2177,11 +2179,11 @@ var Sr = { class: "flex w-full items-center justify-between" }, Cr = { class: "s
 						_: 1
 					}, 8, ["columns"])], 512), [[T, !I.value]]),
 					c(Dr, {
-						show: w.value,
+						show: x.value,
 						client: e.client,
 						notify: e.notify,
 						project: k.value,
-						onClose: n[2] ||= (e) => w.value = !1,
+						onClose: n[2] ||= (e) => x.value = !1,
 						onSaved: ie
 					}, null, 8, [
 						"show",
@@ -2218,17 +2220,17 @@ var Sr = { class: "flex w-full items-center justify-between" }, Cr = { class: "s
 		project: {}
 	},
 	setup(t) {
-		let l = t, u = B(), d = y([]), p = y([]), m = y(!0), g = y(!1), v = y(null), w = y(null), T = y(""), E = y({}), O = n(() => l.project?.id ?? Number(l.id)), k = n(() => p.value.filter((e) => !d.value.some((t) => t.user_id === e.id)).map((e) => ({
+		let l = t, u = B(), d = b([]), f = b([]), m = b(!0), h = b(!1), _ = b(null), y = b(null), T = b(""), E = b({}), O = n(() => l.project?.id ?? Number(l.id)), k = n(() => f.value.filter((e) => !d.value.some((t) => t.user_id === e.id)).map((e) => ({
 			id: e.id,
 			label: e.name
 		})));
-		h(() => {
+		g(() => {
 			A();
 		});
 		async function A() {
 			m.value = !0;
 			try {
-				p.value = await Jt(l.client);
+				f.value = await Jt(l.client);
 			} catch (e) {
 				l.notify("error", H(e, u("tasks_projects.tasks.members_failed")));
 			}
@@ -2241,50 +2243,50 @@ var Sr = { class: "flex w-full items-center justify-between" }, Cr = { class: "s
 			}
 		}
 		function j(e) {
-			return p.value.find((t) => t.id === e)?.name ?? u("tasks_projects.project.time.removed_member");
+			return f.value.find((t) => t.id === e)?.name ?? u("tasks_projects.project.time.removed_member");
 		}
 		async function M() {
-			let e = w.value;
-			if (!(e === null || g.value)) {
-				g.value = !0, E.value = {};
+			let e = y.value;
+			if (!(e === null || h.value)) {
+				h.value = !0, E.value = {};
 				try {
 					await yr(l.client, O.value, {
 						user_id: e.id,
 						rate: st(T.value)
-					}), l.notify("success", u("tasks_projects.project.members.attached", { name: e.label })), w.value = null, T.value = "", await A();
+					}), l.notify("success", u("tasks_projects.project.members.attached", { name: e.label })), y.value = null, T.value = "", await A();
 				} catch (e) {
 					E.value = at(e), l.notify("error", H(e, u("tasks_projects.project.members.attach_failed")));
 				} finally {
-					g.value = !1;
+					h.value = !1;
 				}
 			}
 		}
 		async function N(e) {
 			let t = j(e.user_id);
 			if (window.confirm(u("tasks_projects.project.members.detach_confirm", { name: t }))) {
-				v.value = e.user_id;
+				_.value = e.user_id;
 				try {
 					await br(l.client, O.value, e.user_id), l.notify("success", u("tasks_projects.project.members.detached", { name: t })), await A();
 				} catch (e) {
 					l.notify("error", H(e, u("tasks_projects.project.members.detach_failed")));
 				} finally {
-					v.value = null;
+					_.value = null;
 				}
 			}
 		}
 		return (t, n) => {
-			let l = x("BaseSelectInput"), p = x("BaseInputGroup"), h = x("BaseInput"), y = x("BaseIcon"), O = x("BaseButton"), A = x("BaseSpinner"), P = x("BaseFormatMoney");
-			return _(), a("div", Qr, [o("div", $r, [o("div", ei, [
-				c(p, {
-					label: C(u)("tasks_projects.project.members.member"),
+			let l = S("BaseSelectInput"), f = S("BaseInputGroup"), g = S("BaseInput"), b = S("BaseIcon"), O = S("BaseButton"), A = S("BaseSpinner"), P = S("BaseFormatMoney");
+			return v(), a("div", Qr, [o("div", $r, [o("div", ei, [
+				c(f, {
+					label: w(u)("tasks_projects.project.members.member"),
 					error: E.value.user_id,
 					class: "flex-1"
 				}, {
 					default: D(() => [c(l, {
-						modelValue: w.value,
-						"onUpdate:modelValue": n[0] ||= (e) => w.value = e,
+						modelValue: y.value,
+						"onUpdate:modelValue": n[0] ||= (e) => y.value = e,
 						options: k.value,
-						placeholder: C(u)("tasks_projects.project.members.attach_placeholder"),
+						placeholder: w(u)("tasks_projects.project.members.attach_placeholder"),
 						"label-key": "label"
 					}, null, 8, [
 						"modelValue",
@@ -2293,13 +2295,13 @@ var Sr = { class: "flex w-full items-center justify-between" }, Cr = { class: "s
 					])]),
 					_: 1
 				}, 8, ["label", "error"]),
-				c(p, {
-					label: C(u)("tasks_projects.project.members.rate"),
+				c(f, {
+					label: w(u)("tasks_projects.project.members.rate"),
 					error: E.value.rate,
-					"help-text": C(u)("tasks_projects.project.members.rate_help"),
+					"help-text": w(u)("tasks_projects.project.members.rate_help"),
 					class: "flex-1"
 				}, {
-					default: D(() => [c(h, {
+					default: D(() => [c(g, {
 						modelValue: T.value,
 						"onUpdate:modelValue": n[1] ||= (e) => T.value = e,
 						type: "number",
@@ -2315,31 +2317,31 @@ var Sr = { class: "flex w-full items-center justify-between" }, Cr = { class: "s
 				c(O, {
 					variant: "primary",
 					class: "lg:mb-1",
-					loading: g.value,
-					disabled: g.value || w.value === null,
+					loading: h.value,
+					disabled: h.value || y.value === null,
 					onClick: M
 				}, {
-					left: D((e) => [c(y, {
+					left: D((e) => [c(b, {
 						name: "PlusIcon",
-						class: f(e.class)
+						class: p(e.class)
 					}, null, 8, ["class"])]),
-					default: D(() => [s(" " + S(C(u)("tasks_projects.project.members.attach")), 1)]),
+					default: D(() => [s(" " + C(w(u)("tasks_projects.project.members.attach")), 1)]),
 					_: 1
 				}, 8, ["loading", "disabled"])
-			]), k.value.length === 0 && !m.value ? (_(), a("p", ti, S(C(u)("tasks_projects.project.members.all_attached")), 1)) : i("", !0)]), o("div", ni, [m.value ? (_(), a("div", ri, [c(A, { class: "h-6 w-6 text-primary-500" })])) : d.value.length === 0 ? (_(), a("p", ii, S(C(u)("tasks_projects.project.members.empty")), 1)) : (_(), a("ul", ai, [(_(!0), a(e, null, b(d.value, (e) => (_(), a("li", {
+			]), k.value.length === 0 && !m.value ? (v(), a("p", ti, C(w(u)("tasks_projects.project.members.all_attached")), 1)) : i("", !0)]), o("div", ni, [m.value ? (v(), a("div", ri, [c(A, { class: "h-6 w-6 text-primary-500" })])) : d.value.length === 0 ? (v(), a("p", ii, C(w(u)("tasks_projects.project.members.empty")), 1)) : (v(), a("ul", ai, [(v(!0), a(e, null, x(d.value, (e) => (v(), a("li", {
 				key: e.id,
 				class: "flex items-center justify-between px-5 py-4"
-			}, [o("div", null, [o("p", oi, S(j(e.user_id)), 1), o("p", si, [s(S(C(u)("tasks_projects.project.members.rate")) + ": ", 1), e.rate === null ? (_(), a("span", ci, S(C(u)("tasks_projects.tasks.none")), 1)) : (_(), r(P, {
+			}, [o("div", null, [o("p", oi, C(j(e.user_id)), 1), o("p", si, [s(C(w(u)("tasks_projects.project.members.rate")) + ": ", 1), e.rate === null ? (v(), a("span", ci, C(w(u)("tasks_projects.tasks.none")), 1)) : (v(), r(P, {
 				key: 0,
 				amount: e.rate
 			}, null, 8, ["amount"]))])]), c(O, {
 				variant: "danger",
 				size: "sm",
-				loading: v.value === e.user_id,
-				disabled: v.value === e.user_id,
+				loading: _.value === e.user_id,
+				disabled: _.value === e.user_id,
 				onClick: (t) => N(e)
 			}, {
-				default: D(() => [s(S(C(u)("tasks_projects.general.delete")), 1)]),
+				default: D(() => [s(C(w(u)("tasks_projects.general.delete")), 1)]),
 				_: 1
 			}, 8, [
 				"loading",
@@ -2376,10 +2378,10 @@ var Sr = { class: "flex w-full items-center justify-between" }, Cr = { class: "s
 	},
 	emits: ["refresh"],
 	setup(t, { emit: l }) {
-		let u = t, d = l, m = B(), h = n(() => u.project?.totals ?? null), g = n(() => u.project?.budget_minutes ?? null), v = n(() => {
+		let u = t, d = l, f = B(), h = n(() => u.project?.totals ?? null), g = n(() => u.project?.budget_minutes ?? null), _ = n(() => {
 			let e = g.value, t = h.value?.logged_minutes ?? 0;
 			return e ? Math.min(100, Math.round(t / e * 100)) : 0;
-		}), y = n(() => M.allowed && u.project?.customer_id !== null && (h.value?.unbilled_amount ?? 0) > 0), b = n(() => M.busy), w = n(() => {
+		}), y = n(() => M.allowed && u.project?.customer_id !== null && (h.value?.unbilled_amount ?? 0) > 0), b = n(() => M.busy), x = n(() => {
 			let e = g.value, t = h.value?.logged_minutes ?? 0;
 			return e && t > e ? t - e : 0;
 		});
@@ -2389,28 +2391,28 @@ var Sr = { class: "flex w-full items-center justify-between" }, Cr = { class: "s
 				client: u.client,
 				router: u.router,
 				notify: u.notify,
-				t: m
+				t: f
 			}, { projectId: e.id }) || d("refresh"));
 		}
 		return (n, l) => {
-			let u = x("BaseFormatMoney"), d = x("BaseIcon"), E = x("BaseButton"), O = x("BaseSpinner");
-			return t.project && h.value ? (_(), a("div", ui, [
+			let u = S("BaseFormatMoney"), d = S("BaseIcon"), E = S("BaseButton"), O = S("BaseSpinner");
+			return t.project && h.value ? (v(), a("div", ui, [
 				o("div", di, [
 					o("div", fi, [
-						o("p", pi, S(C(m)("tasks_projects.project.overview.tasks")), 1),
-						o("p", mi, S(h.value.tasks.total), 1),
-						o("p", hi, S(C(m)("tasks_projects.project.overview.open_tasks", { count: h.value.tasks.open })) + " · " + S(C(m)("tasks_projects.project.overview.closed_tasks", { count: h.value.tasks.closed })), 1)
+						o("p", pi, C(w(f)("tasks_projects.project.overview.tasks")), 1),
+						o("p", mi, C(h.value.tasks.total), 1),
+						o("p", hi, C(w(f)("tasks_projects.project.overview.open_tasks", { count: h.value.tasks.open })) + " · " + C(w(f)("tasks_projects.project.overview.closed_tasks", { count: h.value.tasks.closed })), 1)
 					]),
 					o("div", gi, [
-						o("p", _i, S(C(m)("tasks_projects.project.overview.logged")), 1),
-						o("p", vi, S(C(ft)(h.value.logged_minutes)), 1),
-						o("p", yi, S(C(m)("tasks_projects.project.overview.billable")) + ": " + S(C(ft)(h.value.billable_minutes)), 1)
+						o("p", _i, C(w(f)("tasks_projects.project.overview.logged")), 1),
+						o("p", vi, C(w(ft)(h.value.logged_minutes)), 1),
+						o("p", yi, C(w(f)("tasks_projects.project.overview.billable")) + ": " + C(w(ft)(h.value.billable_minutes)), 1)
 					]),
-					o("div", bi, [o("p", xi, S(C(m)("tasks_projects.project.overview.billable_amount")), 1), o("p", Si, [c(u, { amount: h.value.billable_amount }, null, 8, ["amount"])])]),
+					o("div", bi, [o("p", xi, C(w(f)("tasks_projects.project.overview.billable_amount")), 1), o("p", Si, [c(u, { amount: h.value.billable_amount }, null, 8, ["amount"])])]),
 					o("div", Ci, [
-						o("p", wi, S(C(m)("tasks_projects.project.overview.unbilled_amount")), 1),
+						o("p", wi, C(w(f)("tasks_projects.project.overview.unbilled_amount")), 1),
 						o("p", Ti, [c(u, { amount: h.value.unbilled_amount }, null, 8, ["amount"])]),
-						y.value ? (_(), r(E, {
+						y.value ? (v(), r(E, {
 							key: 0,
 							class: "mt-2",
 							variant: "primary-outline",
@@ -2419,29 +2421,29 @@ var Sr = { class: "flex w-full items-center justify-between" }, Cr = { class: "s
 							disabled: b.value,
 							onClick: T
 						}, {
-							left: D((e) => [b.value ? i("", !0) : (_(), r(d, {
+							left: D((e) => [b.value ? i("", !0) : (v(), r(d, {
 								key: 0,
 								name: "BanknotesIcon",
-								class: f(e.class)
+								class: p(e.class)
 							}, null, 8, ["class"]))]),
-							default: D(() => [s(" " + S(C(m)("tasks_projects.project.invoice_project")), 1)]),
+							default: D(() => [s(" " + C(w(f)("tasks_projects.project.invoice_project")), 1)]),
 							_: 1
 						}, 8, ["loading", "disabled"])) : i("", !0)
 					])
 				]),
-				o("div", Ei, [o("p", Di, S(C(m)("tasks_projects.project.overview.budget")), 1), g.value ? (_(), a(e, { key: 0 }, [
-					o("p", Oi, S(C(m)("tasks_projects.project.overview.budget_used", {
-						used: C(ft)(h.value.logged_minutes),
-						total: C(ft)(g.value)
+				o("div", Ei, [o("p", Di, C(w(f)("tasks_projects.project.overview.budget")), 1), g.value ? (v(), a(e, { key: 0 }, [
+					o("p", Oi, C(w(f)("tasks_projects.project.overview.budget_used", {
+						used: w(ft)(h.value.logged_minutes),
+						total: w(ft)(g.value)
 					})), 1),
 					o("div", ki, [o("div", {
-						class: f(["h-2 rounded-full", w.value > 0 ? "bg-status-red" : "bg-primary-500"]),
-						style: p({ width: `${v.value}%` })
+						class: p(["h-2 rounded-full", x.value > 0 ? "bg-status-red" : "bg-primary-500"]),
+						style: m({ width: `${_.value}%` })
 					}, null, 6)]),
-					w.value > 0 ? (_(), a("p", Ai, S(C(m)("tasks_projects.project.overview.budget_over", { amount: C(ft)(w.value) })), 1)) : i("", !0)
-				], 64)) : (_(), a("p", ji, S(C(m)("tasks_projects.project.overview.no_budget")), 1))]),
-				o("div", Mi, [o("p", Ni, S(C(m)("tasks_projects.project.overview.description")), 1), t.project.description ? (_(), a("p", Pi, S(t.project.description), 1)) : (_(), a("p", Fi, S(C(m)("tasks_projects.project.overview.no_description")), 1))])
-			])) : (_(), a("div", Ii, [c(O, { class: "h-8 w-8 text-primary-500" })]));
+					x.value > 0 ? (v(), a("p", Ai, C(w(f)("tasks_projects.project.overview.budget_over", { amount: w(ft)(x.value) })), 1)) : i("", !0)
+				], 64)) : (v(), a("p", ji, C(w(f)("tasks_projects.project.overview.no_budget")), 1))]),
+				o("div", Mi, [o("p", Ni, C(w(f)("tasks_projects.project.overview.description")), 1), t.project.description ? (v(), a("p", Pi, C(t.project.description), 1)) : (v(), a("p", Fi, C(w(f)("tasks_projects.project.overview.no_description")), 1))])
+			])) : (v(), a("div", Ii, [c(O, { class: "h-8 w-8 text-primary-500" })]));
 		};
 	}
 }), Ri = {
@@ -2531,7 +2533,7 @@ var Xi = { class: "mt-4 flex flex-wrap items-end gap-3" }, Zi = {
 	},
 	emits: ["update:modelValue"],
 	setup(e, { emit: t }) {
-		let r = e, s = t, l = B(), u = y(r.modelValue.search), d, f = n(() => [{
+		let r = e, s = t, l = B(), u = b(r.modelValue.search), d, f = n(() => [{
 			id: "",
 			label: l("tasks_projects.tasks.filters.all_projects")
 		}, ...r.projects.map((e) => ({
@@ -2543,7 +2545,7 @@ var Xi = { class: "mt-4 flex flex-wrap items-end gap-3" }, Zi = {
 		}, ...r.members.map((e) => ({
 			id: String(e.id),
 			label: e.name
-		}))]), h = n(() => [
+		}))]), m = n(() => [
 			{
 				id: "",
 				label: l("tasks_projects.tasks.filters.all_statuses")
@@ -2563,18 +2565,18 @@ var Xi = { class: "mt-4 flex flex-wrap items-end gap-3" }, Zi = {
 		]), g = n({
 			get: () => T(f.value, r.modelValue.project),
 			set: (e) => D({ project: e?.id ?? "" })
-		}), v = n({
+		}), _ = n({
 			get: () => T(p.value, r.modelValue.user),
 			set: (e) => D({ user: e?.id ?? "" })
-		}), b = n({
-			get: () => T(h.value, r.modelValue.status),
+		}), y = n({
+			get: () => T(m.value, r.modelValue.status),
 			set: (e) => D({ status: e?.id ?? "" })
-		}), w = n(() => Hi(r.modelValue));
+		}), x = n(() => Hi(r.modelValue));
 		E(() => r.modelValue.search, (e) => {
 			e !== u.value && (u.value = e);
 		}), E(u, (e) => {
 			clearTimeout(d), d = setTimeout(() => D({ search: e.trim() }), aa);
-		}), m(() => clearTimeout(d));
+		}), h(() => clearTimeout(d));
 		function T(e, t) {
 			return e.find((e) => e.id === t) ?? e[0];
 		}
@@ -2588,40 +2590,40 @@ var Xi = { class: "mt-4 flex flex-wrap items-end gap-3" }, Zi = {
 			u.value = "", s("update:modelValue", { ...Ri });
 		}
 		return (t, n) => {
-			let r = x("BaseSelectInput"), s = x("BaseInput");
-			return _(), a("div", Xi, [
-				e.lockProject ? i("", !0) : (_(), a("label", Zi, [o("span", Qi, S(C(l)("tasks_projects.tasks.filters.project")), 1), c(r, {
+			let r = S("BaseSelectInput"), s = S("BaseInput");
+			return v(), a("div", Xi, [
+				e.lockProject ? i("", !0) : (v(), a("label", Zi, [o("span", Qi, C(w(l)("tasks_projects.tasks.filters.project")), 1), c(r, {
 					modelValue: g.value,
 					"onUpdate:modelValue": n[0] ||= (e) => g.value = e,
 					options: f.value,
 					"label-key": "label"
 				}, null, 8, ["modelValue", "options"])])),
-				o("label", $i, [o("span", ea, S(C(l)("tasks_projects.tasks.filters.member")), 1), c(r, {
-					modelValue: v.value,
-					"onUpdate:modelValue": n[1] ||= (e) => v.value = e,
+				o("label", $i, [o("span", ea, C(w(l)("tasks_projects.tasks.filters.member")), 1), c(r, {
+					modelValue: _.value,
+					"onUpdate:modelValue": n[1] ||= (e) => _.value = e,
 					options: p.value,
 					"label-key": "label"
 				}, null, 8, ["modelValue", "options"])]),
-				o("label", ta, [o("span", na, S(C(l)("tasks_projects.tasks.filters.status")), 1), c(r, {
-					modelValue: b.value,
-					"onUpdate:modelValue": n[2] ||= (e) => b.value = e,
-					options: h.value,
+				o("label", ta, [o("span", na, C(w(l)("tasks_projects.tasks.filters.status")), 1), c(r, {
+					modelValue: y.value,
+					"onUpdate:modelValue": n[2] ||= (e) => y.value = e,
+					options: m.value,
 					"label-key": "label"
 				}, null, 8, ["modelValue", "options"])]),
-				o("label", ra, [o("span", ia, S(C(l)("tasks_projects.tasks.filters.search")), 1), c(s, {
+				o("label", ra, [o("span", ia, C(w(l)("tasks_projects.tasks.filters.search")), 1), c(s, {
 					modelValue: u.value,
 					"onUpdate:modelValue": n[3] ||= (e) => u.value = e,
 					type: "text",
 					name: "search",
 					autocomplete: "off",
-					placeholder: C(l)("tasks_projects.tasks.search_placeholder")
+					placeholder: w(l)("tasks_projects.tasks.search_placeholder")
 				}, null, 8, ["modelValue", "placeholder"])]),
-				w.value ? (_(), a("button", {
+				x.value ? (v(), a("button", {
 					key: 1,
 					type: "button",
 					class: "pb-2 text-sm font-medium text-primary-500 hover:underline",
 					onClick: O
-				}, S(C(l)("tasks_projects.tasks.bulk.clear")), 1)) : i("", !0)
+				}, C(w(l)("tasks_projects.tasks.bulk.clear")), 1)) : i("", !0)
 			]);
 		};
 	}
@@ -2651,22 +2653,22 @@ var Xi = { class: "mt-4 flex flex-wrap items-end gap-3" }, Zi = {
 		"select-page"
 	],
 	setup(e, { emit: t }) {
-		let l = e, u = t, d = B(), p = y(null), m = n(() => l.statuses.map((e) => ({
+		let l = e, u = t, d = B(), f = b(null), m = n(() => l.statuses.map((e) => ({
 			id: e.id,
 			label: e.name
 		})));
-		return E(p, (e) => {
-			e !== null && (u("status", e.id), p.value = null);
+		return E(f, (e) => {
+			e !== null && (u("status", e.id), f.value = null);
 		}), (t, n) => {
-			let l = x("BaseSelectInput"), h = x("BaseIcon"), g = x("BaseButton");
-			return e.count > 0 ? (_(), a("div", sa, [
-				o("span", ca, S(C(d)("tasks_projects.tasks.bulk.selected", { count: e.count })), 1),
+			let l = S("BaseSelectInput"), h = S("BaseIcon"), g = S("BaseButton");
+			return e.count > 0 ? (v(), a("div", sa, [
+				o("span", ca, C(w(d)("tasks_projects.tasks.bulk.selected", { count: e.count })), 1),
 				o("div", la, [c(l, {
-					modelValue: p.value,
-					"onUpdate:modelValue": n[0] ||= (e) => p.value = e,
+					modelValue: f.value,
+					"onUpdate:modelValue": n[0] ||= (e) => f.value = e,
 					options: m.value,
 					disabled: e.busy,
-					placeholder: C(d)("tasks_projects.tasks.bulk.change_status"),
+					placeholder: w(d)("tasks_projects.tasks.bulk.change_status"),
 					"label-key": "label"
 				}, null, 8, [
 					"modelValue",
@@ -2682,12 +2684,12 @@ var Xi = { class: "mt-4 flex flex-wrap items-end gap-3" }, Zi = {
 				}, {
 					left: D((e) => [c(h, {
 						name: "TrashIcon",
-						class: f(e.class)
+						class: p(e.class)
 					}, null, 8, ["class"])]),
-					default: D(() => [s(" " + S(C(d)("tasks_projects.tasks.bulk.delete")), 1)]),
+					default: D(() => [s(" " + C(w(d)("tasks_projects.tasks.bulk.delete")), 1)]),
 					_: 1
 				}, 8, ["disabled"]),
-				e.canInvoice ? (_(), r(g, {
+				e.canInvoice ? (v(), r(g, {
 					key: 0,
 					variant: "primary-outline",
 					size: "sm",
@@ -2695,24 +2697,24 @@ var Xi = { class: "mt-4 flex flex-wrap items-end gap-3" }, Zi = {
 					disabled: e.busy || e.invoicing,
 					onClick: n[2] ||= (e) => u("invoice")
 				}, {
-					left: D((t) => [e.invoicing ? i("", !0) : (_(), r(h, {
+					left: D((t) => [e.invoicing ? i("", !0) : (v(), r(h, {
 						key: 0,
 						name: "BanknotesIcon",
-						class: f(t.class)
+						class: p(t.class)
 					}, null, 8, ["class"]))]),
-					default: D(() => [s(" " + S(C(d)("tasks_projects.tasks.bulk.invoice")), 1)]),
+					default: D(() => [s(" " + C(w(d)("tasks_projects.tasks.bulk.invoice")), 1)]),
 					_: 1
 				}, 8, ["loading", "disabled"])) : i("", !0),
 				o("button", {
 					type: "button",
 					class: "ml-auto text-sm font-medium text-primary-600 hover:underline",
 					onClick: n[3] ||= (e) => u("select-page")
-				}, S(C(d)("tasks_projects.tasks.bulk.select_page")), 1),
+				}, C(w(d)("tasks_projects.tasks.bulk.select_page")), 1),
 				o("button", {
 					type: "button",
 					class: "text-sm font-medium text-primary-600 hover:underline",
 					onClick: n[4] ||= (e) => u("clear")
-				}, S(C(d)("tasks_projects.tasks.bulk.clear")), 1)
+				}, C(w(d)("tasks_projects.tasks.bulk.clear")), 1)
 			])) : i("", !0);
 		};
 	}
@@ -2722,12 +2724,12 @@ var Xi = { class: "mt-4 flex flex-wrap items-end gap-3" }, Zi = {
 	setup(e) {
 		let t = e, a = B(), o = n(() => t.state === "invoiced" || t.state === "uninvoiced"), c = n(() => t.state === "invoiced" ? a("tasks_projects.tasks.invoiced") : a("tasks_projects.tasks.uninvoiced")), l = n(() => t.state === "invoiced" ? "bg-alert-success-bg! text-alert-success-text!" : "bg-alert-warning-bg! text-alert-warning-text!");
 		return (e, t) => {
-			let n = x("BaseBadge");
-			return o.value ? (_(), r(n, {
+			let n = S("BaseBadge");
+			return o.value ? (v(), r(n, {
 				key: 0,
-				class: f(["rounded-full whitespace-nowrap", l.value])
+				class: p(["rounded-full whitespace-nowrap", l.value])
 			}, {
-				default: D(() => [s(S(c.value), 1)]),
+				default: D(() => [s(C(c.value), 1)]),
 				_: 1
 			}, 8, ["class"])) : i("", !0);
 		};
@@ -2760,14 +2762,14 @@ var Xi = { class: "mt-4 flex flex-wrap items-end gap-3" }, Zi = {
 		"deleted"
 	],
 	setup(e, { emit: t }) {
-		let l = e, u = t, d = B(), f = v({
+		let l = e, u = t, d = B(), f = y({
 			name: "",
 			description: "",
 			estimateHours: "",
 			rate: "",
 			dueDate: "",
 			billable: !0
-		}), p = y(null), m = y(null), h = y(null), g = y(null), b = y(null), w = y({}), T = y(!1), O = y(!1), k = y(!1), j = n(() => !l.compact || k.value), M = n({
+		}), p = b(null), m = b(null), h = b(null), g = b(null), _ = b(null), x = b({}), T = b(!1), O = b(!1), k = b(!1), j = n(() => !l.compact || k.value), M = n({
 			get: () => R(l.projects, m.value),
 			set: (e) => {
 				m.value = e?.id ?? null;
@@ -2792,7 +2794,7 @@ var Xi = { class: "mt-4 flex flex-wrap items-end gap-3" }, Zi = {
 			let e = l.task;
 			f.name = e?.name ?? "", f.description = e?.description ?? "", f.estimateHours = ct(e?.estimated_minutes ?? null), f.rate = ot(e?.rate ?? null), f.dueDate = e?.due_date ?? "", f.billable = e?.billable ?? !0;
 			let t = l.statuses.find((e) => e.is_default) ?? l.statuses[0], n = e?.task_status_id ?? l.defaults?.task_status_id ?? t?.id ?? null;
-			p.value = R(F.value, n), m.value = e?.project_id ?? l.defaults?.project_id ?? null, h.value = R(I.value, e?.assignee_id ?? null), g.value = e?.priority ? L.value[fa.indexOf(e.priority)] ?? null : null, b.value = e?.customer_id ?? null, w.value = {}, k.value = !1, b.value !== null && en(l.client);
+			p.value = R(F.value, n), m.value = e?.project_id ?? l.defaults?.project_id ?? null, h.value = R(I.value, e?.assignee_id ?? null), g.value = e?.priority ? L.value[fa.indexOf(e.priority)] ?? null : null, _.value = e?.customer_id ?? null, x.value = {}, k.value = !1, _.value !== null && en(l.client);
 		}
 		function ee(e) {
 			f.dueDate = e ? dt(e) : "";
@@ -2805,7 +2807,7 @@ var Xi = { class: "mt-4 flex flex-wrap items-end gap-3" }, Zi = {
 				name: f.name.trim(),
 				task_status_id: e,
 				project_id: m.value,
-				customer_id: m.value === null ? b.value : null,
+				customer_id: m.value === null ? _.value : null,
 				description: f.description.trim() || null,
 				assignee_id: h.value?.id ?? null,
 				priority: t,
@@ -2818,7 +2820,7 @@ var Xi = { class: "mt-4 flex flex-wrap items-end gap-3" }, Zi = {
 		async function ne() {
 			if (T.value) return;
 			if (f.name.trim() === "") {
-				w.value = { name: d("tasks_projects.tasks.name_required") };
+				x.value = { name: d("tasks_projects.tasks.name_required") };
 				return;
 			}
 			let e = te();
@@ -2826,12 +2828,12 @@ var Xi = { class: "mt-4 flex flex-wrap items-end gap-3" }, Zi = {
 				l.notify("error", d("tasks_projects.task_statuses.none"));
 				return;
 			}
-			T.value = !0, w.value = {};
+			T.value = !0, x.value = {};
 			try {
 				let t = l.task, n = t ? await lr(l.client, t.id, e) : await cr(l.client, e);
 				u("saved", n);
 			} catch (e) {
-				w.value = at(e), l.notify("error", re(e, "save_failed"));
+				x.value = at(e), l.notify("error", re(e, "save_failed"));
 			} finally {
 				T.value = !1;
 			}
@@ -2853,43 +2855,43 @@ var Xi = { class: "mt-4 flex flex-wrap items-end gap-3" }, Zi = {
 			}
 		}
 		return (t, n) => {
-			let l = x("BaseIcon"), m = x("BaseInput"), v = x("BaseInputGroup"), y = x("BaseSelectInput"), E = x("BaseDatePicker"), R = x("BaseInputGrid"), z = x("BaseSwitch"), B = x("BaseTextarea"), te = x("BaseButton"), re = x("BaseModal");
-			return _(), r(re, {
+			let l = S("BaseIcon"), m = S("BaseInput"), y = S("BaseInputGroup"), b = S("BaseSelectInput"), E = S("BaseDatePicker"), R = S("BaseInputGrid"), z = S("BaseSwitch"), B = S("BaseTextarea"), te = S("BaseButton"), re = S("BaseModal");
+			return v(), r(re, {
 				show: e.show,
 				onClose: n[12] ||= (e) => u("close")
 			}, {
-				header: D(() => [o("div", pa, [o("span", null, [s(S(P.value) + " ", 1), e.task ? (_(), a("span", ma, "#" + S(e.task.number), 1)) : i("", !0)]), c(l, {
+				header: D(() => [o("div", pa, [o("span", null, [s(C(P.value) + " ", 1), e.task ? (v(), a("span", ma, "#" + C(e.task.number), 1)) : i("", !0)]), c(l, {
 					name: "XMarkIcon",
 					class: "h-6 w-6 cursor-pointer text-subtle hover:text-body",
 					onClick: n[0] ||= (e) => u("close")
 				})])]),
 				default: D(() => [o("form", { onSubmit: A(ne, ["prevent"]) }, [o("div", ha, [
-					c(v, {
-						label: C(d)("tasks_projects.tasks.fields.name"),
-						error: w.value.name,
+					c(y, {
+						label: w(d)("tasks_projects.tasks.fields.name"),
+						error: x.value.name,
 						required: ""
 					}, {
 						default: D(() => [c(m, {
 							modelValue: f.name,
 							"onUpdate:modelValue": n[1] ||= (e) => f.name = e,
-							invalid: !!w.value.name,
+							invalid: !!x.value.name,
 							type: "text"
 						}, null, 8, ["modelValue", "invalid"])]),
 						_: 1
 					}, 8, ["label", "error"]),
 					c(R, null, {
 						default: D(() => [
-							e.lockProject ? i("", !0) : (_(), r(v, {
+							e.lockProject ? i("", !0) : (v(), r(y, {
 								key: 0,
-								label: C(d)("tasks_projects.tasks.fields.project"),
-								error: w.value.project_id,
-								"help-text": C(d)("tasks_projects.tasks.fields.project_help")
+								label: w(d)("tasks_projects.tasks.fields.project"),
+								error: x.value.project_id,
+								"help-text": w(d)("tasks_projects.tasks.fields.project_help")
 							}, {
-								default: D(() => [c(y, {
+								default: D(() => [c(b, {
 									modelValue: M.value,
 									"onUpdate:modelValue": n[2] ||= (e) => M.value = e,
 									options: e.projects,
-									placeholder: C(d)("tasks_projects.tasks.fields.project_placeholder"),
+									placeholder: w(d)("tasks_projects.tasks.fields.project_placeholder"),
 									"label-key": "label"
 								}, null, 8, [
 									"modelValue",
@@ -2902,23 +2904,23 @@ var Xi = { class: "mt-4 flex flex-wrap items-end gap-3" }, Zi = {
 								"error",
 								"help-text"
 							])),
-							b.value === null ? i("", !0) : (_(), r(v, {
+							_.value === null ? i("", !0) : (v(), r(y, {
 								key: 1,
-								label: C(d)("tasks_projects.tasks.fields.customer"),
-								"help-text": C(d)("tasks_projects.tasks.fields.customer_help")
+								label: w(d)("tasks_projects.tasks.fields.customer"),
+								"help-text": w(d)("tasks_projects.tasks.fields.customer_help")
 							}, {
 								default: D(() => [c(m, {
-									"model-value": C($t)(b.value),
+									"model-value": w($t)(_.value),
 									type: "text",
 									disabled: ""
 								}, null, 8, ["model-value"])]),
 								_: 1
 							}, 8, ["label", "help-text"])),
-							c(v, {
-								label: C(d)("tasks_projects.tasks.fields.status"),
-								error: w.value.task_status_id
+							c(y, {
+								label: w(d)("tasks_projects.tasks.fields.status"),
+								error: x.value.task_status_id
 							}, {
-								default: D(() => [c(y, {
+								default: D(() => [c(b, {
 									modelValue: p.value,
 									"onUpdate:modelValue": n[3] ||= (e) => p.value = e,
 									options: F.value,
@@ -2926,15 +2928,15 @@ var Xi = { class: "mt-4 flex flex-wrap items-end gap-3" }, Zi = {
 								}, null, 8, ["modelValue", "options"])]),
 								_: 1
 							}, 8, ["label", "error"]),
-							c(v, {
-								label: C(d)("tasks_projects.tasks.fields.assignee"),
-								error: w.value.assignee_id
+							c(y, {
+								label: w(d)("tasks_projects.tasks.fields.assignee"),
+								error: x.value.assignee_id
 							}, {
-								default: D(() => [c(y, {
+								default: D(() => [c(b, {
 									modelValue: h.value,
 									"onUpdate:modelValue": n[4] ||= (e) => h.value = e,
 									options: I.value,
-									placeholder: C(d)("tasks_projects.tasks.fields.assignee_placeholder"),
+									placeholder: w(d)("tasks_projects.tasks.fields.assignee_placeholder"),
 									"label-key": "label"
 								}, null, 8, [
 									"modelValue",
@@ -2943,16 +2945,16 @@ var Xi = { class: "mt-4 flex flex-wrap items-end gap-3" }, Zi = {
 								])]),
 								_: 1
 							}, 8, ["label", "error"]),
-							j.value ? (_(), r(v, {
+							j.value ? (v(), r(y, {
 								key: 2,
-								label: C(d)("tasks_projects.tasks.fields.priority"),
-								error: w.value.priority
+								label: w(d)("tasks_projects.tasks.fields.priority"),
+								error: x.value.priority
 							}, {
-								default: D(() => [c(y, {
+								default: D(() => [c(b, {
 									modelValue: g.value,
 									"onUpdate:modelValue": n[5] ||= (e) => g.value = e,
 									options: L.value,
-									placeholder: C(d)("tasks_projects.tasks.fields.priority_placeholder"),
+									placeholder: w(d)("tasks_projects.tasks.fields.priority_placeholder"),
 									"label-key": "label"
 								}, null, 8, [
 									"modelValue",
@@ -2961,9 +2963,9 @@ var Xi = { class: "mt-4 flex flex-wrap items-end gap-3" }, Zi = {
 								])]),
 								_: 1
 							}, 8, ["label", "error"])) : i("", !0),
-							c(v, {
-								label: C(d)("tasks_projects.tasks.fields.due_date"),
-								error: w.value.due_date
+							c(y, {
+								label: w(d)("tasks_projects.tasks.fields.due_date"),
+								error: x.value.due_date
 							}, {
 								default: D(() => [c(E, {
 									"model-value": f.dueDate,
@@ -2971,31 +2973,31 @@ var Xi = { class: "mt-4 flex flex-wrap items-end gap-3" }, Zi = {
 								}, null, 8, ["model-value"])]),
 								_: 1
 							}, 8, ["label", "error"]),
-							j.value ? (_(), r(v, {
+							j.value ? (v(), r(y, {
 								key: 3,
-								label: C(d)("tasks_projects.tasks.fields.estimate_hours"),
-								error: w.value.estimated_minutes
+								label: w(d)("tasks_projects.tasks.fields.estimate_hours"),
+								error: x.value.estimated_minutes
 							}, {
 								default: D(() => [c(m, {
 									modelValue: f.estimateHours,
 									"onUpdate:modelValue": n[6] ||= (e) => f.estimateHours = e,
-									invalid: !!w.value.estimated_minutes,
+									invalid: !!x.value.estimated_minutes,
 									type: "number",
 									step: "0.25",
 									min: "0"
 								}, null, 8, ["modelValue", "invalid"])]),
 								_: 1
 							}, 8, ["label", "error"])) : i("", !0),
-							j.value ? (_(), r(v, {
+							j.value ? (v(), r(y, {
 								key: 4,
-								label: C(d)("tasks_projects.tasks.fields.rate"),
-								error: w.value.rate,
-								"help-text": C(d)("tasks_projects.tasks.fields.rate_help")
+								label: w(d)("tasks_projects.tasks.fields.rate"),
+								error: x.value.rate,
+								"help-text": w(d)("tasks_projects.tasks.fields.rate_help")
 							}, {
 								default: D(() => [c(m, {
 									modelValue: f.rate,
 									"onUpdate:modelValue": n[7] ||= (e) => f.rate = e,
-									invalid: !!w.value.rate,
+									invalid: !!x.value.rate,
 									type: "number",
 									step: "0.01",
 									min: "0"
@@ -3009,9 +3011,9 @@ var Xi = { class: "mt-4 flex flex-wrap items-end gap-3" }, Zi = {
 						]),
 						_: 1
 					}),
-					c(v, {
-						label: C(d)("tasks_projects.tasks.fields.billable"),
-						error: w.value.billable
+					c(y, {
+						label: w(d)("tasks_projects.tasks.fields.billable"),
+						error: x.value.billable
 					}, {
 						default: D(() => [c(z, {
 							modelValue: f.billable,
@@ -3020,20 +3022,20 @@ var Xi = { class: "mt-4 flex flex-wrap items-end gap-3" }, Zi = {
 						}, null, 8, ["modelValue"])]),
 						_: 1
 					}, 8, ["label", "error"]),
-					j.value ? (_(), r(v, {
+					j.value ? (v(), r(y, {
 						key: 0,
-						label: C(d)("tasks_projects.tasks.fields.description"),
-						error: w.value.description
+						label: w(d)("tasks_projects.tasks.fields.description"),
+						error: x.value.description
 					}, {
 						default: D(() => [c(B, {
 							modelValue: f.description,
 							"onUpdate:modelValue": n[9] ||= (e) => f.description = e,
 							row: 3,
-							invalid: !!w.value.description
+							invalid: !!x.value.description
 						}, null, 8, ["modelValue", "invalid"])]),
 						_: 1
 					}, 8, ["label", "error"])) : i("", !0),
-					e.compact ? (_(), a("button", {
+					e.compact ? (v(), a("button", {
 						key: 1,
 						type: "button",
 						class: "flex items-center gap-1 text-sm font-medium text-primary-500 hover:underline",
@@ -3041,8 +3043,8 @@ var Xi = { class: "mt-4 flex flex-wrap items-end gap-3" }, Zi = {
 					}, [c(l, {
 						name: k.value ? "ChevronUpIcon" : "ChevronDownIcon",
 						class: "h-4 w-4"
-					}, null, 8, ["name"]), s(" " + S(k.value ? C(d)("tasks_projects.tasks.fewer_fields") : C(d)("tasks_projects.tasks.all_fields")), 1)])) : i("", !0)
-				]), o("div", ga, [N.value ? (_(), r(te, {
+					}, null, 8, ["name"]), s(" " + C(k.value ? w(d)("tasks_projects.tasks.fewer_fields") : w(d)("tasks_projects.tasks.all_fields")), 1)])) : i("", !0)
+				]), o("div", ga, [N.value ? (v(), r(te, {
 					key: 0,
 					type: "button",
 					variant: "danger",
@@ -3050,14 +3052,14 @@ var Xi = { class: "mt-4 flex flex-wrap items-end gap-3" }, Zi = {
 					disabled: O.value,
 					onClick: ie
 				}, {
-					default: D(() => [s(S(C(d)("tasks_projects.general.delete")), 1)]),
+					default: D(() => [s(C(w(d)("tasks_projects.general.delete")), 1)]),
 					_: 1
-				}, 8, ["loading", "disabled"])) : (_(), a("span", _a)), o("div", va, [c(te, {
+				}, 8, ["loading", "disabled"])) : (v(), a("span", _a)), o("div", va, [c(te, {
 					type: "button",
 					variant: "primary-outline",
 					onClick: n[11] ||= (e) => u("close")
 				}, {
-					default: D(() => [s(S(C(d)("tasks_projects.general.cancel")), 1)]),
+					default: D(() => [s(C(w(d)("tasks_projects.general.cancel")), 1)]),
 					_: 1
 				}), c(te, {
 					type: "submit",
@@ -3065,7 +3067,7 @@ var Xi = { class: "mt-4 flex flex-wrap items-end gap-3" }, Zi = {
 					loading: T.value,
 					disabled: T.value
 				}, {
-					default: D(() => [s(S(N.value ? C(d)("tasks_projects.general.update") : C(d)("tasks_projects.general.save")), 1)]),
+					default: D(() => [s(C(N.value ? w(d)("tasks_projects.general.update") : w(d)("tasks_projects.general.save")), 1)]),
 					_: 1
 				}, 8, ["loading", "disabled"])])])], 32)]),
 				_: 1
@@ -3095,77 +3097,81 @@ var Xi = { class: "mt-4 flex flex-wrap items-end gap-3" }, Zi = {
 		30,
 		60
 	]
-}, xa = v({
+}, G = y({
 	adminMode: !1,
 	userId: null,
 	settings: { ...ba },
 	companySession: 0,
 	loading: !1
 });
-async function Sa(e) {
-	if (xa.adminMode) return;
-	xa.loading = !0;
+async function xa(e) {
+	if (G.adminMode) return;
+	G.loading = !0;
 	let [t, n] = await Promise.all([We(e).catch(() => null), Ue(e).catch(() => null)]);
-	xa.userId = t, xa.settings = Ta(n), xa.loading = !1;
+	G.userId = t, G.settings = wa(n), G.loading = !1;
 }
-function Ca() {
-	xa.userId = null, xa.settings = { ...ba }, xa.companySession += 1, xa.loading = !1;
+function Sa() {
+	G.userId = null, G.settings = { ...ba }, G.companySession += 1, G.loading = !1;
+}
+function Ca(e) {
+	G.adminMode = e;
 }
 function wa(e) {
-	xa.adminMode = e;
-}
-function Ta(e) {
 	if (typeof e != "object" || !e) return { ...ba };
 	let t = Array.isArray(e.rounding_increments) ? e.rounding_increments.filter((e) => typeof e == "number") : ba.rounding_increments;
 	return {
-		default_rate: Ea(e.default_rate, ba.default_rate),
-		rounding_minutes: Ea(e.rounding_minutes, ba.rounding_minutes),
-		rounding_direction: Oa(e.rounding_direction),
-		week_start: ka(e.week_start),
+		default_rate: Ta(e.default_rate, ba.default_rate),
+		rounding_minutes: Ta(e.rounding_minutes, ba.rounding_minutes),
+		rounding_direction: Da(e.rounding_direction),
+		week_start: Oa(e.week_start),
 		members_see_all_time: e.members_see_all_time === !0,
-		auto_start_tasks: Da(e.auto_start_tasks, ba.auto_start_tasks),
-		lock_invoiced_tasks: Da(e.lock_invoiced_tasks, ba.lock_invoiced_tasks),
-		hide_invoiced_on_board: Da(e.hide_invoiced_on_board, ba.hide_invoiced_on_board),
-		invoice_project_heading: Da(e.invoice_project_heading, ba.invoice_project_heading),
-		invoice_task_description: Da(e.invoice_task_description, ba.invoice_task_description),
-		invoice_entry_dates: Da(e.invoice_entry_dates, ba.invoice_entry_dates),
-		invoice_entry_times: Da(e.invoice_entry_times, ba.invoice_entry_times),
-		invoice_entry_hours: Da(e.invoice_entry_hours, ba.invoice_entry_hours),
-		invoice_entry_descriptions: Da(e.invoice_entry_descriptions, ba.invoice_entry_descriptions),
+		auto_start_tasks: Ea(e.auto_start_tasks, ba.auto_start_tasks),
+		lock_invoiced_tasks: Ea(e.lock_invoiced_tasks, ba.lock_invoiced_tasks),
+		hide_invoiced_on_board: Ea(e.hide_invoiced_on_board, ba.hide_invoiced_on_board),
+		invoice_project_heading: Ea(e.invoice_project_heading, ba.invoice_project_heading),
+		invoice_task_description: Ea(e.invoice_task_description, ba.invoice_task_description),
+		invoice_entry_dates: Ea(e.invoice_entry_dates, ba.invoice_entry_dates),
+		invoice_entry_times: Ea(e.invoice_entry_times, ba.invoice_entry_times),
+		invoice_entry_hours: Ea(e.invoice_entry_hours, ba.invoice_entry_hours),
+		invoice_entry_descriptions: Ea(e.invoice_entry_descriptions, ba.invoice_entry_descriptions),
 		rounding_increments: t.length > 0 ? t : ba.rounding_increments
 	};
 }
-function Ea(e, t) {
+function Ta(e, t) {
 	return typeof e == "number" && Number.isFinite(e) ? e : t;
 }
-function Da(e, t) {
+function Ea(e, t) {
 	return typeof e == "boolean" ? e : t;
 }
-function Oa(e) {
+function Da(e) {
 	return e === "up" || e === "down" || e === "nearest" ? e : ba.rounding_direction;
 }
-function ka(e) {
+function Oa(e) {
 	return typeof e == "number" && Number.isInteger(e) && e >= 0 && e <= 6 ? e : ba.week_start;
 }
 //#endregion
 //#region resources/js/support/time.ts
-var Aa = 60, ja = 60, Ma = 7;
-function Na(e) {
-	let t = Number.isFinite(e) && e > 0 ? Math.floor(e) : 0, n = Math.floor(t / 3600), r = Math.floor(t % 3600 / ja), i = t % ja;
+var ka = 60, Aa = 60, ja = 7;
+function Ma(e) {
+	let t = Number.isFinite(e) && e > 0 ? Math.floor(e) : 0, n = Math.floor(t / 3600), r = Math.floor(t % 3600 / Aa), i = t % Aa;
 	return `${n}:${Xa(r)}:${Xa(i)}`;
 }
-function Pa(e) {
+function Na(e) {
 	let t = e !== null && Number.isFinite(e) && e > 0 ? Math.round(e) : 0;
-	return `${Math.floor(t / Aa)}:${Xa(t % Aa)}`;
+	return `${Math.floor(t / ka)}:${Xa(t % ka)}`;
 }
-function Fa(e) {
+function Pa(e) {
 	let t = e.trim();
 	if (t === "") return null;
 	let n = /^(\d+):([0-5]?\d)$/.exec(t);
-	if (n) return Number(n[1]) * Aa + Number(n[2]);
+	if (n) return Number(n[1]) * ka + Number(n[2]);
 	if (!/^\d+([.,]\d+)?$/.test(t)) return null;
 	let r = Number(t.replace(",", "."));
-	return Number.isNaN(r) ? null : Math.round(r * Aa);
+	return Number.isNaN(r) ? null : Math.round(r * ka);
+}
+function Fa(e, t, n = "nearest") {
+	let r = Number.isFinite(t) && t >= 1 ? Math.floor(t) : 1, i = Number.isFinite(e) ? Math.floor(e) : 0;
+	return i <= 0 ? 0 : n === "up" ? Math.ceil(i / r) * r : n === "down" ? Math.floor(i / r) * r : i < r ? r : Math.round(i / r) * r;
 }
 function Ia(e) {
 	let t = qa(e);
@@ -3183,14 +3189,14 @@ function Ra(e, t = "09:00") {
 }
 function za(e, t) {
 	let n = new Date(e);
-	return n.setTime(n.getTime() + t * ja * 1e3), n.toISOString();
+	return n.setTime(n.getTime() + t * Aa * 1e3), n.toISOString();
 }
 function Ba(e, t) {
-	let n = Number.isInteger(t) && t >= 0 && t <= 6 ? t : 1, r = Ya(e), i = (r.getDay() - n + Ma) % Ma;
+	let n = Number.isInteger(t) && t >= 0 && t <= 6 ? t : 1, r = Ya(e), i = (r.getDay() - n + ja) % ja;
 	return r.setDate(r.getDate() - i), r;
 }
 function Va(e) {
-	return Array.from({ length: Ma }, (t, n) => Ha(e, n));
+	return Array.from({ length: ja }, (t, n) => Ha(e, n));
 }
 function Ha(e, t) {
 	let n = Ya(e);
@@ -3235,10 +3241,12 @@ function Xa(e) {
 }
 //#endregion
 //#region resources/js/stores/timer.ts
-var G = v({
+var K = y({
 	running: null,
-	busy: !1
-}), Za = v({ now: Date.now() }), Qa, $a = 0;
+	busy: !1,
+	stopPrompt: null,
+	startPrompt: null
+}), Za = y({ now: Date.now() }), Qa, $a = 0;
 function eo() {
 	Za.now = Date.now();
 }
@@ -3249,15 +3257,15 @@ function no() {
 	$a = Math.max(0, $a - 1), $a === 0 && Qa !== void 0 && (clearInterval(Qa), Qa = void 0);
 }
 function ro() {
-	return to(), g(no, !0), n(() => Za.now);
+	return to(), _(no, !0), n(() => Za.now);
 }
 var io = !1;
 function ao(e, t) {
-	if (G.running = e && typeof e.id == "number" ? e : null, G.running === null) {
+	if (K.running = e && typeof e.id == "number" ? e : null, K.running === null) {
 		io && (io = !1, no());
 		return;
 	}
-	io || (io = !0, to()), t && typeof G.running.task_id == "number" && $e(t, [G.running.task_id]);
+	io || (io = !0, to()), t && typeof K.running.task_id == "number" && $e(t, [K.running.task_id]);
 }
 function oo(e, t, n) {
 	e?.notify("error", H(t, e.t(n)));
@@ -3269,22 +3277,39 @@ function so(e) {
 		started_at: e.started_at
 	}] });
 }
-var K = {
+async function co(e, t, n) {
+	try {
+		let n = await cr(e, {
+			name: t.name,
+			project_id: t.projectId
+		});
+		return Qe(n), V(), typeof n.id == "number" ? n.id : null;
+	} catch (e) {
+		return oo(n, e, "tasks_projects.tasks.save_failed"), null;
+	}
+}
+var q = {
 	get running() {
-		return G.running;
+		return K.running;
 	},
 	get runningTaskId() {
-		let e = G.running?.task_id;
+		let e = K.running?.task_id;
 		return typeof e == "number" ? e : null;
 	},
 	get elapsedSeconds() {
-		return G.running === null ? 0 : Ka(G.running.started_at, Za.now);
+		return K.running === null ? 0 : Ka(K.running.started_at, Za.now);
 	},
 	get busy() {
-		return G.busy;
+		return K.busy;
+	},
+	get stopPrompt() {
+		return K.stopPrompt;
+	},
+	get startPrompt() {
+		return K.startPrompt;
 	},
 	isRunningOn(e) {
-		return G.running !== null && G.running.task_id === e;
+		return K.running !== null && K.running.task_id === e;
 	},
 	async refresh(e) {
 		try {
@@ -3294,8 +3319,8 @@ var K = {
 		}
 	},
 	async start(e, t, n = null, r) {
-		if (G.busy) return null;
-		G.busy = !0;
+		if (K.busy) return null;
+		K.busy = !0;
 		try {
 			let r = await Ne(e, {
 				task_id: t,
@@ -3305,70 +3330,121 @@ var K = {
 		} catch (t) {
 			return _t(t) ? (r?.notify("warning", r.t("tasks_projects.timer.already_running")), await this.refresh(e)) : oo(r, t, "tasks_projects.timer.start_failed"), null;
 		} finally {
-			G.busy = !1;
+			K.busy = !1;
 		}
 	},
-	async startOnTask(e, t, n = null, r) {
-		if (G.busy) return null;
-		G.busy = !0;
+	async startOnTask(e, t, n = null, r, i) {
+		if (K.busy) return null;
+		K.busy = !0;
 		try {
-			let r = await fr(e, t, n);
+			let r = await fr(e, t, n, i);
 			return ao(r, e), so(r), V(), r;
 		} catch (t) {
 			return gt(t) === "timer_already_running" ? (r?.notify("warning", r.t("tasks_projects.timer.already_running")), await this.refresh(e)) : oo(r, t, "tasks_projects.timer.start_failed"), null;
 		} finally {
-			G.busy = !1;
+			K.busy = !1;
 		}
 	},
-	async stop(e, t) {
-		if (G.busy || G.running === null) return null;
-		let n = G.running.task_id;
-		G.busy = !0;
+	async stop(e, t, n) {
+		if (K.busy || K.running === null) return null;
+		let r = K.running.task_id;
+		K.busy = !0;
 		try {
-			let t = await Pe(e);
-			return ao(null), tt(n, { running: [] }), V(), t;
+			let t = await Pe(e, n);
+			return ao(null), tt(r, { running: [] }), V(), t;
 		} catch (n) {
 			return oo(t, n, "tasks_projects.timer.stop_failed"), await this.refresh(e), null;
 		} finally {
-			G.busy = !1;
+			K.busy = !1;
 		}
 	},
-	async stopOnTask(e, t, n) {
-		if (G.busy) return null;
-		G.busy = !0;
+	async stopOnTask(e, t, n, r) {
+		if (K.busy) return null;
+		K.busy = !0;
 		try {
-			let n = await pr(e, t);
+			let n = await pr(e, t, r);
 			return ao(null), tt(t, { running: [] }), V(), n;
 		} catch (t) {
 			return gt(t) === "timer_mismatch" ? n?.notify("warning", n.t("tasks_projects.timer.mismatch")) : oo(n, t, "tasks_projects.timer.stop_failed"), await this.refresh(e), null;
 		} finally {
-			G.busy = !1;
+			K.busy = !1;
 		}
 	},
+	askStop() {
+		this.answerStop(null);
+		let e = K.running;
+		return e === null ? Promise.resolve(null) : new Promise((t) => {
+			K.stopPrompt = {
+				entry: e,
+				resolve: t
+			};
+		});
+	},
+	answerStop(e) {
+		let t = K.stopPrompt;
+		t !== null && (K.stopPrompt = null, t.resolve(e));
+	},
+	askStart(e = {}) {
+		return this.answerStart(null), new Promise((t) => {
+			K.startPrompt = {
+				...e,
+				resolve: t
+			};
+		});
+	},
+	answerStart(e) {
+		let t = K.startPrompt;
+		t !== null && (K.startPrompt = null, t.resolve(e));
+	},
+	async stopWithPrompt(e, t, n = {}) {
+		let r = K.running;
+		if (r === null) return null;
+		let i = n.taskId;
+		if (typeof i == "number" && r.task_id !== i) return t?.notify("warning", t.t("tasks_projects.timer.mismatch")), await this.refresh(e), null;
+		let a = Ze(r.task_id), o = await this.askStop();
+		if (o === null) return null;
+		if (o.action === "discard") return await this.discard(e, t) && t?.notify("success", t.t("tasks_projects.timer.discarded")), null;
+		let s = {
+			description: o.description,
+			billable: o.billable
+		}, c = typeof i == "number" ? await this.stopOnTask(e, i, t, s) : await this.stop(e, t, s);
+		return c !== null && t?.notify("success", t.t("tasks_projects.timer.stopped", {
+			name: a,
+			duration: Na(c.duration_minutes)
+		})), c;
+	},
+	async startWithPrompt(e, t, n = {}) {
+		let r = await this.askStart(n);
+		if (r === null) return null;
+		let i = "taskId" in r ? r.taskId : await co(e, r.create, t);
+		if (i === null) return null;
+		let a = await this.startOnTask(e, i, r.description, t, r.billable);
+		return a !== null && t?.notify("success", t.t("tasks_projects.timer.started", { name: Ze(i) })), a;
+	},
 	async discard(e, t) {
-		if (G.busy || G.running === null) return !1;
-		let n = G.running.task_id;
-		G.busy = !0;
+		if (K.busy || K.running === null) return !1;
+		let n = K.running.task_id;
+		K.busy = !0;
 		try {
 			return await Fe(e), ao(null), tt(n, { running: [] }), V(), !0;
 		} catch (n) {
 			return oo(t, n, "tasks_projects.timer.discard_failed"), await this.refresh(e), !1;
 		} finally {
-			G.busy = !1;
+			K.busy = !1;
 		}
 	},
 	reset() {
-		G.busy = !1, ao(null);
+		this.answerStop(null), this.answerStart(null), K.busy = !1, ao(null);
 	}
-}, co = { class: "flex items-center gap-1.5" }, lo = [
+}, lo = { class: "flex items-center gap-1.5" }, uo = [
 	"disabled",
 	"title",
 	"aria-label"
-], uo = ["title", "aria-label"], fo = ["disabled", "title"], po = [
+], fo = ["title", "aria-label"], po = ["disabled", "title"], mo = [
 	"disabled",
 	"title",
 	"aria-label"
-], mo = ["title"], ho = /* @__PURE__ */ l({
+], ho = ["title"], go = /* @__PURE__ */ l({
 	__name: "TaskRunControl",
 	props: {
 		client: {},
@@ -3381,8 +3457,8 @@ var K = {
 		let r = t, i = B(), l = ro(), u = n(() => ({
 			notify: r.notify,
 			t: i
-		})), d = n(() => K.isRunningOn(r.task.id)), p = n(() => K.runningTaskId !== null && !d.value), m = n(() => Ze(K.runningTaskId)), h = n(() => nt(r.task).running.filter((e) => e.user_id !== xa.userId && e.entry_id !== K.running?.id)), g = n(() => Na(K.elapsedSeconds)), v = n(() => r.size === "md" ? "h-5 w-5" : "h-4 w-4"), y = n(() => r.size === "md" ? "p-2" : "p-1.5");
-		function w(e) {
+		})), d = n(() => q.isRunningOn(r.task.id)), f = n(() => q.runningTaskId !== null && !d.value), m = n(() => Ze(q.runningTaskId)), h = n(() => nt(r.task).running.filter((e) => e.user_id !== G.userId && e.entry_id !== q.running?.id)), g = n(() => Ma(q.elapsedSeconds)), _ = n(() => r.size === "md" ? "h-5 w-5" : "h-4 w-4"), y = n(() => r.size === "md" ? "p-2" : "p-1.5");
+		function b(e) {
 			return r.members.find((t) => t.id === e)?.name ?? `#${e}`;
 		}
 		function T(e) {
@@ -3390,79 +3466,75 @@ var K = {
 			return t ? pt(t.name) : "?";
 		}
 		function E(e) {
-			return Na(Ka(e.started_at, l.value));
+			return Ma(Ka(e.started_at, l.value));
 		}
 		function D(e) {
 			return i("tasks_projects.timer.running_by", {
-				name: w(e.user_id),
+				name: b(e.user_id),
 				time: E(e)
 			});
 		}
 		async function O() {
-			await K.startOnTask(r.client, r.task.id, null, u.value) !== null && r.notify("success", i("tasks_projects.timer.started", { name: r.task.name }));
+			await q.startOnTask(r.client, r.task.id, null, u.value) !== null && r.notify("success", i("tasks_projects.timer.started", { name: r.task.name }));
 		}
-		async function k() {
-			let e = await K.stopOnTask(r.client, r.task.id, u.value);
-			e !== null && r.notify("success", i("tasks_projects.timer.stopped", {
-				name: r.task.name,
-				duration: Pa(e.duration_minutes)
-			}));
+		function k() {
+			q.stopWithPrompt(r.client, u.value, { taskId: r.task.id });
 		}
 		async function j() {
-			await K.stop(r.client, u.value) !== null && await O();
+			await q.stopWithPrompt(r.client, u.value) !== null && await O();
 		}
 		return (n, r) => {
-			let l = x("BaseIcon");
-			return _(), a("div", co, [d.value ? (_(), a(e, { key: 0 }, [o("button", {
+			let l = S("BaseIcon");
+			return v(), a("div", lo, [d.value ? (v(), a(e, { key: 0 }, [o("button", {
 				type: "button",
-				class: f(["rounded-md text-status-red hover:bg-hover disabled:opacity-50", y.value]),
-				disabled: C(K).busy,
-				title: C(i)("tasks_projects.timer.stop_on", { name: t.task.name }),
-				"aria-label": C(i)("tasks_projects.timer.stop_on", { name: t.task.name }),
+				class: p(["rounded-md text-status-red hover:bg-hover disabled:opacity-50", y.value]),
+				disabled: w(q).busy,
+				title: w(i)("tasks_projects.timer.stop_on", { name: t.task.name }),
+				"aria-label": w(i)("tasks_projects.timer.stop_on", { name: t.task.name }),
 				onClick: A(k, ["stop"])
 			}, [c(l, {
 				name: "StopIcon",
-				class: f(v.value)
-			}, null, 8, ["class"])], 10, lo), o("span", { class: f(["font-medium tabular-nums text-primary-500", t.size === "md" ? "text-base" : "text-xs"]) }, S(g.value), 3)], 64)) : p.value ? (_(), a(e, { key: 1 }, [o("button", {
+				class: p(_.value)
+			}, null, 8, ["class"])], 10, uo), o("span", { class: p(["font-medium tabular-nums text-primary-500", t.size === "md" ? "text-base" : "text-xs"]) }, C(g.value), 3)], 64)) : f.value ? (v(), a(e, { key: 1 }, [o("button", {
 				type: "button",
-				class: f(["cursor-not-allowed rounded-md text-subtle", y.value]),
+				class: p(["cursor-not-allowed rounded-md text-subtle", y.value]),
 				disabled: "",
-				title: C(i)("tasks_projects.timer.busy_elsewhere", { name: m.value }),
-				"aria-label": C(i)("tasks_projects.timer.busy_elsewhere", { name: m.value })
+				title: w(i)("tasks_projects.timer.busy_elsewhere", { name: m.value }),
+				"aria-label": w(i)("tasks_projects.timer.busy_elsewhere", { name: m.value })
 			}, [c(l, {
 				name: "PlayIcon",
-				class: f(v.value)
-			}, null, 8, ["class"])], 10, uo), o("button", {
+				class: p(_.value)
+			}, null, 8, ["class"])], 10, fo), o("button", {
 				type: "button",
 				class: "rounded-md px-1.5 py-0.5 text-[11px] font-medium text-primary-500 hover:bg-hover disabled:opacity-50",
-				disabled: C(K).busy,
-				title: C(i)("tasks_projects.timer.stop_and_start"),
+				disabled: w(q).busy,
+				title: w(i)("tasks_projects.timer.stop_and_start"),
 				onClick: A(j, ["stop"])
-			}, S(C(i)("tasks_projects.timer.stop_and_start")), 9, fo)], 64)) : (_(), a("button", {
+			}, C(w(i)("tasks_projects.timer.stop_and_start")), 9, po)], 64)) : (v(), a("button", {
 				key: 2,
 				type: "button",
-				class: f(["rounded-md text-primary-500 hover:bg-hover disabled:opacity-50", y.value]),
-				disabled: C(K).busy,
-				title: C(i)("tasks_projects.timer.start_on", { name: t.task.name }),
-				"aria-label": C(i)("tasks_projects.timer.start_on", { name: t.task.name }),
+				class: p(["rounded-md text-primary-500 hover:bg-hover disabled:opacity-50", y.value]),
+				disabled: w(q).busy,
+				title: w(i)("tasks_projects.timer.start_on", { name: t.task.name }),
+				"aria-label": w(i)("tasks_projects.timer.start_on", { name: t.task.name }),
 				onClick: A(O, ["stop"])
 			}, [c(l, {
 				name: "PlayIcon",
-				class: f(v.value)
-			}, null, 8, ["class"])], 10, po)), (_(!0), a(e, null, b(h.value, (e) => (_(), a("span", {
+				class: p(_.value)
+			}, null, 8, ["class"])], 10, mo)), (v(!0), a(e, null, x(h.value, (e) => (v(), a("span", {
 				key: e.entry_id,
 				class: "flex items-center gap-1 rounded-full bg-surface-tertiary px-1.5 py-0.5 text-[11px] text-muted",
 				title: D(e)
 			}, [c(l, {
 				name: "ClockIcon",
 				class: "h-3.5 w-3.5 text-primary-500"
-			}), s(" " + S(T(e.user_id)), 1)], 8, mo))), 128))]);
+			}), s(" " + C(T(e.user_id)), 1)], 8, ho))), 128))]);
 		};
 	}
-}), go = { class: "relative table-container" }, _o = { class: "inline-flex items-center whitespace-nowrap" }, vo = { class: "tabular-nums" }, yo = {
+}), _o = { class: "relative table-container" }, vo = { class: "inline-flex items-center whitespace-nowrap" }, yo = { class: "tabular-nums" }, bo = {
 	key: 1,
 	class: "text-subtle"
-}, bo = ["title"], xo = 10, So = "whitespace-nowrap px-3 py-3 text-left text-xs font-medium text-muted uppercase tracking-wider", Co = "px-3 py-4 text-sm text-muted whitespace-nowrap", wo = /* @__PURE__ */ l({
+}, xo = ["title"], So = 10, Co = "whitespace-nowrap px-3 py-3 text-left text-xs font-medium text-muted uppercase tracking-wider", wo = "px-3 py-4 text-sm text-muted whitespace-nowrap", To = /* @__PURE__ */ l({
 	__name: "TaskList",
 	props: {
 		client: {},
@@ -3476,13 +3548,13 @@ var K = {
 	},
 	emits: ["changed"],
 	setup(t, { expose: l, emit: u }) {
-		let d = t, m = u, h = {
+		let d = t, f = u, h = {
 			number: "number",
 			name: "name"
-		}, g = B(), v = y(null), b = y(!0), w = y(0), k = y([]), A = y([]), j = y(!1), N = y(!1), P = y(null), F = y({}), I = y(null), L = n(() => d.projects.map((e) => ({
+		}, g = B(), _ = b(null), y = b(!0), x = b(0), k = b([]), A = b([]), j = b(!1), N = b(!1), P = b(null), F = b({}), I = b(null), L = n(() => d.projects.map((e) => ({
 			id: e.id,
 			label: e.name
-		}))), R = n(() => M.busy), z = n(() => M.allowed), ee = n(() => d.filters.search !== "" || d.filters.status !== "" || d.filters.user !== "" || d.projectId === null && d.filters.project !== ""), te = n(() => !b.value && w.value === 0 && !ee.value), ne = n(() => [
+		}))), R = n(() => M.busy), z = n(() => M.allowed), ee = n(() => d.filters.search !== "" || d.filters.status !== "" || d.filters.user !== "" || d.projectId === null && d.filters.project !== ""), te = n(() => !y.value && x.value === 0 && !ee.value), ne = n(() => [
 			{
 				key: "select",
 				label: "",
@@ -3541,28 +3613,28 @@ var K = {
 				tdClass: "text-right text-sm font-medium"
 			}
 		].map((e) => ({
-			defaultThClass: So,
-			defaultTdClass: Co,
+			defaultThClass: Co,
+			defaultTdClass: wo,
 			...e
 		})));
 		E(() => Ui(d.filters), () => ie()), E(() => d.projectId, () => ie()), E(et, () => ie(!0));
 		async function re({ page: e, sort: t }) {
 			let n = Vt(t, h), r = {
 				page: e,
-				limit: xo,
+				limit: So,
 				...Gi(d.filters, { projectId: d.projectId }),
 				...n
 			};
-			b.value = !0;
+			y.value = !0;
 			try {
 				let e = await sr(d.client, r), t = e.data ?? [], n = e.meta;
-				return w.value = n?.total ?? t.length, k.value = t, A.value = A.value.filter((e) => t.some((t) => t.id === e)), {
+				return x.value = n?.total ?? t.length, k.value = t, A.value = A.value.filter((e) => t.some((t) => t.id === e)), {
 					data: t,
 					pagination: {
 						totalPages: n?.last_page ?? 1,
 						currentPage: n?.current_page ?? 1,
 						totalCount: n?.total ?? t.length,
-						limit: n?.per_page ?? xo
+						limit: n?.per_page ?? So
 					}
 				};
 			} catch (e) {
@@ -3572,15 +3644,15 @@ var K = {
 						totalPages: 1,
 						currentPage: 1,
 						totalCount: 0,
-						limit: xo
+						limit: So
 					}
 				};
 			} finally {
-				b.value = !1;
+				y.value = !1;
 			}
 		}
 		function ie(e = !1) {
-			v.value?.refresh(e);
+			_.value?.refresh(e);
 		}
 		function ae(e) {
 			return A.value.includes(e.id);
@@ -3602,10 +3674,10 @@ var K = {
 		}
 		function de(e) {
 			let t = P.value ? g("tasks_projects.tasks.updated", { name: e.name }) : g("tasks_projects.tasks.created", { name: e.name });
-			N.value = !1, P.value = null, d.notify("success", t), V(), m("changed");
+			N.value = !1, P.value = null, d.notify("success", t), V(), f("changed");
 		}
 		function fe(e) {
-			N.value = !1, P.value = null, d.notify("success", g("tasks_projects.tasks.deleted", { name: e.name })), V(), m("changed");
+			N.value = !1, P.value = null, d.notify("success", g("tasks_projects.tasks.deleted", { name: e.name })), V(), f("changed");
 		}
 		function pe(e) {
 			return d.statuses.find((t) => t.id === e.task_status_id) ?? null;
@@ -3614,7 +3686,7 @@ var K = {
 			return e.assignee_id === null ? g("tasks_projects.tasks.unassigned") : d.members.find((t) => t.id === e.assignee_id)?.name ?? `#${e.assignee_id}`;
 		}
 		function he(e) {
-			return Pa(nt(e).logged_minutes);
+			return Na(nt(e).logged_minutes);
 		}
 		function ge(e) {
 			return nt(e).invoiced === "uninvoiced";
@@ -3645,7 +3717,7 @@ var K = {
 			if (window.confirm(g("tasks_projects.tasks.delete_confirm", { name: e.name }))) {
 				I.value = e.id;
 				try {
-					await ur(d.client, e.id), d.notify("success", g("tasks_projects.tasks.deleted", { name: e.name })), V(), m("changed");
+					await ur(d.client, e.id), d.notify("success", g("tasks_projects.tasks.deleted", { name: e.name })), V(), f("changed");
 				} catch (e) {
 					d.notify("error", H(e, g("tasks_projects.tasks.delete_failed")));
 				} finally {
@@ -3676,7 +3748,7 @@ var K = {
 						count: n.updated.length,
 						failed: n.failed.length,
 						ids: n.failed.map((e) => `#${e.id}`).join(", ")
-					})) : n.updated.length === 0 ? d.notify("warning", g("tasks_projects.tasks.bulk.nothing")) : d.notify("success", g(`tasks_projects.tasks.bulk.${t}`, { count: n.updated.length })), ce(), V(), m("changed");
+					})) : n.updated.length === 0 ? d.notify("warning", g("tasks_projects.tasks.bulk.nothing")) : d.notify("success", g(`tasks_projects.tasks.bulk.${t}`, { count: n.updated.length })), ce(), V(), f("changed");
 				} catch (e) {
 					d.notify("error", H(e, g("tasks_projects.tasks.bulk.failed")));
 				} finally {
@@ -3688,8 +3760,8 @@ var K = {
 			openCreate: le,
 			refresh: ie
 		}), (n, l) => {
-			let u = x("BaseIcon"), d = x("BaseButton"), m = x("BaseEmptyPlaceholder"), h = x("BaseCheckbox"), y = x("router-link"), b = x("BaseFormatMoney"), w = x("BaseDropdownItem"), E = x("BaseDropdown"), k = x("BaseTable");
-			return _(), a("div", null, [
+			let u = S("BaseIcon"), d = S("BaseButton"), f = S("BaseEmptyPlaceholder"), h = S("BaseCheckbox"), y = S("router-link"), b = S("BaseFormatMoney"), x = S("BaseDropdownItem"), E = S("BaseDropdown"), k = S("BaseTable");
+			return v(), a("div", null, [
 				c(ua, {
 					count: A.value.length,
 					statuses: t.statuses,
@@ -3708,9 +3780,9 @@ var K = {
 					"invoicing",
 					"can-invoice"
 				]),
-				O(c(m, {
-					title: C(g)("tasks_projects.tasks.empty_title"),
-					description: C(g)("tasks_projects.tasks.empty_description")
+				O(c(f, {
+					title: w(g)("tasks_projects.tasks.empty_title"),
+					description: w(g)("tasks_projects.tasks.empty_description")
 				}, {
 					actions: D(() => [c(d, {
 						variant: "primary",
@@ -3718,9 +3790,9 @@ var K = {
 					}, {
 						left: D((e) => [c(u, {
 							name: "PlusIcon",
-							class: f(e.class)
+							class: p(e.class)
 						}, null, 8, ["class"])]),
-						default: D(() => [s(" " + S(C(g)("tasks_projects.tasks.new_task")), 1)]),
+						default: D(() => [s(" " + C(w(g)("tasks_projects.tasks.new_task")), 1)]),
 						_: 1
 					})]),
 					default: D(() => [c(u, {
@@ -3729,9 +3801,9 @@ var K = {
 					})]),
 					_: 1
 				}, 8, ["title", "description"]), [[T, te.value]]),
-				O(o("div", go, [c(k, {
+				O(o("div", _o, [c(k, {
 					ref_key: "tableRef",
-					ref: v,
+					ref: _,
 					data: re,
 					columns: ne.value,
 					class: "mt-3"
@@ -3745,29 +3817,29 @@ var K = {
 						"aria-label",
 						"onChange"
 					])]),
-					"cell-number": D(({ row: e }) => [s("#" + S(e.data.number), 1)]),
+					"cell-number": D(({ row: e }) => [s("#" + C(e.data.number), 1)]),
 					"cell-name": D(({ row: e }) => [c(y, {
 						class: "hover:text-primary-500",
-						to: C(W).task(e.data.id)
+						to: w(W).task(e.data.id)
 					}, {
-						default: D(() => [s(S(e.data.name), 1)]),
+						default: D(() => [s(C(e.data.name), 1)]),
 						_: 2
-					}, 1032, ["to"]), e.data.due_date ? (_(), a("span", {
+					}, 1032, ["to"]), e.data.due_date ? (v(), a("span", {
 						key: 0,
-						class: f(["mt-0.5 block text-xs font-normal", C(mt)(e.data.due_date) && !e.data.closed_at ? "font-medium text-status-red" : "text-muted"])
-					}, S(C(g)("tasks_projects.tasks.columns.due_date")) + ": " + S(C(ut)(e.data.due_date)), 3)) : i("", !0)]),
-					"cell-status": D(({ row: e }) => [o("span", _o, [o("span", {
-						class: f(["mr-2 inline-block h-2.5 w-2.5 shrink-0 rounded-full", pe(e.data)?.colour ? "" : "bg-line-default"]),
-						style: p(pe(e.data)?.colour ? { backgroundColor: pe(e.data)?.colour } : void 0)
-					}, null, 6), s(" " + S(pe(e.data)?.name ?? "-"), 1)])]),
-					"cell-assignee": D(({ row: e }) => [o("span", { class: f(e.data.assignee_id === null ? "text-subtle" : "") }, S(me(e.data)), 3)]),
-					"cell-logged": D(({ row: e }) => [o("span", vo, S(he(e.data)), 1)]),
-					"cell-unbilled": D(({ row: e }) => [C(nt)(e.data).unbilled_amount > 0 ? (_(), r(b, {
+						class: p(["mt-0.5 block text-xs font-normal", w(mt)(e.data.due_date) && !e.data.closed_at ? "font-medium text-status-red" : "text-muted"])
+					}, C(w(g)("tasks_projects.tasks.columns.due_date")) + ": " + C(w(ut)(e.data.due_date)), 3)) : i("", !0)]),
+					"cell-status": D(({ row: e }) => [o("span", vo, [o("span", {
+						class: p(["mr-2 inline-block h-2.5 w-2.5 shrink-0 rounded-full", pe(e.data)?.colour ? "" : "bg-line-default"]),
+						style: m(pe(e.data)?.colour ? { backgroundColor: pe(e.data)?.colour } : void 0)
+					}, null, 6), s(" " + C(pe(e.data)?.name ?? "-"), 1)])]),
+					"cell-assignee": D(({ row: e }) => [o("span", { class: p(e.data.assignee_id === null ? "text-subtle" : "") }, C(me(e.data)), 3)]),
+					"cell-logged": D(({ row: e }) => [o("span", yo, C(he(e.data)), 1)]),
+					"cell-unbilled": D(({ row: e }) => [w(nt)(e.data).unbilled_amount > 0 ? (v(), r(b, {
 						key: 0,
-						amount: C(nt)(e.data).unbilled_amount
-					}, null, 8, ["amount"])) : (_(), a("span", yo, "-"))]),
-					"cell-invoiced": D(({ row: e }) => [c(da, { state: C(nt)(e.data).invoiced }, null, 8, ["state"])]),
-					"cell-timer": D(({ row: e }) => [c(ho, {
+						amount: w(nt)(e.data).unbilled_amount
+					}, null, 8, ["amount"])) : (v(), a("span", bo, "-"))]),
+					"cell-invoiced": D(({ row: e }) => [c(da, { state: w(nt)(e.data).invoiced }, null, 8, ["state"])]),
+					"cell-timer": D(({ row: e }) => [c(go, {
 						client: t.client,
 						notify: t.notify,
 						task: e.data,
@@ -3784,35 +3856,35 @@ var K = {
 							class: "h-5 text-muted"
 						})]),
 						default: D(() => [
-							c(w, { onClick: (e) => ue(t.data) }, {
+							c(x, { onClick: (e) => ue(t.data) }, {
 								default: D(() => [c(u, {
 									name: "PencilIcon",
 									class: "mr-3 h-5 w-5 text-subtle group-hover:text-muted"
-								}), s(" " + S(C(g)("tasks_projects.general.edit")), 1)]),
+								}), s(" " + C(w(g)("tasks_projects.general.edit")), 1)]),
 								_: 1
 							}, 8, ["onClick"]),
-							z.value ? (_(), a(e, { key: 0 }, [ge(t.data) && !R.value ? (_(), r(w, {
+							z.value ? (v(), a(e, { key: 0 }, [ge(t.data) && !R.value ? (v(), r(x, {
 								key: 0,
 								onClick: (e) => ye(t.data)
 							}, {
 								default: D(() => [c(u, {
 									name: "BanknotesIcon",
 									class: "mr-3 h-5 w-5 text-subtle group-hover:text-muted"
-								}), s(" " + S(C(g)("tasks_projects.tasks.invoice_task")), 1)]),
+								}), s(" " + C(w(g)("tasks_projects.tasks.invoice_task")), 1)]),
 								_: 1
-							}, 8, ["onClick"])) : (_(), a("div", {
+							}, 8, ["onClick"])) : (v(), a("div", {
 								key: 1,
 								class: "group flex cursor-not-allowed items-center px-4 py-2 text-sm font-normal text-subtle",
-								title: R.value ? C(g)("tasks_projects.billing.busy") : _e(t.data)
+								title: R.value ? w(g)("tasks_projects.billing.busy") : _e(t.data)
 							}, [c(u, {
 								name: "BanknotesIcon",
 								class: "mr-3 h-5 w-5 text-subtle"
-							}), s(" " + S(C(g)("tasks_projects.tasks.invoice_task")), 1)], 8, bo))], 64)) : i("", !0),
-							c(w, { onClick: (e) => xe(t.data) }, {
+							}), s(" " + C(w(g)("tasks_projects.tasks.invoice_task")), 1)], 8, xo))], 64)) : i("", !0),
+							c(x, { onClick: (e) => xe(t.data) }, {
 								default: D(() => [c(u, {
 									name: "TrashIcon",
 									class: "mr-3 h-5 w-5 text-subtle group-hover:text-muted"
-								}), s(" " + S(C(g)("tasks_projects.general.delete")), 1)]),
+								}), s(" " + C(w(g)("tasks_projects.general.delete")), 1)]),
 								_: 1
 							}, 8, ["onClick"])
 						]),
@@ -3849,7 +3921,7 @@ var K = {
 			]);
 		};
 	}
-}), To = { class: "py-4" }, Eo = { class: "flex flex-wrap items-end justify-between gap-3" }, Do = /* @__PURE__ */ l({
+}), Eo = { class: "py-4" }, Do = { class: "flex flex-wrap items-end justify-between gap-3" }, Oo = /* @__PURE__ */ l({
 	__name: "ProjectTasksTab",
 	props: {
 		id: {},
@@ -3860,31 +3932,31 @@ var K = {
 	},
 	emits: ["refresh"],
 	setup(e, { emit: t }) {
-		let r = e, i = t, l = B(), u = y(null), d = y([]), p = y([]), m = y({ ...Ri }), g = n(() => r.project?.id ?? Number(r.id)), v = n(() => r.project === null ? [] : [r.project]);
-		h(() => void b());
-		async function b() {
+		let r = e, i = t, l = B(), u = b(null), d = b([]), f = b([]), m = b({ ...Ri }), h = n(() => r.project?.id ?? Number(r.id)), _ = n(() => r.project === null ? [] : [r.project]);
+		g(() => void y());
+		async function y() {
 			try {
 				d.value = await or(r.client);
 			} catch (e) {
 				r.notify("error", H(e, l("tasks_projects.task_statuses.load_failed")));
 			}
 			try {
-				p.value = await Jt(r.client);
+				f.value = await Jt(r.client);
 			} catch {
-				p.value = [];
+				f.value = [];
 			}
 		}
-		function w() {
+		function x() {
 			i("refresh");
 		}
 		return (t, n) => {
-			let r = x("BaseIcon"), i = x("BaseButton");
-			return _(), a("div", To, [o("div", Eo, [c(oa, {
+			let r = S("BaseIcon"), i = S("BaseButton");
+			return v(), a("div", Eo, [o("div", Do, [c(oa, {
 				modelValue: m.value,
 				"onUpdate:modelValue": n[0] ||= (e) => m.value = e,
 				class: "flex-1",
-				projects: v.value,
-				members: p.value,
+				projects: _.value,
+				members: f.value,
 				statuses: d.value,
 				"lock-project": ""
 			}, null, 8, [
@@ -3898,11 +3970,11 @@ var K = {
 			}, {
 				left: D((e) => [c(r, {
 					name: "PlusIcon",
-					class: f(e.class)
+					class: p(e.class)
 				}, null, 8, ["class"])]),
-				default: D(() => [s(" " + S(C(l)("tasks_projects.tasks.new_task")), 1)]),
+				default: D(() => [s(" " + C(w(l)("tasks_projects.tasks.new_task")), 1)]),
 				_: 1
-			})]), c(wo, {
+			})]), c(To, {
 				ref_key: "listRef",
 				ref: u,
 				client: e.client,
@@ -3910,10 +3982,10 @@ var K = {
 				router: e.router,
 				filters: m.value,
 				statuses: d.value,
-				members: p.value,
-				projects: v.value,
-				"project-id": g.value,
-				onChanged: w
+				members: f.value,
+				projects: _.value,
+				"project-id": h.value,
+				onChanged: x
 			}, null, 8, [
 				"client",
 				"notify",
@@ -3926,13 +3998,13 @@ var K = {
 			])]);
 		};
 	}
-}), Oo = { class: "flex w-full items-center justify-between" }, ko = { class: "space-y-5 px-6 py-6" }, Ao = {
+}), ko = { class: "flex w-full items-center justify-between" }, Ao = { class: "space-y-5 px-6 py-6" }, jo = {
 	key: 0,
 	class: "rounded-md bg-alert-warning-bg px-3 py-2 text-sm text-alert-warning-text"
-}, jo = { class: "inline-flex overflow-hidden rounded-md border border-line-default" }, Mo = ["disabled", "onClick"], No = {
+}, Mo = { class: "inline-flex overflow-hidden rounded-md border border-line-default" }, No = ["disabled", "onClick"], Po = {
 	key: 1,
 	class: "text-sm text-muted"
-}, Po = { class: "flex items-center justify-between border-t border-line-default px-6 py-4" }, Fo = { key: 1 }, Io = { class: "flex space-x-3" }, Lo = "09:00", Ro = /* @__PURE__ */ l({
+}, Fo = { class: "flex items-center justify-between border-t border-line-default px-6 py-4" }, Io = { key: 1 }, Lo = { class: "flex space-x-3" }, Ro = "09:00", zo = /* @__PURE__ */ l({
 	__name: "TimeEntryModal",
 	props: {
 		show: { type: Boolean },
@@ -3949,21 +4021,21 @@ var K = {
 		"deleted"
 	],
 	setup(t, { emit: l }) {
-		let u = t, d = l, p = ["duration", "range"], m = B(), h = v({
+		let u = t, d = l, f = ["duration", "range"], m = B(), h = y({
 			date: "",
 			mode: "duration",
 			duration: "",
-			start: Lo,
+			start: Ro,
 			end: "",
 			description: "",
 			billable: !0
-		}), g = y(null), w = y({}), T = y(!1), O = y(!1), k = n(() => u.entry !== null), j = n(() => u.entry?.invoice_id != null), M = n(() => j.value ? m("tasks_projects.time.view_entry") : k.value ? m("tasks_projects.time.edit_entry") : m("tasks_projects.time.new_entry"));
+		}), g = b(null), _ = b({}), T = b(!1), O = b(!1), k = n(() => u.entry !== null), j = n(() => u.entry?.invoice_id != null), M = n(() => j.value ? m("tasks_projects.time.view_entry") : k.value ? m("tasks_projects.time.edit_entry") : m("tasks_projects.time.new_entry"));
 		E(() => u.show, (e) => {
 			e && N();
 		}, { immediate: !0 });
 		function N() {
 			let e = u.entry;
-			w.value = {}, g.value = e === null ? u.defaultTask ?? null : null, h.date = e ? Ia(e.started_at) : u.defaultDate ?? Ua(/* @__PURE__ */ new Date()), h.duration = e ? Pa(e.duration_minutes) : "", h.start = e?.started_at ? La(e.started_at) : Lo, h.end = e?.ended_at ? La(e.ended_at) : "", h.description = e?.description ?? "", h.billable = e ? e.billable : g.value?.billable ?? !0, h.mode = e !== null && P(e) ? "range" : "duration", h.date === "" && (h.date = u.defaultDate ?? Ua(/* @__PURE__ */ new Date())), e !== null && F(e.task_id);
+			_.value = {}, g.value = e === null ? u.defaultTask ?? null : null, h.date = e ? Ia(e.started_at) : u.defaultDate ?? Ua(/* @__PURE__ */ new Date()), h.duration = e ? Na(e.duration_minutes) : "", h.start = e?.started_at ? La(e.started_at) : Ro, h.end = e?.ended_at ? La(e.ended_at) : "", h.description = e?.description ?? "", h.billable = e ? e.billable : g.value?.billable ?? !0, h.mode = e !== null && P(e) ? "range" : "duration", h.date === "" && (h.date = u.defaultDate ?? Ua(/* @__PURE__ */ new Date())), e !== null && F(e.task_id);
 		}
 		function P(e) {
 			if (!e.started_at || !e.ended_at) return !1;
@@ -3993,12 +4065,12 @@ var K = {
 		function z() {
 			let e = {}, t = g.value;
 			(t === null || typeof t.id != "number") && (e.task_id = m("tasks_projects.time.task_required")), h.date === "" && (e.date = m("tasks_projects.time.date_required"));
-			let n = Ra(h.date, h.mode === "range" ? h.start : Lo);
+			let n = Ra(h.date, h.mode === "range" ? h.start : Ro);
 			n === null && (e.started_at = m("tasks_projects.time.range_invalid"));
-			let r = h.mode === "duration" ? Fa(h.duration) : null;
+			let r = h.mode === "duration" ? Pa(h.duration) : null;
 			h.mode === "duration" && r === null && (e.duration_minutes = m("tasks_projects.time.duration_invalid"));
 			let i = h.mode === "range" ? Ra(h.date, h.end) : null;
-			if (h.mode === "range" && (i === null || n === null || i <= n) && (e.ended_at = m("tasks_projects.time.range_invalid")), w.value = e, Object.keys(e).length > 0 || t === null || n === null) return null;
+			if (h.mode === "range" && (i === null || n === null || i <= n) && (e.ended_at = m("tasks_projects.time.range_invalid")), _.value = e, Object.keys(e).length > 0 || t === null || n === null) return null;
 			let a = {
 				task_id: t.id,
 				started_at: n,
@@ -4016,7 +4088,7 @@ var K = {
 					let t = u.entry, n = t ? await Ae(u.client, t.id, e) : await ke(u.client, e);
 					d("saved", n);
 				} catch (e) {
-					w.value = at(e), u.notify("error", H(e, m("tasks_projects.time.save_failed")));
+					_.value = at(e), u.notify("error", H(e, m("tasks_projects.time.save_failed")));
 				} finally {
 					T.value = !1;
 				}
@@ -4036,35 +4108,35 @@ var K = {
 			}
 		}
 		return (n, l) => {
-			let u = x("BaseIcon"), v = x("BaseInput"), y = x("BaseMultiselect"), E = x("BaseInputGroup"), N = x("BaseDatePicker"), P = x("BaseInputGrid"), F = x("BaseTextarea"), z = x("BaseSwitch"), B = x("BaseButton"), ne = x("BaseModal");
-			return _(), r(ne, {
+			let u = S("BaseIcon"), y = S("BaseInput"), b = S("BaseMultiselect"), E = S("BaseInputGroup"), N = S("BaseDatePicker"), P = S("BaseInputGrid"), F = S("BaseTextarea"), z = S("BaseSwitch"), B = S("BaseButton"), ne = S("BaseModal");
+			return v(), r(ne, {
 				show: t.show,
 				onClose: l[8] ||= (e) => d("close")
 			}, {
-				header: D(() => [o("div", Oo, [o("span", null, S(M.value), 1), c(u, {
+				header: D(() => [o("div", ko, [o("span", null, C(M.value), 1), c(u, {
 					name: "XMarkIcon",
 					class: "h-6 w-6 cursor-pointer text-subtle hover:text-body",
 					onClick: l[0] ||= (e) => d("close")
 				})])]),
-				default: D(() => [o("form", { onSubmit: A(ee, ["prevent"]) }, [o("div", ko, [
-					j.value ? (_(), a("p", Ao, S(C(m)("tasks_projects.time.stamped_notice")), 1)) : i("", !0),
+				default: D(() => [o("form", { onSubmit: A(ee, ["prevent"]) }, [o("div", Ao, [
+					j.value ? (v(), a("p", jo, C(w(m)("tasks_projects.time.stamped_notice")), 1)) : i("", !0),
 					c(E, {
-						label: C(m)("tasks_projects.time.fields.task"),
-						error: w.value.task_id,
+						label: w(m)("tasks_projects.time.fields.task"),
+						error: _.value.task_id,
 						required: ""
 					}, {
-						default: D(() => [t.lockTask ? (_(), r(v, {
+						default: D(() => [t.lockTask ? (v(), r(y, {
 							key: 0,
 							"model-value": g.value?.name ?? "",
 							type: "text",
 							disabled: ""
-						}, null, 8, ["model-value"])) : (_(), r(y, {
+						}, null, 8, ["model-value"])) : (v(), r(b, {
 							key: 1,
 							"model-value": g.value,
 							options: I,
 							disabled: j.value,
-							invalid: !!w.value.task_id,
-							placeholder: C(m)("tasks_projects.time.fields.task_placeholder"),
+							invalid: !!_.value.task_id,
+							placeholder: w(m)("tasks_projects.time.fields.task_placeholder"),
 							"initial-search": g.value?.name ?? "",
 							delay: 400,
 							"filter-results": !1,
@@ -4087,14 +4159,14 @@ var K = {
 					}, 8, ["label", "error"]),
 					c(P, null, {
 						default: D(() => [c(E, {
-							label: C(m)("tasks_projects.time.fields.date"),
-							error: w.value.date,
+							label: w(m)("tasks_projects.time.fields.date"),
+							error: _.value.date,
 							required: ""
 						}, {
 							default: D(() => [c(N, {
 								"model-value": h.date,
 								disabled: j.value,
-								invalid: !!w.value.date,
+								invalid: !!_.value.date,
 								"onUpdate:modelValue": L
 							}, null, 8, [
 								"model-value",
@@ -4102,33 +4174,33 @@ var K = {
 								"invalid"
 							])]),
 							_: 1
-						}, 8, ["label", "error"]), c(E, { label: C(m)("tasks_projects.time.fields.mode") }, {
-							default: D(() => [o("div", jo, [(_(), a(e, null, b(p, (e) => o("button", {
+						}, 8, ["label", "error"]), c(E, { label: w(m)("tasks_projects.time.fields.mode") }, {
+							default: D(() => [o("div", Mo, [(v(), a(e, null, x(f, (e) => o("button", {
 								key: e,
 								type: "button",
-								class: f(["px-3 py-2 text-sm", h.mode === e ? "bg-primary-500 text-white" : "bg-surface text-body hover:bg-hover"]),
+								class: p(["px-3 py-2 text-sm", h.mode === e ? "bg-primary-500 text-white" : "bg-surface text-body hover:bg-hover"]),
 								disabled: j.value,
 								onClick: (t) => h.mode = e
-							}, S(C(m)(`tasks_projects.time.mode.${e}`)), 11, Mo)), 64))])]),
+							}, C(w(m)(`tasks_projects.time.mode.${e}`)), 11, No)), 64))])]),
 							_: 1
 						}, 8, ["label"])]),
 						_: 1
 					}),
-					h.mode === "duration" ? (_(), r(E, {
+					h.mode === "duration" ? (v(), r(E, {
 						key: 1,
-						label: C(m)("tasks_projects.time.fields.duration"),
-						error: w.value.duration_minutes,
-						"help-text": C(m)("tasks_projects.time.fields.duration_help"),
+						label: w(m)("tasks_projects.time.fields.duration"),
+						error: _.value.duration_minutes,
+						"help-text": w(m)("tasks_projects.time.fields.duration_help"),
 						required: ""
 					}, {
-						default: D(() => [c(v, {
+						default: D(() => [c(y, {
 							modelValue: h.duration,
 							"onUpdate:modelValue": l[2] ||= (e) => h.duration = e,
 							type: "text",
 							inputmode: "text",
 							placeholder: "1:30",
 							disabled: j.value,
-							invalid: !!w.value.duration_minutes
+							invalid: !!_.value.duration_minutes
 						}, null, 8, [
 							"modelValue",
 							"disabled",
@@ -4139,18 +4211,18 @@ var K = {
 						"label",
 						"error",
 						"help-text"
-					])) : (_(), r(P, { key: 2 }, {
+					])) : (v(), r(P, { key: 2 }, {
 						default: D(() => [c(E, {
-							label: C(m)("tasks_projects.time.fields.start"),
-							error: w.value.started_at,
+							label: w(m)("tasks_projects.time.fields.start"),
+							error: _.value.started_at,
 							required: ""
 						}, {
-							default: D(() => [c(v, {
+							default: D(() => [c(y, {
 								modelValue: h.start,
 								"onUpdate:modelValue": l[3] ||= (e) => h.start = e,
 								type: "time",
 								disabled: j.value,
-								invalid: !!w.value.started_at
+								invalid: !!_.value.started_at
 							}, null, 8, [
 								"modelValue",
 								"disabled",
@@ -4158,16 +4230,16 @@ var K = {
 							])]),
 							_: 1
 						}, 8, ["label", "error"]), c(E, {
-							label: C(m)("tasks_projects.time.fields.end"),
-							error: w.value.ended_at,
+							label: w(m)("tasks_projects.time.fields.end"),
+							error: _.value.ended_at,
 							required: ""
 						}, {
-							default: D(() => [c(v, {
+							default: D(() => [c(y, {
 								modelValue: h.end,
 								"onUpdate:modelValue": l[4] ||= (e) => h.end = e,
 								type: "time",
 								disabled: j.value,
-								invalid: !!w.value.ended_at
+								invalid: !!_.value.ended_at
 							}, null, 8, [
 								"modelValue",
 								"disabled",
@@ -4178,15 +4250,15 @@ var K = {
 						_: 1
 					})),
 					c(E, {
-						label: C(m)("tasks_projects.time.fields.description"),
-						error: w.value.description
+						label: w(m)("tasks_projects.time.fields.description"),
+						error: _.value.description
 					}, {
 						default: D(() => [c(F, {
 							modelValue: h.description,
 							"onUpdate:modelValue": l[5] ||= (e) => h.description = e,
 							row: 3,
 							disabled: j.value,
-							invalid: !!w.value.description
+							invalid: !!_.value.description
 						}, null, 8, [
 							"modelValue",
 							"disabled",
@@ -4195,10 +4267,10 @@ var K = {
 						_: 1
 					}, 8, ["label", "error"]),
 					c(E, {
-						label: C(m)("tasks_projects.time.fields.billable"),
-						error: w.value.billable
+						label: w(m)("tasks_projects.time.fields.billable"),
+						error: _.value.billable
 					}, {
-						default: D(() => [j.value ? (_(), a("span", No, S(h.billable ? C(m)("tasks_projects.time.billable") : C(m)("tasks_projects.time.non_billable")), 1)) : (_(), r(z, {
+						default: D(() => [j.value ? (v(), a("span", Po, C(h.billable ? w(m)("tasks_projects.time.billable") : w(m)("tasks_projects.time.non_billable")), 1)) : (v(), r(z, {
 							key: 0,
 							modelValue: h.billable,
 							"onUpdate:modelValue": l[6] ||= (e) => h.billable = e,
@@ -4206,7 +4278,7 @@ var K = {
 						}, null, 8, ["modelValue"]))]),
 						_: 1
 					}, 8, ["label", "error"])
-				]), o("div", Po, [k.value && !j.value ? (_(), r(B, {
+				]), o("div", Fo, [k.value && !j.value ? (v(), r(B, {
 					key: 0,
 					type: "button",
 					variant: "danger",
@@ -4215,39 +4287,39 @@ var K = {
 					disabled: O.value,
 					onClick: te
 				}, {
-					default: D(() => [s(S(C(m)("tasks_projects.general.delete")), 1)]),
+					default: D(() => [s(C(w(m)("tasks_projects.general.delete")), 1)]),
 					_: 1
-				}, 8, ["loading", "disabled"])) : (_(), a("span", Fo)), o("div", Io, [c(B, {
+				}, 8, ["loading", "disabled"])) : (v(), a("span", Io)), o("div", Lo, [c(B, {
 					type: "button",
 					variant: "primary-outline",
 					onClick: l[7] ||= (e) => d("close")
 				}, {
-					default: D(() => [s(S(j.value ? C(m)("tasks_projects.timer.close") : C(m)("tasks_projects.general.cancel")), 1)]),
+					default: D(() => [s(C(j.value ? w(m)("tasks_projects.timer.close") : w(m)("tasks_projects.general.cancel")), 1)]),
 					_: 1
-				}), j.value ? i("", !0) : (_(), r(B, {
+				}), j.value ? i("", !0) : (v(), r(B, {
 					key: 0,
 					type: "submit",
 					variant: "primary",
 					loading: T.value,
 					disabled: T.value
 				}, {
-					default: D(() => [s(S(k.value ? C(m)("tasks_projects.general.update") : C(m)("tasks_projects.general.save")), 1)]),
+					default: D(() => [s(C(k.value ? w(m)("tasks_projects.general.update") : w(m)("tasks_projects.general.save")), 1)]),
 					_: 1
 				}, 8, ["loading", "disabled"]))])])], 32)]),
 				_: 1
 			}, 8, ["show"]);
 		};
 	}
-}), zo = { class: "py-4" }, Bo = { class: "flex justify-end" }, Vo = { class: "relative mt-3 table-container" }, Ho = { class: "font-medium text-heading" }, Uo = {
+}), Bo = { class: "py-4" }, Vo = { class: "flex justify-end" }, Ho = { class: "relative mt-3 table-container" }, Uo = { class: "font-medium text-heading" }, Wo = {
 	key: 0,
 	class: "block text-xs text-muted"
-}, Wo = {
+}, Go = {
 	key: 1,
 	class: "text-subtle"
-}, Go = {
+}, Ko = {
 	key: 0,
 	class: "text-xs text-primary-500"
-}, Ko = 15, qo = 100, Jo = /* @__PURE__ */ l({
+}, qo = 15, Jo = 100, Yo = /* @__PURE__ */ l({
 	__name: "ProjectTimeTab",
 	props: {
 		id: {},
@@ -4257,7 +4329,7 @@ var K = {
 	},
 	emits: ["refresh"],
 	setup(e, { emit: t }) {
-		let l = e, u = t, d = B(), p = ro(), m = y(null), g = y([]), v = y([]), b = y(!1), w = y(null), T = n(() => l.project?.id ?? Number(l.id)), O = n(() => [
+		let l = e, u = t, d = B(), f = ro(), m = b(null), h = b([]), _ = b([]), y = b(!1), x = b(null), T = n(() => l.project?.id ?? Number(l.id)), O = n(() => [
 			{
 				key: "started_at",
 				label: d("tasks_projects.project.time.columns.date"),
@@ -4296,21 +4368,21 @@ var K = {
 				tdClass: "text-right text-sm font-medium"
 			}
 		]);
-		h(() => {
+		g(() => {
 			k();
 		}), E(et, () => m.value?.refresh(!0));
 		async function k() {
 			try {
-				g.value = await Jt(l.client);
+				h.value = await Jt(l.client);
 			} catch (e) {
 				l.notify("error", H(e, d("tasks_projects.tasks.members_failed")));
 			}
 			try {
 				let e = await sr(l.client, {
 					project_id: T.value,
-					limit: qo
+					limit: Jo
 				});
-				v.value = e.data ?? [];
+				_.value = e.data ?? [];
 			} catch (e) {
 				l.notify("error", H(e, d("tasks_projects.tasks.load_failed")));
 			}
@@ -4318,7 +4390,7 @@ var K = {
 		async function A({ page: e }) {
 			let t = {
 				page: e,
-				limit: Ko,
+				limit: qo,
 				project_id: T.value
 			};
 			try {
@@ -4329,7 +4401,7 @@ var K = {
 						totalPages: e.meta?.last_page ?? 1,
 						currentPage: e.meta?.current_page ?? 1,
 						totalCount: e.meta?.total ?? 0,
-						limit: e.meta?.per_page ?? Ko
+						limit: e.meta?.per_page ?? qo
 					}
 				};
 			} catch (e) {
@@ -4339,32 +4411,32 @@ var K = {
 						totalPages: 1,
 						currentPage: 1,
 						totalCount: 0,
-						limit: Ko
+						limit: qo
 					}
 				};
 			}
 		}
 		function j(e) {
-			return g.value.find((t) => t.id === e)?.name ?? d("tasks_projects.project.time.removed_member");
+			return h.value.find((t) => t.id === e)?.name ?? d("tasks_projects.project.time.removed_member");
 		}
 		function M(e) {
-			return v.value.find((t) => t.id === e)?.name ?? `#${e}`;
+			return _.value.find((t) => t.id === e)?.name ?? `#${e}`;
 		}
 		function N(e) {
-			return e.is_running ? Na(Ka(e.started_at, p.value)) : ft(e.duration_minutes);
+			return e.is_running ? Ma(Ka(e.started_at, f.value)) : ft(e.duration_minutes);
 		}
 		function P() {
-			w.value = null, b.value = !0;
+			x.value = null, y.value = !0;
 		}
 		function F(e) {
-			e.is_running || (w.value = e, b.value = !0);
+			e.is_running || (x.value = e, y.value = !0);
 		}
 		function I() {
-			let e = w.value ? d("tasks_projects.time.updated") : d("tasks_projects.time.created");
-			b.value = !1, w.value = null, l.notify("success", e), m.value?.refresh(!0), V(), u("refresh");
+			let e = x.value ? d("tasks_projects.time.updated") : d("tasks_projects.time.created");
+			y.value = !1, x.value = null, l.notify("success", e), m.value?.refresh(!0), V(), u("refresh");
 		}
 		function L() {
-			b.value = !1, w.value = null, l.notify("success", d("tasks_projects.time.deleted")), m.value?.refresh(!0), V(), u("refresh");
+			y.value = !1, x.value = null, l.notify("success", d("tasks_projects.time.deleted")), m.value?.refresh(!0), V(), u("refresh");
 		}
 		async function R(e) {
 			if (window.confirm(d("tasks_projects.time.delete_confirm"))) try {
@@ -4374,36 +4446,36 @@ var K = {
 			}
 		}
 		return (t, n) => {
-			let l = x("BaseIcon"), u = x("BaseButton"), p = x("BaseFormatMoney"), h = x("BaseDropdownItem"), g = x("BaseDropdown"), v = x("BaseTable");
-			return _(), a("div", zo, [
-				o("div", Bo, [c(u, {
+			let l = S("BaseIcon"), u = S("BaseButton"), f = S("BaseFormatMoney"), h = S("BaseDropdownItem"), g = S("BaseDropdown"), _ = S("BaseTable");
+			return v(), a("div", Bo, [
+				o("div", Vo, [c(u, {
 					variant: "primary",
 					onClick: P
 				}, {
 					left: D((e) => [c(l, {
 						name: "PlusIcon",
-						class: f(e.class)
+						class: p(e.class)
 					}, null, 8, ["class"])]),
-					default: D(() => [s(" " + S(C(d)("tasks_projects.project.time.add_entry")), 1)]),
+					default: D(() => [s(" " + C(w(d)("tasks_projects.project.time.add_entry")), 1)]),
 					_: 1
 				})]),
-				o("div", Vo, [c(v, {
+				o("div", Ho, [c(_, {
 					ref_key: "tableRef",
 					ref: m,
 					data: A,
 					columns: O.value
 				}, {
-					"cell-started_at": D(({ row: e }) => [s(S(e.data.started_at ? C(ut)(e.data.started_at) : "-"), 1)]),
-					"cell-user": D(({ row: e }) => [s(S(j(e.data.user_id)), 1)]),
-					"cell-task": D(({ row: e }) => [o("span", Ho, S(M(e.data.task_id)), 1), e.data.description ? (_(), a("span", Uo, S(e.data.description), 1)) : i("", !0)]),
-					"cell-duration_minutes": D(({ row: e }) => [o("span", { class: f(["tabular-nums", e.data.is_running ? "font-medium text-primary-500" : ""]) }, S(N(e.data)), 3)]),
-					"cell-billable": D(({ row: e }) => [e.data.billable ? (_(), r(l, {
+					"cell-started_at": D(({ row: e }) => [s(C(e.data.started_at ? w(ut)(e.data.started_at) : "-"), 1)]),
+					"cell-user": D(({ row: e }) => [s(C(j(e.data.user_id)), 1)]),
+					"cell-task": D(({ row: e }) => [o("span", Uo, C(M(e.data.task_id)), 1), e.data.description ? (v(), a("span", Wo, C(e.data.description), 1)) : i("", !0)]),
+					"cell-duration_minutes": D(({ row: e }) => [o("span", { class: p(["tabular-nums", e.data.is_running ? "font-medium text-primary-500" : ""]) }, C(N(e.data)), 3)]),
+					"cell-billable": D(({ row: e }) => [e.data.billable ? (v(), r(l, {
 						key: 0,
 						name: "CheckCircleIcon",
 						class: "h-5 w-5 text-status-green"
-					})) : (_(), a("span", Wo, "-"))]),
-					"cell-amount": D(({ row: e }) => [c(p, { amount: e.data.amount }, null, 8, ["amount"])]),
-					"cell-actions": D(({ row: e }) => [e.data.is_running ? (_(), a("span", Go, S(C(d)("tasks_projects.project.time.running")), 1)) : (_(), r(g, { key: 1 }, {
+					})) : (v(), a("span", Go, "-"))]),
+					"cell-amount": D(({ row: e }) => [c(f, { amount: e.data.amount }, null, 8, ["amount"])]),
+					"cell-actions": D(({ row: e }) => [e.data.is_running ? (v(), a("span", Ko, C(w(d)("tasks_projects.project.time.running")), 1)) : (v(), r(g, { key: 1 }, {
 						activator: D(() => [c(l, {
 							name: "EllipsisHorizontalIcon",
 							class: "h-5 text-muted"
@@ -4412,28 +4484,28 @@ var K = {
 							default: D(() => [c(l, {
 								name: "PencilIcon",
 								class: "mr-3 h-5 w-5 text-subtle group-hover:text-muted"
-							}), s(" " + S(C(d)("tasks_projects.general.edit")), 1)]),
+							}), s(" " + C(w(d)("tasks_projects.general.edit")), 1)]),
 							_: 1
-						}, 8, ["onClick"]), e.data.invoice_id === null ? (_(), r(h, {
+						}, 8, ["onClick"]), e.data.invoice_id === null ? (v(), r(h, {
 							key: 0,
 							onClick: (t) => R(e.data)
 						}, {
 							default: D(() => [c(l, {
 								name: "TrashIcon",
 								class: "mr-3 h-5 w-5 text-subtle group-hover:text-muted"
-							}), s(" " + S(C(d)("tasks_projects.general.delete")), 1)]),
+							}), s(" " + C(w(d)("tasks_projects.general.delete")), 1)]),
 							_: 1
 						}, 8, ["onClick"])) : i("", !0)]),
 						_: 2
 					}, 1024))]),
 					_: 1
 				}, 8, ["columns"])]),
-				c(Ro, {
-					show: b.value,
+				c(zo, {
+					show: y.value,
 					client: e.client,
 					notify: e.notify,
-					entry: w.value,
-					onClose: n[0] ||= (e) => b.value = !1,
+					entry: x.value,
+					onClose: n[0] ||= (e) => y.value = !1,
 					onSaved: I,
 					onDeleted: L
 				}, null, 8, [
@@ -4445,20 +4517,20 @@ var K = {
 			]);
 		};
 	}
-}), Yo = {
+}), Xo = {
 	viewProject: `${U}:view-project`,
 	editProject: `${U}:edit-project`,
 	viewTask: `${U}:view-task`,
 	viewOwnTime: `${U}:view-own-time`
 };
-function Xo(e) {
+function Zo(e) {
 	e.addMessages(rr), e.registerPage({
 		id: "projects",
 		module: U,
 		path: "projects",
 		component: sn(e, Zr),
 		meta: {
-			ability: Yo.viewProject,
+			ability: Xo.viewProject,
 			title: "tasks_projects.projects.title"
 		}
 	}), e.registerPage({
@@ -4467,7 +4539,7 @@ function Xo(e) {
 		path: "projects/:id",
 		component: sn(e, zr),
 		meta: {
-			ability: Yo.viewProject,
+			ability: Xo.viewProject,
 			title: "tasks_projects.projects.title"
 		},
 		children: [
@@ -4476,25 +4548,25 @@ function Xo(e) {
 				path: "",
 				component: sn(e, Li),
 				meta: {
-					ability: Yo.viewProject,
+					ability: Xo.viewProject,
 					title: "tasks_projects.project.tabs.overview"
 				}
 			},
 			{
 				id: "tasks",
 				path: "tasks",
-				component: sn(e, Do),
+				component: sn(e, Oo),
 				meta: {
-					ability: Yo.viewTask,
+					ability: Xo.viewTask,
 					title: "tasks_projects.project.tabs.tasks"
 				}
 			},
 			{
 				id: "time",
 				path: "time",
-				component: sn(e, Jo),
+				component: sn(e, Yo),
 				meta: {
-					ability: Yo.viewOwnTime,
+					ability: Xo.viewOwnTime,
 					title: "tasks_projects.project.tabs.time"
 				}
 			},
@@ -4503,7 +4575,7 @@ function Xo(e) {
 				path: "members",
 				component: sn(e, li),
 				meta: {
-					ability: Yo.editProject,
+					ability: Xo.editProject,
 					title: "tasks_projects.project.tabs.members"
 				}
 			}
@@ -4512,7 +4584,7 @@ function Xo(e) {
 }
 //#endregion
 //#region resources/js/messages/reports.ts
-var Zo = { en: { tasks_projects: { reports: {
+var Qo = { en: { tasks_projects: { reports: {
 	title: "Reports",
 	load_failed: "Unable to load the report.",
 	empty_title: "Nothing logged in this range",
@@ -4557,68 +4629,68 @@ var Zo = { en: { tasks_projects: { reports: {
 		amount: "Amount",
 		unbilled: "Unbilled"
 	}
-} } } }, Qo = { summary: `${Rt}/reports/summary` };
-async function $o(e, t) {
-	let { data: n } = await e.get(Qo.summary, { params: t });
-	return es(n?.data, t);
+} } } }, $o = { summary: `${Rt}/reports/summary` };
+async function es(e, t) {
+	let { data: n } = await e.get($o.summary, { params: t });
+	return ts(n?.data, t);
 }
-function es(e, t) {
-	let n = rs(e) ? e : {};
+function ts(e, t) {
+	let n = is(e) ? e : {};
 	return {
-		from: os(n.from, t.from ?? ""),
-		to: os(n.to, t.to ?? ""),
-		totals: ns(n.totals).map(ts),
-		by_project: ns(n.by_project).map((e) => ({
-			...ts(e),
-			project_id: as(e.project_id),
-			label: os(e.label, "")
+		from: ss(n.from, t.from ?? ""),
+		to: ss(n.to, t.to ?? ""),
+		totals: rs(n.totals).map(ns),
+		by_project: rs(n.by_project).map((e) => ({
+			...ns(e),
+			project_id: os(e.project_id),
+			label: ss(e.label, "")
 		})),
-		by_member: ns(n.by_member).map((e) => ({
-			...ts(e),
-			user_id: as(e.user_id),
-			label: os(e.label, "")
+		by_member: rs(n.by_member).map((e) => ({
+			...ns(e),
+			user_id: os(e.user_id),
+			label: ss(e.label, "")
 		})),
-		by_customer: ns(n.by_customer).map((e) => ({
-			...ts(e),
-			customer_id: as(e.customer_id)
+		by_customer: rs(n.by_customer).map((e) => ({
+			...ns(e),
+			customer_id: os(e.customer_id)
 		})),
-		by_billable: ns(n.by_billable).map((e) => ({
-			...ts(e),
+		by_billable: rs(n.by_billable).map((e) => ({
+			...ns(e),
 			billable: e.billable === !0
 		}))
 	};
 }
-function ts(e) {
+function ns(e) {
 	return {
-		currency_id: as(e.currency_id),
-		minutes: is(e.minutes),
-		amount: is(e.amount),
-		billable_minutes: is(e.billable_minutes),
-		billable_amount: is(e.billable_amount),
-		unbilled_amount: is(e.unbilled_amount)
+		currency_id: os(e.currency_id),
+		minutes: as(e.minutes),
+		amount: as(e.amount),
+		billable_minutes: as(e.billable_minutes),
+		billable_amount: as(e.billable_amount),
+		unbilled_amount: as(e.unbilled_amount)
 	};
 }
-function ns(e) {
-	return Array.isArray(e) ? e.filter(rs) : [];
-}
 function rs(e) {
-	return typeof e == "object" && !!e;
+	return Array.isArray(e) ? e.filter(is) : [];
 }
 function is(e) {
-	return typeof e == "number" && Number.isFinite(e) ? e : 0;
+	return typeof e == "object" && !!e;
 }
 function as(e) {
+	return typeof e == "number" && Number.isFinite(e) ? e : 0;
+}
+function os(e) {
 	return typeof e == "number" && Number.isFinite(e) ? e : null;
 }
-function os(e, t) {
+function ss(e, t) {
 	return typeof e == "string" && e.trim() !== "" ? e : t;
 }
 //#endregion
 //#region resources/js/components/ReportBreakdownTable.vue?vue&type=script&setup=true&lang.ts
-var ss = { class: "mt-6" }, cs = { class: "text-sm font-semibold tracking-wider text-muted uppercase" }, ls = { class: "relative table-container" }, us = {
+var cs = { class: "mt-6" }, ls = { class: "text-sm font-semibold tracking-wider text-muted uppercase" }, us = { class: "relative table-container" }, ds = {
 	key: 0,
 	class: "text-subtle"
-}, ds = { key: 1 }, fs = /* @__PURE__ */ l({
+}, fs = { key: 1 }, ps = /* @__PURE__ */ l({
 	__name: "ReportBreakdownTable",
 	props: {
 		title: {},
@@ -4660,43 +4732,43 @@ var ss = { class: "mt-6" }, cs = { class: "text-sm font-semibold tracking-wider 
 			}
 		]), u = n(() => t.showCurrency ? "currency" : "plain");
 		return (t, n) => {
-			let i = x("BaseFormatMoney"), d = x("BaseTable");
-			return _(), a("section", ss, [o("h3", cs, S(e.title), 1), o("div", ls, [(_(), r(d, {
+			let i = S("BaseFormatMoney"), d = S("BaseTable");
+			return v(), a("section", cs, [o("h3", ls, C(e.title), 1), o("div", us, [(v(), r(d, {
 				key: u.value,
 				data: e.rows,
 				columns: l.value,
 				class: "mt-2"
 			}, {
-				"cell-currency_id": D(({ row: e }) => [e.data.currency_id === null ? (_(), a("span", us, "-")) : (_(), a("span", ds, "#" + S(e.data.currency_id), 1))]),
-				"cell-minutes": D(({ row: e }) => [s(S(C(Pa)(e.data.minutes)), 1)]),
-				"cell-billable_minutes": D(({ row: e }) => [s(S(C(Pa)(e.data.billable_minutes)), 1)]),
+				"cell-currency_id": D(({ row: e }) => [e.data.currency_id === null ? (v(), a("span", ds, "-")) : (v(), a("span", fs, "#" + C(e.data.currency_id), 1))]),
+				"cell-minutes": D(({ row: e }) => [s(C(w(Na)(e.data.minutes)), 1)]),
+				"cell-billable_minutes": D(({ row: e }) => [s(C(w(Na)(e.data.billable_minutes)), 1)]),
 				"cell-amount": D(({ row: e }) => [c(i, { amount: e.data.amount }, null, 8, ["amount"])]),
 				"cell-unbilled_amount": D(({ row: e }) => [c(i, { amount: e.data.unbilled_amount }, null, 8, ["amount"])]),
 				_: 1
 			}, 8, ["data", "columns"]))])]);
 		};
 	}
-}), ps = 3;
-function ms(e, t, n = /* @__PURE__ */ new Date()) {
+}), ms = 3;
+function hs(e, t, n = /* @__PURE__ */ new Date()) {
 	let r = n.getFullYear(), i = n.getMonth();
 	switch (e) {
 		case "THIS_WEEK": {
 			let e = Ba(n, t);
-			return gs(e, Ha(e, 6));
+			return _s(e, Ha(e, 6));
 		}
-		case "LAST_MONTH": return gs(new Date(r, i - 1, 1), new Date(r, i, 0));
+		case "LAST_MONTH": return _s(new Date(r, i - 1, 1), new Date(r, i, 0));
 		case "THIS_QUARTER": {
-			let e = Math.floor(i / ps) * ps;
-			return gs(new Date(r, e, 1), new Date(r, e + ps, 0));
+			let e = Math.floor(i / ms) * ms;
+			return _s(new Date(r, e, 1), new Date(r, e + ms, 0));
 		}
-		case "THIS_YEAR": return gs(new Date(r, 0, 1), new Date(r, 12, 0));
-		default: return gs(new Date(r, i, 1), new Date(r, i + 1, 0));
+		case "THIS_YEAR": return _s(new Date(r, 0, 1), new Date(r, 12, 0));
+		default: return _s(new Date(r, i, 1), new Date(r, i + 1, 0));
 	}
 }
-function hs(e, t) {
+function gs(e, t) {
 	return t <= 0 ? 0 : Math.min(100, Math.max(0, Math.round(e / t * 100)));
 }
-function gs(e, t) {
+function _s(e, t) {
 	return {
 		from: Ua(e),
 		to: Ua(t)
@@ -4704,19 +4776,19 @@ function gs(e, t) {
 }
 //#endregion
 //#region resources/js/pages/ReportsPage.vue?vue&type=script&setup=true&lang.ts
-var _s = {
+var vs = {
 	key: 0,
 	class: "mt-2 text-sm text-muted"
-}, vs = { class: "flex items-center justify-end space-x-5" }, ys = { class: "mt-4 flex flex-wrap gap-2" }, bs = ["onClick"], xs = {
+}, ys = { class: "flex items-center justify-end space-x-5" }, bs = { class: "mt-4 flex flex-wrap gap-2" }, xs = ["onClick"], Ss = {
 	key: 0,
 	class: "flex justify-center py-16"
-}, Ss = {
+}, Cs = {
 	key: 0,
 	class: "text-xs font-medium tracking-wider text-muted uppercase"
-}, Cs = { class: "text-xs font-medium tracking-wider text-muted uppercase" }, ws = { class: "mt-1 text-2xl font-semibold text-heading" }, Ts = { class: "text-xs font-medium tracking-wider text-muted uppercase" }, Es = { class: "mt-1 text-2xl font-semibold text-heading" }, Ds = { class: "text-xs font-medium tracking-wider text-muted uppercase" }, Os = { class: "mt-1 text-2xl font-semibold text-heading" }, ks = { class: "text-xs font-medium tracking-wider text-muted uppercase" }, As = { class: "mt-1 text-2xl font-semibold text-heading" }, js = { class: "mt-4 rounded-xl border border-line-default bg-surface p-5" }, Ms = { class: "text-xs font-medium tracking-wider text-muted uppercase" }, Ns = { class: "mt-3 flex h-2 w-full overflow-hidden rounded-full bg-surface-tertiary" }, Ps = { class: "mt-3 flex flex-wrap gap-6 text-sm" }, Fs = { class: "inline-flex items-center text-body" }, Is = { class: "ml-1 font-medium text-heading" }, Ls = { class: "ml-1 text-muted" }, Rs = { class: "inline-flex items-center text-body" }, zs = { class: "ml-1 font-medium text-heading" }, Bs = { class: "ml-1 text-muted" }, Vs = {
+}, ws = { class: "text-xs font-medium tracking-wider text-muted uppercase" }, Ts = { class: "mt-1 text-2xl font-semibold text-heading" }, Es = { class: "text-xs font-medium tracking-wider text-muted uppercase" }, Ds = { class: "mt-1 text-2xl font-semibold text-heading" }, Os = { class: "text-xs font-medium tracking-wider text-muted uppercase" }, ks = { class: "mt-1 text-2xl font-semibold text-heading" }, As = { class: "text-xs font-medium tracking-wider text-muted uppercase" }, js = { class: "mt-1 text-2xl font-semibold text-heading" }, Ms = { class: "mt-4 rounded-xl border border-line-default bg-surface p-5" }, Ns = { class: "text-xs font-medium tracking-wider text-muted uppercase" }, Ps = { class: "mt-3 flex h-2 w-full overflow-hidden rounded-full bg-surface-tertiary" }, Fs = { class: "mt-3 flex flex-wrap gap-6 text-sm" }, Is = { class: "inline-flex items-center text-body" }, Ls = { class: "ml-1 font-medium text-heading" }, Rs = { class: "ml-1 text-muted" }, zs = { class: "inline-flex items-center text-body" }, Bs = { class: "ml-1 font-medium text-heading" }, Vs = { class: "ml-1 text-muted" }, Hs = {
 	key: 1,
 	class: "mt-2 text-sm text-subtle"
-}, Hs = "THIS_MONTH", Us = /* @__PURE__ */ l({
+}, Us = "THIS_MONTH", Ws = /* @__PURE__ */ l({
 	__name: "ReportsPage",
 	props: {
 		client: { type: [Function, Object] },
@@ -4724,7 +4796,7 @@ var _s = {
 		router: {}
 	},
 	setup(t) {
-		let l = t, u = B(), d = y(null), m = y([]), g = y(!0), v = y(Hs), w = y(""), T = y(""), E = n(() => [
+		let l = t, u = B(), d = b(null), f = b([]), h = b(!0), _ = b(Us), y = b(""), T = b(""), E = n(() => [
 			{
 				id: "THIS_WEEK",
 				label: u("tasks_projects.reports.range.this_week")
@@ -4761,45 +4833,45 @@ var _s = {
 			...e,
 			id: `${e.customer_id ?? "none"}-${e.currency_id ?? "base"}`,
 			label: e.customer_id === null ? u("tasks_projects.reports.tables.no_customer") : $t(e.customer_id)
-		}))), P = n(() => ae(!0)), F = n(() => ae(!1)), I = n(() => P.value + F.value), L = n(() => hs(P.value, I.value));
-		h(() => {
-			R(Hs), re();
+		}))), P = n(() => ae(!0)), F = n(() => ae(!1)), I = n(() => P.value + F.value), L = n(() => gs(P.value, I.value));
+		g(() => {
+			R(Us), re();
 		});
 		function R(e) {
-			if (v.value = e, e !== "CUSTOM") {
-				let t = ms(e, xa.settings.week_start);
-				w.value = t.from, T.value = t.to;
+			if (_.value = e, e !== "CUSTOM") {
+				let t = hs(e, G.settings.week_start);
+				y.value = t.from, T.value = t.to;
 			}
 			te();
 		}
 		function z(e) {
-			w.value = e ? dt(e) : "", v.value = "CUSTOM", te();
+			y.value = e ? dt(e) : "", _.value = "CUSTOM", te();
 		}
 		function ee(e) {
-			T.value = e ? dt(e) : "", v.value = "CUSTOM", te();
+			T.value = e ? dt(e) : "", _.value = "CUSTOM", te();
 		}
 		async function te() {
-			g.value = !0;
+			h.value = !0;
 			try {
-				let e = await $o(l.client, ne());
+				let e = await es(l.client, ne());
 				d.value = e, e.by_customer.some((e) => e.customer_id !== null) && en(l.client);
 			} catch (e) {
 				d.value = null, l.notify("error", H(e, u("tasks_projects.reports.load_failed")));
 			} finally {
-				g.value = !1;
+				h.value = !1;
 			}
 		}
 		function ne() {
 			let e = {};
-			return w.value !== "" && (e.from = w.value), T.value !== "" && (e.to = T.value), e;
+			return y.value !== "" && (e.from = y.value), T.value !== "" && (e.to = T.value), e;
 		}
 		async function re() {
 			try {
-				m.value = await Jt(l.client);
+				f.value = await Jt(l.client);
 			} catch {}
 		}
 		function ie(e) {
-			let t = m.value.find((t) => t.id === e.user_id)?.name ?? "";
+			let t = f.value.find((t) => t.id === e.user_id)?.name ?? "";
 			return t === "" ? e.label === "" ? e.user_id === null ? u("tasks_projects.reports.tables.unknown_member") : `#${e.user_id}` : e.label : t;
 		}
 		function ae(e) {
@@ -4809,77 +4881,77 @@ var _s = {
 			return e === null ? u("tasks_projects.reports.summary.base_currency") : u("tasks_projects.reports.summary.currency", { id: e });
 		}
 		function se(e) {
-			return v.value === e.id ? "border-primary-500 bg-primary-50 text-primary-500" : "border-line-default bg-surface text-muted hover:text-heading";
+			return _.value === e.id ? "border-primary-500 bg-primary-50 text-primary-500" : "border-line-default bg-surface text-muted hover:text-heading";
 		}
 		function ce() {
-			R(Hs);
+			R(Us);
 		}
 		return (t, n) => {
-			let l = x("BaseBreadcrumbItem"), m = x("BaseBreadcrumb"), h = x("BaseIcon"), v = x("BaseButton"), y = x("router-link"), B = x("BasePageHeader"), te = x("BaseDatePicker"), ne = x("BaseInputGroup"), re = x("BaseFilterWrapper"), ie = x("BaseSpinner"), ae = x("BaseEmptyPlaceholder"), le = x("BaseFormatMoney"), ue = x("BasePage");
-			return _(), r(ue, null, {
+			let l = S("BaseBreadcrumbItem"), f = S("BaseBreadcrumb"), g = S("BaseIcon"), _ = S("BaseButton"), b = S("router-link"), B = S("BasePageHeader"), te = S("BaseDatePicker"), ne = S("BaseInputGroup"), re = S("BaseFilterWrapper"), ie = S("BaseSpinner"), ae = S("BaseEmptyPlaceholder"), le = S("BaseFormatMoney"), ue = S("BasePage");
+			return v(), r(ue, null, {
 				default: D(() => [
-					c(B, { title: C(u)("tasks_projects.reports.title") }, {
-						actions: D(() => [o("div", vs, [
-							c(y, { to: C(W).tasks }, {
-								default: D(() => [c(v, { variant: "white" }, {
-									left: D((e) => [c(h, {
+					c(B, { title: w(u)("tasks_projects.reports.title") }, {
+						actions: D(() => [o("div", ys, [
+							c(b, { to: w(W).tasks }, {
+								default: D(() => [c(_, { variant: "white" }, {
+									left: D((e) => [c(g, {
 										name: "ClipboardDocumentListIcon",
-										class: f(e.class)
+										class: p(e.class)
 									}, null, 8, ["class"])]),
-									default: D(() => [s(" " + S(C(u)("tasks_projects.tasks.title")), 1)]),
+									default: D(() => [s(" " + C(w(u)("tasks_projects.tasks.title")), 1)]),
 									_: 1
 								})]),
 								_: 1
 							}, 8, ["to"]),
-							c(y, { to: C(W).projects }, {
-								default: D(() => [c(v, { variant: "white" }, {
-									left: D((e) => [c(h, {
+							c(b, { to: w(W).projects }, {
+								default: D(() => [c(_, { variant: "white" }, {
+									left: D((e) => [c(g, {
 										name: "FolderIcon",
-										class: f(e.class)
+										class: p(e.class)
 									}, null, 8, ["class"])]),
-									default: D(() => [s(" " + S(C(u)("tasks_projects.projects.title")), 1)]),
+									default: D(() => [s(" " + C(w(u)("tasks_projects.projects.title")), 1)]),
 									_: 1
 								})]),
 								_: 1
 							}, 8, ["to"]),
-							c(y, { to: C(W).billing }, {
-								default: D(() => [c(v, { variant: "primary-outline" }, {
-									left: D((e) => [c(h, {
+							c(b, { to: w(W).billing }, {
+								default: D(() => [c(_, { variant: "primary-outline" }, {
+									left: D((e) => [c(g, {
 										name: "BanknotesIcon",
-										class: f(e.class)
+										class: p(e.class)
 									}, null, 8, ["class"])]),
-									default: D(() => [s(" " + S(C(u)("tasks_projects.billing.title")), 1)]),
+									default: D(() => [s(" " + C(w(u)("tasks_projects.billing.title")), 1)]),
 									_: 1
 								})]),
 								_: 1
 							}, 8, ["to"])
 						])]),
-						default: D(() => [c(m, null, {
+						default: D(() => [c(f, null, {
 							default: D(() => [
 								c(l, {
-									title: C(u)("tasks_projects.general.home"),
+									title: w(u)("tasks_projects.general.home"),
 									to: "/admin/dashboard"
 								}, null, 8, ["title"]),
 								c(l, {
-									title: C(u)("tasks_projects.tasks.title"),
-									to: C(W).tasks
+									title: w(u)("tasks_projects.tasks.title"),
+									to: w(W).tasks
 								}, null, 8, ["title", "to"]),
 								c(l, {
-									title: C(u)("tasks_projects.reports.title"),
+									title: w(u)("tasks_projects.reports.title"),
 									to: "#",
 									active: ""
 								}, null, 8, ["title"])
 							]),
 							_: 1
-						}), d.value ? (_(), a("p", _s, S(C(ut)(d.value.from)) + " – " + S(C(ut)(d.value.to)), 1)) : i("", !0)]),
+						}), d.value ? (v(), a("p", vs, C(w(ut)(d.value.from)) + " – " + C(w(ut)(d.value.to)), 1)) : i("", !0)]),
 						_: 1
 					}, 8, ["title"]),
-					o("div", ys, [(_(!0), a(e, null, b(E.value, (e) => (_(), a("button", {
+					o("div", bs, [(v(!0), a(e, null, x(E.value, (e) => (v(), a("button", {
 						key: e.id,
 						type: "button",
-						class: f(["rounded-md border px-3 py-1.5 text-sm font-medium", se(e)]),
+						class: p(["rounded-md border px-3 py-1.5 text-sm font-medium", se(e)]),
 						onClick: (t) => R(e.id)
-					}, S(e.label), 11, bs))), 128))]),
+					}, C(e.label), 11, xs))), 128))]),
 					c(re, {
 						show: !0,
 						"row-on-xl": "",
@@ -4887,16 +4959,16 @@ var _s = {
 						onClear: ce
 					}, {
 						default: D(() => [c(ne, {
-							label: C(u)("tasks_projects.reports.range.from"),
+							label: w(u)("tasks_projects.reports.range.from"),
 							class: "mt-2 flex-1"
 						}, {
 							default: D(() => [c(te, {
-								"model-value": w.value,
+								"model-value": y.value,
 								"onUpdate:modelValue": z
 							}, null, 8, ["model-value"])]),
 							_: 1
 						}, 8, ["label"]), c(ne, {
-							label: C(u)("tasks_projects.reports.range.to"),
+							label: w(u)("tasks_projects.reports.range.to"),
 							class: "mt-2 flex-1"
 						}, {
 							default: D(() => [c(te, {
@@ -4907,33 +4979,33 @@ var _s = {
 						}, 8, ["label"])]),
 						_: 1
 					}),
-					g.value && d.value === null ? (_(), a("div", xs, [c(ie, { class: "h-8 w-8 text-primary-500" })])) : A.value ? (_(), a(e, { key: 2 }, [
-						(_(!0), a(e, null, b(O.value, (e) => (_(), a("div", {
+					h.value && d.value === null ? (v(), a("div", Ss, [c(ie, { class: "h-8 w-8 text-primary-500" })])) : A.value ? (v(), a(e, { key: 2 }, [
+						(v(!0), a(e, null, x(O.value, (e) => (v(), a("div", {
 							key: e.currency_id ?? "base",
 							class: "mt-4 rounded-xl border border-line-default bg-surface p-5"
-						}, [k.value ? (_(), a("p", Ss, S(oe(e.currency_id)), 1)) : i("", !0), o("div", { class: f(["grid grid-cols-2 gap-4 sm:grid-cols-4", k.value ? "mt-3" : ""]) }, [
-							o("div", null, [o("p", Cs, S(C(u)("tasks_projects.reports.summary.logged")), 1), o("p", ws, S(C(Pa)(e.minutes)), 1)]),
-							o("div", null, [o("p", Ts, S(C(u)("tasks_projects.reports.summary.billable")), 1), o("p", Es, S(C(Pa)(e.billable_minutes)), 1)]),
-							o("div", null, [o("p", Ds, S(C(u)("tasks_projects.reports.summary.amount")), 1), o("p", Os, [c(le, { amount: e.amount }, null, 8, ["amount"])])]),
-							o("div", null, [o("p", ks, S(C(u)("tasks_projects.reports.summary.unbilled")), 1), o("p", As, [c(le, { amount: e.unbilled_amount }, null, 8, ["amount"])])])
+						}, [k.value ? (v(), a("p", Cs, C(oe(e.currency_id)), 1)) : i("", !0), o("div", { class: p(["grid grid-cols-2 gap-4 sm:grid-cols-4", k.value ? "mt-3" : ""]) }, [
+							o("div", null, [o("p", ws, C(w(u)("tasks_projects.reports.summary.logged")), 1), o("p", Ts, C(w(Na)(e.minutes)), 1)]),
+							o("div", null, [o("p", Es, C(w(u)("tasks_projects.reports.summary.billable")), 1), o("p", Ds, C(w(Na)(e.billable_minutes)), 1)]),
+							o("div", null, [o("p", Os, C(w(u)("tasks_projects.reports.summary.amount")), 1), o("p", ks, [c(le, { amount: e.amount }, null, 8, ["amount"])])]),
+							o("div", null, [o("p", As, C(w(u)("tasks_projects.reports.summary.unbilled")), 1), o("p", js, [c(le, { amount: e.unbilled_amount }, null, 8, ["amount"])])])
 						], 2)]))), 128)),
-						o("section", js, [o("p", Ms, S(C(u)("tasks_projects.reports.split.title")), 1), I.value > 0 ? (_(), a(e, { key: 0 }, [o("div", Ns, [o("div", {
+						o("section", Ms, [o("p", Ns, C(w(u)("tasks_projects.reports.split.title")), 1), I.value > 0 ? (v(), a(e, { key: 0 }, [o("div", Ps, [o("div", {
 							class: "h-2 bg-primary-500",
-							style: p({ width: `${L.value}%` })
-						}, null, 4)]), o("div", Ps, [o("span", Fs, [
+							style: m({ width: `${L.value}%` })
+						}, null, 4)]), o("div", Fs, [o("span", Is, [
 							n[0] ||= o("span", { class: "mr-2 inline-block h-2.5 w-2.5 rounded-full bg-primary-500" }, null, -1),
-							s(" " + S(C(u)("tasks_projects.reports.split.billable")) + ": ", 1),
-							o("span", Is, S(C(Pa)(P.value)), 1),
-							o("span", Ls, "(" + S(L.value) + "%)", 1)
-						]), o("span", Rs, [
+							s(" " + C(w(u)("tasks_projects.reports.split.billable")) + ": ", 1),
+							o("span", Ls, C(w(Na)(P.value)), 1),
+							o("span", Rs, "(" + C(L.value) + "%)", 1)
+						]), o("span", zs, [
 							n[1] ||= o("span", { class: "mr-2 inline-block h-2.5 w-2.5 rounded-full bg-surface-tertiary" }, null, -1),
-							s(" " + S(C(u)("tasks_projects.reports.split.non_billable")) + ": ", 1),
-							o("span", zs, S(C(Pa)(F.value)), 1),
-							o("span", Bs, "(" + S(100 - L.value) + "%)", 1)
-						])])], 64)) : (_(), a("p", Vs, S(C(u)("tasks_projects.reports.split.nothing")), 1))]),
-						c(fs, {
-							title: C(u)("tasks_projects.reports.tables.by_project"),
-							"label-heading": C(u)("tasks_projects.reports.tables.project"),
+							s(" " + C(w(u)("tasks_projects.reports.split.non_billable")) + ": ", 1),
+							o("span", Bs, C(w(Na)(F.value)), 1),
+							o("span", Vs, "(" + C(100 - L.value) + "%)", 1)
+						])])], 64)) : (v(), a("p", Hs, C(w(u)("tasks_projects.reports.split.nothing")), 1))]),
+						c(ps, {
+							title: w(u)("tasks_projects.reports.tables.by_project"),
+							"label-heading": w(u)("tasks_projects.reports.tables.project"),
 							rows: j.value,
 							"show-currency": k.value
 						}, null, 8, [
@@ -4942,9 +5014,9 @@ var _s = {
 							"rows",
 							"show-currency"
 						]),
-						c(fs, {
-							title: C(u)("tasks_projects.reports.tables.by_member"),
-							"label-heading": C(u)("tasks_projects.reports.tables.member"),
+						c(ps, {
+							title: w(u)("tasks_projects.reports.tables.by_member"),
+							"label-heading": w(u)("tasks_projects.reports.tables.member"),
 							rows: M.value,
 							"show-currency": k.value
 						}, null, 8, [
@@ -4953,9 +5025,9 @@ var _s = {
 							"rows",
 							"show-currency"
 						]),
-						c(fs, {
-							title: C(u)("tasks_projects.reports.tables.by_customer"),
-							"label-heading": C(u)("tasks_projects.reports.tables.customer"),
+						c(ps, {
+							title: w(u)("tasks_projects.reports.tables.by_customer"),
+							"label-heading": w(u)("tasks_projects.reports.tables.customer"),
 							rows: N.value,
 							"show-currency": k.value
 						}, null, 8, [
@@ -4964,12 +5036,12 @@ var _s = {
 							"rows",
 							"show-currency"
 						])
-					], 64)) : (_(), r(ae, {
+					], 64)) : (v(), r(ae, {
 						key: 1,
-						title: C(u)("tasks_projects.reports.empty_title"),
-						description: C(u)("tasks_projects.reports.empty_description")
+						title: w(u)("tasks_projects.reports.empty_title"),
+						description: w(u)("tasks_projects.reports.empty_description")
 					}, {
-						default: D(() => [c(h, {
+						default: D(() => [c(g, {
 							name: "ChartBarIcon",
 							class: "mt-5 mb-4 h-16 w-16 text-subtle"
 						})]),
@@ -4980,15 +5052,15 @@ var _s = {
 			});
 		};
 	}
-}), Ws = "tasks-projects";
-function Gs(e) {
-	e.addMessages(Zo), e.registerPage({
+}), Gs = "tasks-projects";
+function Ks(e) {
+	e.addMessages(Qo), e.registerPage({
 		id: "reports",
-		module: Ws,
+		module: Gs,
 		path: "reports",
-		component: sn(e, Us),
+		component: sn(e, Ws),
 		meta: {
-			ability: `${Ws}:view-own-time`,
+			ability: `${Gs}:view-own-time`,
 			title: "tasks_projects.reports.title"
 		}
 	}), e.on("company:changing", () => {
@@ -4997,7 +5069,7 @@ function Gs(e) {
 }
 //#endregion
 //#region resources/js/messages/tasks.ts
-var Ks = { en: { tasks_projects: {
+var qs = { en: { tasks_projects: {
 	board: {
 		title: "Board",
 		load_failed: "Unable to load the board.",
@@ -5147,19 +5219,19 @@ var Ks = { en: { tasks_projects: {
 		load_failed: "Unable to load the task statuses.",
 		none: "No board columns yet."
 	}
-} } }, qs = { class: "mt-6 rounded-xl border border-line-default bg-surface" }, Js = { class: "flex items-center justify-between border-b border-line-light px-5 py-3" }, Ys = { class: "text-sm font-semibold text-heading" }, Xs = ["title"], Zs = { class: "overflow-x-auto" }, Qs = { class: "min-w-full text-sm" }, $s = { class: "bg-surface-secondary text-xs tracking-wide text-muted uppercase" }, ec = { class: "px-4 py-2 text-left font-medium" }, tc = { class: "px-4 py-2 text-left font-medium" }, nc = { class: "px-4 py-2 text-left font-medium" }, rc = { class: "px-4 py-2 text-left font-medium" }, ic = { class: "px-4 py-2 text-left font-medium" }, ac = { class: "px-4 py-2 text-left font-medium" }, oc = { class: "px-4 py-2 text-left font-medium" }, sc = { class: "px-4 py-2 text-left font-medium" }, cc = { class: "px-4 py-2 text-right font-medium" }, lc = ["onClick"], uc = { class: "px-4 py-2.5 whitespace-nowrap" }, dc = { class: "px-4 py-2.5 whitespace-nowrap tabular-nums" }, fc = { class: "px-4 py-2.5 whitespace-nowrap" }, pc = {
+} } }, Js = { class: "mt-6 rounded-xl border border-line-default bg-surface" }, Ys = { class: "flex items-center justify-between border-b border-line-light px-5 py-3" }, Xs = { class: "text-sm font-semibold text-heading" }, Zs = ["title"], Qs = { class: "overflow-x-auto" }, $s = { class: "min-w-full text-sm" }, ec = { class: "bg-surface-secondary text-xs tracking-wide text-muted uppercase" }, tc = { class: "px-4 py-2 text-left font-medium" }, nc = { class: "px-4 py-2 text-left font-medium" }, rc = { class: "px-4 py-2 text-left font-medium" }, ic = { class: "px-4 py-2 text-left font-medium" }, ac = { class: "px-4 py-2 text-left font-medium" }, oc = { class: "px-4 py-2 text-left font-medium" }, sc = { class: "px-4 py-2 text-left font-medium" }, cc = { class: "px-4 py-2 text-left font-medium" }, lc = { class: "px-4 py-2 text-right font-medium" }, uc = ["onClick"], dc = { class: "px-4 py-2.5 whitespace-nowrap" }, fc = { class: "px-4 py-2.5 whitespace-nowrap tabular-nums" }, pc = { class: "px-4 py-2.5 whitespace-nowrap" }, mc = {
 	key: 0,
 	class: "text-primary-500"
-}, mc = { key: 1 }, hc = { class: "px-4 py-2.5 whitespace-nowrap tabular-nums" }, gc = { class: "px-4 py-2.5 whitespace-nowrap tabular-nums" }, _c = { class: "max-w-64 truncate px-4 py-2.5" }, vc = { class: "px-4 py-2.5" }, yc = {
+}, hc = { key: 1 }, gc = { class: "px-4 py-2.5 whitespace-nowrap tabular-nums" }, _c = { class: "px-4 py-2.5 whitespace-nowrap tabular-nums" }, vc = { class: "max-w-64 truncate px-4 py-2.5" }, yc = { class: "px-4 py-2.5" }, bc = {
 	key: 1,
 	class: "text-subtle"
-}, bc = { class: "px-4 py-2.5 whitespace-nowrap" }, xc = ["title"], Sc = {
-	key: 2,
+}, xc = { class: "px-4 py-2.5 whitespace-nowrap" }, Sc = ["title"], Cc = {
+	key: 3,
 	class: "text-xs text-primary-500"
-}, Cc = { key: 0 }, wc = {
+}, wc = { key: 0 }, Tc = {
 	colspan: "9",
 	class: "px-4 py-8 text-center text-sm text-subtle"
-}, Tc = /* @__PURE__ */ l({
+}, Ec = /* @__PURE__ */ l({
 	__name: "TimeLogGrid",
 	props: {
 		client: {},
@@ -5168,48 +5240,57 @@ var Ks = { en: { tasks_projects: {
 		members: { default: () => [] }
 	},
 	setup(t) {
-		let l = t, u = B(), d = ro(), p = y([]), m = y(!1), h = y(!1), g = y(null), v = n(() => ({
+		let l = t, u = B(), d = ro(), f = b([]), m = b(!1), h = b(!1), g = b(null), _ = n(() => ({
 			id: l.task.id,
 			name: l.task.name,
 			number: l.task.number,
 			project_id: l.task.project_id,
 			billable: l.task.billable
-		})), w = n(() => K.isRunningOn(l.task.id));
-		E(() => l.task.id, () => void T(), { immediate: !0 }), E(et, () => void T());
-		async function T() {
+		})), y = n(() => q.isRunningOn(l.task.id)), T = n(() => ({
+			notify: l.notify,
+			t: u
+		}));
+		function O(e) {
+			return e.is_running && q.running?.id === e.id;
+		}
+		function k() {
+			q.stopWithPrompt(l.client, T.value, { taskId: l.task.id });
+		}
+		E(() => l.task.id, () => void j(), { immediate: !0 }), E(et, () => void j());
+		async function j() {
 			m.value = !0;
 			try {
-				p.value = await mr(l.client, l.task.id);
+				f.value = await mr(l.client, l.task.id);
 			} catch (e) {
-				p.value = [], l.notify("error", H(e, u("tasks_projects.tasks.time_log.load_failed")));
+				f.value = [], l.notify("error", H(e, u("tasks_projects.tasks.time_log.load_failed")));
 			} finally {
 				m.value = !1;
 			}
 		}
-		function O(e) {
+		function M(e) {
 			return e.invoice_id !== null;
 		}
-		function k(e) {
+		function N(e) {
 			return l.members.find((t) => t.id === e)?.name ?? `#${e}`;
 		}
-		function j(e) {
-			return e.is_running ? Na(Ka(e.started_at, d.value)) : Pa(e.duration_minutes);
+		function P(e) {
+			return e.is_running ? Ma(Ka(e.started_at, d.value)) : Na(e.duration_minutes);
 		}
-		function M() {
-			w.value || (g.value = null, h.value = !0);
+		function F() {
+			y.value || (g.value = null, h.value = !0);
 		}
-		function N(e) {
+		function I(e) {
 			e.is_running || (g.value = e, h.value = !0);
 		}
-		function P() {
+		function L() {
 			let e = g.value ? u("tasks_projects.time.updated") : u("tasks_projects.time.created");
 			h.value = !1, g.value = null, l.notify("success", e), V();
 		}
-		function F() {
+		function R() {
 			h.value = !1, g.value = null, l.notify("success", u("tasks_projects.time.deleted")), V();
 		}
-		async function I(e) {
-			if (O(e)) {
+		async function z(e) {
+			if (M(e)) {
 				l.notify("warning", u("tasks_projects.tasks.time_log.stamped_delete"));
 				return;
 			}
@@ -5220,89 +5301,102 @@ var Ks = { en: { tasks_projects: {
 			}
 		}
 		return (n, l) => {
-			let d = x("BaseSpinner"), y = x("BaseIcon"), T = x("BaseButton"), E = x("BaseDropdownItem"), L = x("BaseDropdown");
-			return _(), a("section", qs, [
-				o("header", Js, [o("h2", Ys, [s(S(C(u)("tasks_projects.tasks.time_log.title")) + " ", 1), m.value ? (_(), r(d, {
+			let d = S("BaseSpinner"), b = S("BaseIcon"), T = S("BaseButton"), E = S("BaseDropdownItem"), j = S("BaseDropdown");
+			return v(), a("section", Js, [
+				o("header", Ys, [o("h2", Xs, [s(C(w(u)("tasks_projects.tasks.time_log.title")) + " ", 1), m.value ? (v(), r(d, {
 					key: 0,
 					class: "ml-2 inline-block h-4 w-4 text-primary-500"
-				})) : i("", !0)]), o("span", { title: w.value ? C(u)("tasks_projects.tasks.time_log.add_disabled") : void 0 }, [c(T, {
+				})) : i("", !0)]), o("span", { title: y.value ? w(u)("tasks_projects.tasks.time_log.add_disabled") : void 0 }, [c(T, {
 					variant: "primary-outline",
 					size: "sm",
-					disabled: w.value,
-					onClick: M
+					disabled: y.value,
+					onClick: F
 				}, {
-					left: D((e) => [c(y, {
+					left: D((e) => [c(b, {
 						name: "PlusIcon",
-						class: f(e.class)
+						class: p(e.class)
 					}, null, 8, ["class"])]),
-					default: D(() => [s(" " + S(C(u)("tasks_projects.tasks.time_log.add_item")), 1)]),
+					default: D(() => [s(" " + C(w(u)("tasks_projects.tasks.time_log.add_item")), 1)]),
 					_: 1
-				}, 8, ["disabled"])], 8, Xs)]),
-				o("div", Zs, [o("table", Qs, [o("thead", $s, [o("tr", null, [
-					o("th", ec, S(C(u)("tasks_projects.tasks.time_log.columns.start_date")), 1),
-					o("th", tc, S(C(u)("tasks_projects.tasks.time_log.columns.start_time")), 1),
-					o("th", nc, S(C(u)("tasks_projects.tasks.time_log.columns.end_date")), 1),
-					o("th", rc, S(C(u)("tasks_projects.tasks.time_log.columns.end_time")), 1),
-					o("th", ic, S(C(u)("tasks_projects.tasks.time_log.columns.duration")), 1),
-					o("th", ac, S(C(u)("tasks_projects.tasks.time_log.columns.description")), 1),
-					o("th", oc, S(C(u)("tasks_projects.tasks.time_log.columns.billable")), 1),
-					o("th", sc, S(C(u)("tasks_projects.tasks.time_log.columns.member")), 1),
-					o("th", cc, S(C(u)("tasks_projects.general.actions")), 1)
-				])]), o("tbody", null, [(_(!0), a(e, null, b(p.value, (e) => (_(), a("tr", {
+				}, 8, ["disabled"])], 8, Zs)]),
+				o("div", Qs, [o("table", $s, [o("thead", ec, [o("tr", null, [
+					o("th", tc, C(w(u)("tasks_projects.tasks.time_log.columns.start_date")), 1),
+					o("th", nc, C(w(u)("tasks_projects.tasks.time_log.columns.start_time")), 1),
+					o("th", rc, C(w(u)("tasks_projects.tasks.time_log.columns.end_date")), 1),
+					o("th", ic, C(w(u)("tasks_projects.tasks.time_log.columns.end_time")), 1),
+					o("th", ac, C(w(u)("tasks_projects.tasks.time_log.columns.duration")), 1),
+					o("th", oc, C(w(u)("tasks_projects.tasks.time_log.columns.description")), 1),
+					o("th", sc, C(w(u)("tasks_projects.tasks.time_log.columns.billable")), 1),
+					o("th", cc, C(w(u)("tasks_projects.tasks.time_log.columns.member")), 1),
+					o("th", lc, C(w(u)("tasks_projects.general.actions")), 1)
+				])]), o("tbody", null, [(v(!0), a(e, null, x(f.value, (e) => (v(), a("tr", {
 					key: e.id,
-					class: f(["border-t border-line-light", e.is_running ? "bg-primary-50" : "cursor-pointer hover:bg-hover"]),
-					onClick: (t) => N(e)
+					class: p(["border-t border-line-light", e.is_running ? "bg-primary-50" : "cursor-pointer hover:bg-hover"]),
+					onClick: (t) => I(e)
 				}, [
-					o("td", uc, S(C(ut)(C(Ia)(e.started_at)) || "-"), 1),
-					o("td", dc, S(C(La)(e.started_at) || "-"), 1),
-					o("td", fc, [e.is_running ? (_(), a("span", pc, S(C(u)("tasks_projects.tasks.time_log.running")), 1)) : (_(), a("span", mc, S(C(ut)(C(Ia)(e.ended_at)) || "-"), 1))]),
-					o("td", hc, S(e.is_running ? "-" : C(La)(e.ended_at) || "-"), 1),
-					o("td", gc, [o("span", { class: f(e.is_running ? "font-medium text-primary-500" : "") }, S(j(e)), 3)]),
-					o("td", _c, S(e.description || "-"), 1),
-					o("td", vc, [e.billable ? (_(), r(y, {
+					o("td", dc, C(w(ut)(w(Ia)(e.started_at)) || "-"), 1),
+					o("td", fc, C(w(La)(e.started_at) || "-"), 1),
+					o("td", pc, [e.is_running ? (v(), a("span", mc, C(w(u)("tasks_projects.tasks.time_log.running")), 1)) : (v(), a("span", hc, C(w(ut)(w(Ia)(e.ended_at)) || "-"), 1))]),
+					o("td", gc, C(e.is_running ? "-" : w(La)(e.ended_at) || "-"), 1),
+					o("td", _c, [o("span", { class: p(e.is_running ? "font-medium text-primary-500" : "") }, C(P(e)), 3)]),
+					o("td", vc, C(e.description || "-"), 1),
+					o("td", yc, [e.billable ? (v(), r(b, {
 						key: 0,
 						name: "CheckCircleIcon",
 						class: "h-5 w-5 text-status-green"
-					})) : (_(), a("span", yc, "-"))]),
-					o("td", bc, S(k(e.user_id)), 1),
+					})) : (v(), a("span", bc, "-"))]),
+					o("td", xc, C(N(e.user_id)), 1),
 					o("td", {
 						class: "px-4 py-2.5 text-right whitespace-nowrap",
 						onClick: l[0] ||= A(() => {}, ["stop"])
-					}, [O(e) ? (_(), a("span", {
+					}, [M(e) ? (v(), a("span", {
 						key: 0,
 						class: "text-xs text-muted",
-						title: C(u)("tasks_projects.tasks.time_log.stamped_delete")
-					}, S(C(u)("tasks_projects.tasks.time_log.stamped")), 9, xc)) : e.is_running ? (_(), a("span", Sc, S(C(u)("tasks_projects.tasks.time_log.running")), 1)) : (_(), r(L, { key: 1 }, {
-						activator: D(() => [c(y, {
+						title: w(u)("tasks_projects.tasks.time_log.stamped_delete")
+					}, C(w(u)("tasks_projects.tasks.time_log.stamped")), 9, Sc)) : e.is_running ? O(e) ? (v(), r(T, {
+						key: 2,
+						variant: "white",
+						size: "sm",
+						disabled: w(q).busy,
+						onClick: k
+					}, {
+						left: D((e) => [c(b, {
+							name: "StopIcon",
+							class: p(e.class)
+						}, null, 8, ["class"])]),
+						default: D(() => [s(" " + C(w(u)("tasks_projects.timer.stop")), 1)]),
+						_: 1
+					}, 8, ["disabled"])) : (v(), a("span", Cc, C(w(u)("tasks_projects.tasks.time_log.running")), 1)) : (v(), r(j, { key: 1 }, {
+						activator: D(() => [c(b, {
 							name: "EllipsisHorizontalIcon",
 							class: "h-5 text-muted"
 						})]),
-						default: D(() => [c(E, { onClick: (t) => N(e) }, {
-							default: D(() => [c(y, {
+						default: D(() => [c(E, { onClick: (t) => I(e) }, {
+							default: D(() => [c(b, {
 								name: "PencilIcon",
 								class: "mr-3 h-5 w-5 text-subtle group-hover:text-muted"
-							}), s(" " + S(C(u)("tasks_projects.general.edit")), 1)]),
+							}), s(" " + C(w(u)("tasks_projects.general.edit")), 1)]),
 							_: 1
-						}, 8, ["onClick"]), c(E, { onClick: (t) => I(e) }, {
-							default: D(() => [c(y, {
+						}, 8, ["onClick"]), c(E, { onClick: (t) => z(e) }, {
+							default: D(() => [c(b, {
 								name: "TrashIcon",
 								class: "mr-3 h-5 w-5 text-subtle group-hover:text-muted"
-							}), s(" " + S(C(u)("tasks_projects.general.delete")), 1)]),
+							}), s(" " + C(w(u)("tasks_projects.general.delete")), 1)]),
 							_: 1
 						}, 8, ["onClick"])]),
 						_: 2
 					}, 1024))])
-				], 10, lc))), 128)), p.value.length === 0 && !m.value ? (_(), a("tr", Cc, [o("td", wc, S(C(u)("tasks_projects.tasks.time_log.empty")), 1)])) : i("", !0)])])]),
-				c(Ro, {
+				], 10, uc))), 128)), f.value.length === 0 && !m.value ? (v(), a("tr", wc, [o("td", Tc, C(w(u)("tasks_projects.tasks.time_log.empty")), 1)])) : i("", !0)])])]),
+				c(zo, {
 					show: h.value,
 					client: t.client,
 					notify: t.notify,
 					entry: g.value,
-					"default-task": v.value,
+					"default-task": _.value,
 					"lock-task": "",
 					onClose: l[1] ||= (e) => h.value = !1,
-					onSaved: P,
-					onDeleted: F
+					onSaved: L,
+					onDeleted: R
 				}, null, 8, [
 					"show",
 					"client",
@@ -5313,25 +5407,25 @@ var Ks = { en: { tasks_projects: {
 			]);
 		};
 	}
-}), Ec = {
+}), Dc = {
 	key: 0,
 	class: "mt-2 flex flex-wrap items-center gap-3 text-sm text-muted"
-}, Dc = { class: "rounded-sm bg-surface-tertiary px-2 py-0.5 text-body" }, Oc = {
+}, Oc = { class: "rounded-sm bg-surface-tertiary px-2 py-0.5 text-body" }, kc = {
 	key: 1,
 	class: "text-subtle"
-}, kc = {
+}, Ac = {
 	key: 0,
 	class: "flex flex-wrap items-center justify-end gap-3"
-}, Ac = ["title"], jc = {
+}, jc = ["title"], Mc = {
 	key: 0,
 	class: "flex justify-center py-16"
-}, Mc = { class: "mt-6 grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4" }, Nc = { class: "rounded-xl border border-line-default bg-surface p-5" }, Pc = { class: "text-xs font-medium tracking-wider text-muted uppercase" }, Fc = { class: "mt-2" }, Ic = { class: "mt-2 text-xs text-muted" }, Lc = { class: "text-body" }, Rc = { class: "rounded-xl border border-line-default bg-surface p-5" }, zc = { class: "text-xs font-medium tracking-wider text-muted uppercase" }, Bc = { class: "mt-2 text-2xl font-semibold text-heading" }, Vc = { class: "mt-1 text-xs text-muted" }, Hc = { class: "text-body" }, Uc = { class: "rounded-xl border border-line-default bg-surface p-5" }, Wc = { class: "text-xs font-medium tracking-wider text-muted uppercase" }, Gc = { class: "mt-2 text-2xl font-semibold text-heading" }, Kc = { class: "mt-1 text-xs text-muted" }, qc = { class: "rounded-xl border border-line-default bg-surface p-5" }, Jc = { class: "text-xs font-medium tracking-wider text-muted uppercase" }, Yc = { class: "mt-2 text-lg font-semibold text-heading" }, Xc = { class: "mt-1 text-xs text-muted" }, Zc = { class: "mt-4 rounded-xl border border-line-default bg-surface p-5" }, Qc = { class: "text-xs font-medium tracking-wider text-muted uppercase" }, $c = {
+}, Nc = { class: "mt-6 grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4" }, Pc = { class: "rounded-xl border border-line-default bg-surface p-5" }, Fc = { class: "text-xs font-medium tracking-wider text-muted uppercase" }, Ic = { class: "mt-2" }, Lc = { class: "mt-2 text-xs text-muted" }, Rc = { class: "text-body" }, zc = { class: "rounded-xl border border-line-default bg-surface p-5" }, Bc = { class: "text-xs font-medium tracking-wider text-muted uppercase" }, Vc = { class: "mt-2 text-2xl font-semibold text-heading" }, Hc = { class: "mt-1 text-xs text-muted" }, Uc = { class: "text-body" }, Wc = { class: "rounded-xl border border-line-default bg-surface p-5" }, Gc = { class: "text-xs font-medium tracking-wider text-muted uppercase" }, Kc = { class: "mt-2 text-2xl font-semibold text-heading" }, qc = { class: "mt-1 text-xs text-muted" }, Jc = { class: "rounded-xl border border-line-default bg-surface p-5" }, Yc = { class: "text-xs font-medium tracking-wider text-muted uppercase" }, Xc = { class: "mt-2 text-lg font-semibold text-heading" }, Zc = { class: "mt-1 text-xs text-muted" }, Qc = { class: "mt-4 rounded-xl border border-line-default bg-surface p-5" }, $c = { class: "text-xs font-medium tracking-wider text-muted uppercase" }, el = {
 	key: 0,
 	class: "mt-2 text-sm whitespace-pre-line text-body"
-}, el = {
+}, tl = {
 	key: 1,
 	class: "mt-2 text-sm text-subtle"
-}, tl = 100, nl = /* @__PURE__ */ l({
+}, nl = 100, rl = /* @__PURE__ */ l({
 	__name: "TaskPage",
 	props: {
 		id: {},
@@ -5345,57 +5439,57 @@ var Ks = { en: { tasks_projects: {
 			NORMAL: "bg-primary-50 text-primary-500",
 			HIGH: "bg-alert-warning-bg text-alert-warning-text",
 			URGENT: "bg-alert-error-bg text-alert-error-text"
-		}, d = B(), p = l.router, m = y(null), g = y([]), v = y([]), b = y([]), w = y(!0), T = y(!1), O = y(!1), k = y(!1), A = n(() => Number(l.id)), j = n(() => nt(m.value)), N = n(() => m.value?.name ?? d("tasks_projects.tasks.title")), P = n(() => g.value.map((e) => ({
+		}, d = B(), f = l.router, m = b(null), h = b([]), _ = b([]), y = b([]), x = b(!0), T = b(!1), O = b(!1), k = b(!1), A = n(() => Number(l.id)), j = n(() => nt(m.value)), N = n(() => m.value?.name ?? d("tasks_projects.tasks.title")), P = n(() => h.value.map((e) => ({
 			id: e.id,
 			label: e.name
-		}))), F = n(() => b.value.map((e) => ({
+		}))), F = n(() => y.value.map((e) => ({
 			id: e.id,
 			label: e.name
-		}))), I = n(() => b.value.find((e) => e.id === m.value?.project_id)), L = n(() => {
+		}))), I = n(() => y.value.find((e) => e.id === m.value?.project_id)), L = n(() => {
 			let e = m.value?.assignee_id ?? null;
-			return e === null ? d("tasks_projects.tasks.unassigned") : v.value.find((t) => t.id === e)?.name ?? `#${e}`;
+			return e === null ? d("tasks_projects.tasks.unassigned") : _.value.find((t) => t.id === e)?.name ?? `#${e}`;
 		}), R = n({
 			get: () => P.value.find((e) => e.id === m.value?.task_status_id) ?? null,
 			set: (e) => {
 				e !== null && se(e);
 			}
 		}), z = n(() => M.busy), ee = n(() => j.value.invoiced === "uninvoiced"), te = n(() => j.value.invoiced === "invoiced" ? d("tasks_projects.tasks.already_invoiced") : d("tasks_projects.tasks.nothing_to_invoice")), ne = n(() => m.value?.priority ? d(`tasks_projects.tasks.priority.${m.value.priority.toLowerCase()}`) : null);
-		E(A, () => void re()), E(et, () => void re(!0)), h(() => {
+		E(A, () => void re()), E(et, () => void re(!0)), g(() => {
 			re(), ie();
 		});
 		async function re(e = !1) {
 			if (!(!Number.isInteger(A.value) || A.value <= 0)) {
-				w.value = !e;
+				x.value = !e;
 				try {
 					let e = await dr(l.client, A.value);
 					m.value = e, Qe(e), e.customer_id !== null && en(l.client);
 				} catch (t) {
 					e || l.notify("error", H(t, d("tasks_projects.tasks.detail.not_found")));
 				} finally {
-					w.value = !1;
+					x.value = !1;
 				}
 			}
 		}
 		async function ie() {
 			try {
-				g.value = await or(l.client);
+				h.value = await or(l.client);
 			} catch (e) {
 				l.notify("error", H(e, d("tasks_projects.task_statuses.load_failed")));
 			}
 			try {
-				v.value = await Jt(l.client);
+				_.value = await Jt(l.client);
 			} catch {
-				v.value = [];
+				_.value = [];
 			}
 			try {
 				let e = await Ht(l.client, {
-					limit: tl,
+					limit: nl,
 					status: "ACTIVE",
 					sort_by: "name"
 				});
-				b.value = e.data ?? [];
+				y.value = e.data ?? [];
 			} catch {
-				b.value = [];
+				y.value = [];
 			}
 		}
 		function ae(e, t) {
@@ -5434,13 +5528,13 @@ var Ks = { en: { tasks_projects: {
 			let e = m.value;
 			e !== null && ee.value && !z.value && await bt({
 				client: l.client,
-				router: p,
+				router: f,
 				notify: l.notify,
 				t: d
 			}, { taskIds: [e.id] });
 		}
 		function le() {
-			p.push(W.tasks);
+			f.push(W.tasks);
 		}
 		function ue(e) {
 			k.value = !1, m.value = e, Qe(e), l.notify("success", d("tasks_projects.tasks.updated", { name: e.name })), V();
@@ -5459,16 +5553,16 @@ var Ks = { en: { tasks_projects: {
 			}
 		}
 		return (n, l) => {
-			let p = x("BaseBreadcrumbItem"), h = x("BaseBreadcrumb"), y = x("router-link"), b = x("BaseIcon"), E = x("BaseButton"), A = x("BasePageHeader"), B = x("BaseSpinner"), re = x("BaseSelectInput"), ie = x("BaseFormatMoney"), ae = x("BasePage");
-			return _(), r(ae, null, {
+			let f = S("BaseBreadcrumbItem"), g = S("BaseBreadcrumb"), y = S("router-link"), b = S("BaseIcon"), E = S("BaseButton"), A = S("BasePageHeader"), B = S("BaseSpinner"), re = S("BaseSelectInput"), ie = S("BaseFormatMoney"), ae = S("BasePage");
+			return v(), r(ae, null, {
 				default: D(() => [
 					c(A, { title: N.value }, {
-						actions: D(() => [m.value ? (_(), a("div", kc, [
-							c(ho, {
+						actions: D(() => [m.value ? (v(), a("div", Ac, [
+							c(go, {
 								client: t.client,
 								notify: t.notify,
 								task: m.value,
-								members: v.value,
+								members: _.value,
 								size: "md"
 							}, null, 8, [
 								"client",
@@ -5476,7 +5570,7 @@ var Ks = { en: { tasks_projects: {
 								"task",
 								"members"
 							]),
-							C(M).allowed ? (_(), a("span", {
+							w(M).allowed ? (v(), a("span", {
 								key: 0,
 								class: "inline-flex",
 								title: ee.value ? void 0 : te.value
@@ -5486,21 +5580,21 @@ var Ks = { en: { tasks_projects: {
 								disabled: !ee.value || z.value,
 								onClick: ce
 							}, {
-								left: D((e) => [z.value ? i("", !0) : (_(), r(b, {
+								left: D((e) => [z.value ? i("", !0) : (v(), r(b, {
 									key: 0,
 									name: "BanknotesIcon",
-									class: f(e.class)
+									class: p(e.class)
 								}, null, 8, ["class"]))]),
-								default: D(() => [s(" " + S(C(d)("tasks_projects.tasks.invoice_task")), 1)]),
+								default: D(() => [s(" " + C(w(d)("tasks_projects.tasks.invoice_task")), 1)]),
 								_: 1
-							}, 8, ["loading", "disabled"])], 8, Ac)) : i("", !0),
+							}, 8, ["loading", "disabled"])], 8, jc)) : i("", !0),
 							c(E, {
 								variant: "primary-outline",
 								loading: O.value,
 								disabled: O.value,
 								onClick: de
 							}, {
-								default: D(() => [s(S(C(d)("tasks_projects.general.delete")), 1)]),
+								default: D(() => [s(C(w(d)("tasks_projects.general.delete")), 1)]),
 								_: 1
 							}, 8, ["loading", "disabled"]),
 							c(E, {
@@ -5509,51 +5603,51 @@ var Ks = { en: { tasks_projects: {
 							}, {
 								left: D((e) => [c(b, {
 									name: "PencilIcon",
-									class: f(e.class)
+									class: p(e.class)
 								}, null, 8, ["class"])]),
-								default: D(() => [s(" " + S(C(d)("tasks_projects.general.edit")), 1)]),
+								default: D(() => [s(" " + C(w(d)("tasks_projects.general.edit")), 1)]),
 								_: 1
 							})
 						])) : i("", !0)]),
-						default: D(() => [c(h, null, {
+						default: D(() => [c(g, null, {
 							default: D(() => [
-								c(p, {
-									title: C(d)("tasks_projects.general.home"),
+								c(f, {
+									title: w(d)("tasks_projects.general.home"),
 									to: "/admin/dashboard"
 								}, null, 8, ["title"]),
-								c(p, {
-									title: C(d)("tasks_projects.tasks.title"),
-									to: C(W).tasks
+								c(f, {
+									title: w(d)("tasks_projects.tasks.title"),
+									to: w(W).tasks
 								}, null, 8, ["title", "to"]),
-								c(p, {
+								c(f, {
 									title: m.value ? `#${m.value.number}` : N.value,
 									to: "#",
 									active: ""
 								}, null, 8, ["title"])
 							]),
 							_: 1
-						}), m.value ? (_(), a("div", Ec, [
-							o("span", Dc, "#" + S(m.value.number), 1),
-							m.value.project_id ? (_(), r(y, {
+						}), m.value ? (v(), a("div", Dc, [
+							o("span", Oc, "#" + C(m.value.number), 1),
+							m.value.project_id ? (v(), r(y, {
 								key: 0,
 								class: "hover:text-primary-500",
-								to: C(W).project(m.value.project_id)
+								to: w(W).project(m.value.project_id)
 							}, {
-								default: D(() => [s(S(I.value?.name ?? `#${m.value.project_id}`), 1)]),
+								default: D(() => [s(C(I.value?.name ?? `#${m.value.project_id}`), 1)]),
 								_: 1
-							}, 8, ["to"])) : (_(), a("span", Oc, S(C(d)("tasks_projects.tasks.no_project")), 1)),
-							m.value.customer_id ? (_(), r(y, {
+							}, 8, ["to"])) : (v(), a("span", kc, C(w(d)("tasks_projects.tasks.no_project")), 1)),
+							m.value.customer_id ? (v(), r(y, {
 								key: 2,
 								class: "hover:text-primary-500",
-								to: C(W).customer(m.value.customer_id)
+								to: w(W).customer(m.value.customer_id)
 							}, {
-								default: D(() => [s(S(C($t)(m.value.customer_id)), 1)]),
+								default: D(() => [s(C(w($t)(m.value.customer_id)), 1)]),
 								_: 1
 							}, 8, ["to"])) : i("", !0),
-							ne.value && m.value.priority ? (_(), a("span", {
+							ne.value && m.value.priority ? (v(), a("span", {
 								key: 3,
-								class: f(["rounded-full px-2 py-0.5 text-xs font-medium", u[m.value.priority]])
-							}, S(ne.value), 3)) : i("", !0),
+								class: p(["rounded-full px-2 py-0.5 text-xs font-medium", u[m.value.priority]])
+							}, C(ne.value), 3)) : i("", !0),
 							c(da, { state: j.value.invoiced }, null, 8, ["state"])
 						])) : i("", !0)]),
 						_: 1
@@ -5562,11 +5656,11 @@ var Ks = { en: { tasks_projects: {
 						client: t.client,
 						notify: t.notify
 					}, null, 8, ["client", "notify"]),
-					w.value && m.value === null ? (_(), a("div", jc, [c(B, { class: "h-8 w-8 text-primary-500" })])) : m.value ? (_(), a(e, { key: 1 }, [
-						o("div", Mc, [
-							o("div", Nc, [
-								o("p", Pc, S(C(d)("tasks_projects.tasks.detail.status")), 1),
-								o("div", Fc, [c(re, {
+					x.value && m.value === null ? (v(), a("div", Mc, [c(B, { class: "h-8 w-8 text-primary-500" })])) : m.value ? (v(), a(e, { key: 1 }, [
+						o("div", Nc, [
+							o("div", Pc, [
+								o("p", Fc, C(w(d)("tasks_projects.tasks.detail.status")), 1),
+								o("div", Ic, [c(re, {
 									modelValue: R.value,
 									"onUpdate:modelValue": l[1] ||= (e) => R.value = e,
 									options: P.value,
@@ -5577,30 +5671,30 @@ var Ks = { en: { tasks_projects: {
 									"options",
 									"disabled"
 								])]),
-								o("p", Ic, [s(S(C(d)("tasks_projects.tasks.detail.assignee")) + ": ", 1), o("span", Lc, S(L.value), 1)])
+								o("p", Lc, [s(C(w(d)("tasks_projects.tasks.detail.assignee")) + ": ", 1), o("span", Rc, C(L.value), 1)])
 							]),
-							o("div", Rc, [
-								o("p", zc, S(C(d)("tasks_projects.tasks.detail.logged")), 1),
-								o("p", Bc, S(C(ft)(j.value.logged_minutes)), 1),
-								o("p", Vc, [s(S(C(d)("tasks_projects.tasks.detail.estimate")) + ": ", 1), o("span", Hc, S(m.value.estimated_minutes ? C(ft)(m.value.estimated_minutes) : C(d)("tasks_projects.tasks.detail.no_estimate")), 1)])
+							o("div", zc, [
+								o("p", Bc, C(w(d)("tasks_projects.tasks.detail.logged")), 1),
+								o("p", Vc, C(w(ft)(j.value.logged_minutes)), 1),
+								o("p", Hc, [s(C(w(d)("tasks_projects.tasks.detail.estimate")) + ": ", 1), o("span", Uc, C(m.value.estimated_minutes ? w(ft)(m.value.estimated_minutes) : w(d)("tasks_projects.tasks.detail.no_estimate")), 1)])
 							]),
-							o("div", Uc, [
-								o("p", Wc, S(C(d)("tasks_projects.tasks.detail.unbilled")), 1),
-								o("p", Gc, [c(ie, { amount: j.value.unbilled_amount }, null, 8, ["amount"])]),
-								o("p", Kc, S(C(ft)(j.value.unbilled_minutes)), 1)
+							o("div", Wc, [
+								o("p", Gc, C(w(d)("tasks_projects.tasks.detail.unbilled")), 1),
+								o("p", Kc, [c(ie, { amount: j.value.unbilled_amount }, null, 8, ["amount"])]),
+								o("p", qc, C(w(ft)(j.value.unbilled_minutes)), 1)
 							]),
-							o("div", qc, [
-								o("p", Jc, S(C(d)("tasks_projects.tasks.detail.due_date")), 1),
-								o("p", Yc, S(m.value.due_date ? C(ut)(m.value.due_date) : "-"), 1),
-								o("p", Xc, S(m.value.billable ? C(d)("tasks_projects.tasks.billable") : C(d)("tasks_projects.time.non_billable")), 1)
+							o("div", Jc, [
+								o("p", Yc, C(w(d)("tasks_projects.tasks.detail.due_date")), 1),
+								o("p", Xc, C(m.value.due_date ? w(ut)(m.value.due_date) : "-"), 1),
+								o("p", Zc, C(m.value.billable ? w(d)("tasks_projects.tasks.billable") : w(d)("tasks_projects.time.non_billable")), 1)
 							])
 						]),
-						o("div", Zc, [o("p", Qc, S(C(d)("tasks_projects.tasks.detail.description")), 1), m.value.description ? (_(), a("p", $c, S(m.value.description), 1)) : (_(), a("p", el, S(C(d)("tasks_projects.tasks.detail.no_description")), 1))]),
-						c(Tc, {
+						o("div", Qc, [o("p", $c, C(w(d)("tasks_projects.tasks.detail.description")), 1), m.value.description ? (v(), a("p", el, C(m.value.description), 1)) : (v(), a("p", tl, C(w(d)("tasks_projects.tasks.detail.no_description")), 1))]),
+						c(Ec, {
 							client: t.client,
 							notify: t.notify,
 							task: m.value,
-							members: v.value
+							members: _.value
 						}, null, 8, [
 							"client",
 							"notify",
@@ -5608,14 +5702,14 @@ var Ks = { en: { tasks_projects: {
 							"members"
 						])
 					], 64)) : i("", !0),
-					m.value ? (_(), r(ya, {
+					m.value ? (v(), r(ya, {
 						key: 2,
 						show: k.value,
 						client: t.client,
 						notify: t.notify,
 						task: m.value,
-						statuses: g.value,
-						members: v.value,
+						statuses: h.value,
+						members: _.value,
 						projects: F.value,
 						onClose: l[2] ||= (e) => k.value = !1,
 						onSaved: ue,
@@ -5634,7 +5728,7 @@ var Ks = { en: { tasks_projects: {
 			});
 		};
 	}
-}), rl = ["aria-label"], il = ["aria-current", "onClick"], al = { class: "max-sm:hidden" }, ol = /* @__PURE__ */ l({
+}), il = ["aria-label"], al = ["aria-current", "onClick"], ol = { class: "max-sm:hidden" }, sl = /* @__PURE__ */ l({
 	__name: "ViewSwitcher",
 	props: {
 		active: {},
@@ -5665,30 +5759,30 @@ var Ks = { en: { tasks_projects: {
 		function d(e) {
 			return i.active === e.name || e.id === "list" && i.active === on.tasks;
 		}
-		function p(e) {
+		function f(e) {
 			d(e) || s("select", {
 				name: e.name,
 				query: i.query
 			});
 		}
 		return (t, n) => {
-			let r = x("BaseIcon");
-			return _(), a("nav", {
+			let r = S("BaseIcon");
+			return v(), a("nav", {
 				class: "inline-flex overflow-hidden rounded-lg border border-line-default",
-				"aria-label": C(l)("tasks_projects.tasks.title")
-			}, [(_(!0), a(e, null, b(u.value, (e) => (_(), a("button", {
+				"aria-label": w(l)("tasks_projects.tasks.title")
+			}, [(v(!0), a(e, null, x(u.value, (e) => (v(), a("button", {
 				key: e.id,
 				type: "button",
-				class: f(["flex items-center gap-1.5 border-r border-line-default px-3 py-1.5 text-sm font-medium last:border-r-0", d(e) ? "bg-primary-50 text-primary-500" : "bg-surface text-muted hover:bg-hover hover:text-heading"]),
+				class: p(["flex items-center gap-1.5 border-r border-line-default px-3 py-1.5 text-sm font-medium last:border-r-0", d(e) ? "bg-primary-50 text-primary-500" : "bg-surface text-muted hover:bg-hover hover:text-heading"]),
 				"aria-current": d(e) ? "page" : void 0,
-				onClick: (t) => p(e)
+				onClick: (t) => f(e)
 			}, [c(r, {
 				name: e.icon,
 				class: "h-4 w-4"
-			}, null, 8, ["name"]), o("span", al, S(e.label), 1)], 10, il))), 128))], 8, rl);
+			}, null, 8, ["name"]), o("span", ol, C(e.label), 1)], 10, al))), 128))], 8, il);
 		};
 	}
-}), sl = { class: "flex flex-wrap items-center justify-end gap-3" }, cl = 100, ll = /* @__PURE__ */ l({
+}), cl = { class: "flex flex-wrap items-center justify-end gap-3" }, ll = 100, ul = /* @__PURE__ */ l({
 	__name: "TasksPage",
 	props: {
 		client: { type: [Function, Object] },
@@ -5696,17 +5790,17 @@ var Ks = { en: { tasks_projects: {
 		router: {}
 	},
 	setup(e) {
-		let t = e, i = B(), a = t.router, l = y([]), u = y([]), d = y([]), p = y(!1), m = n(() => t.router.currentRoute.value), g = n(() => Bi(m.value.query)), v = n(() => Vi(g.value)), b = n(() => String(m.value.name ?? "")), w = n(() => d.value.map((e) => ({
+		let t = e, i = B(), a = t.router, l = b([]), u = b([]), d = b([]), f = b(!1), m = n(() => t.router.currentRoute.value), h = n(() => Bi(m.value.query)), _ = n(() => Vi(h.value)), y = n(() => String(m.value.name ?? "")), x = n(() => d.value.map((e) => ({
 			id: e.id,
 			label: e.name
 		})));
-		E(b, (e) => T(e)), h(() => {
-			T(b.value), O();
+		E(y, (e) => T(e)), g(() => {
+			T(y.value), O();
 		});
 		function T(e) {
 			e === on.tasks && a.replace({
 				name: on.list,
-				query: v.value
+				query: _.value
 			});
 		}
 		async function O() {
@@ -5722,7 +5816,7 @@ var Ks = { en: { tasks_projects: {
 			}
 			try {
 				let e = await Ht(t.client, {
-					limit: cl,
+					limit: ll,
 					status: "ACTIVE",
 					sort_by: "name"
 				});
@@ -5732,8 +5826,8 @@ var Ks = { en: { tasks_projects: {
 			}
 		}
 		function k(e) {
-			Wi(e, g.value) || a.replace({
-				name: b.value === on.tasks ? on.list : b.value,
+			Wi(e, h.value) || a.replace({
+				name: y.value === on.tasks ? on.list : y.value,
 				query: Vi(e)
 			});
 		}
@@ -5741,59 +5835,59 @@ var Ks = { en: { tasks_projects: {
 			a.push(e);
 		}
 		function j(e) {
-			p.value = !1, t.notify("success", i("tasks_projects.tasks.created", { name: e.name })), V();
+			f.value = !1, t.notify("success", i("tasks_projects.tasks.created", { name: e.name })), V();
 		}
 		return (t, n) => {
-			let a = x("BaseBreadcrumbItem"), m = x("BaseBreadcrumb"), h = x("BaseIcon"), y = x("BaseButton"), T = x("router-link"), E = x("BasePageHeader"), O = x("router-view"), M = x("BasePage");
-			return _(), r(M, null, {
+			let a = S("BaseBreadcrumbItem"), m = S("BaseBreadcrumb"), g = S("BaseIcon"), b = S("BaseButton"), T = S("router-link"), E = S("BasePageHeader"), O = S("router-view"), M = S("BasePage");
+			return v(), r(M, null, {
 				default: D(() => [
-					c(E, { title: C(i)("tasks_projects.tasks.title") }, {
-						actions: D(() => [o("div", sl, [
-							c(ol, {
-								active: b.value,
-								query: v.value,
+					c(E, { title: w(i)("tasks_projects.tasks.title") }, {
+						actions: D(() => [o("div", cl, [
+							c(sl, {
+								active: y.value,
+								query: _.value,
 								onSelect: A
 							}, null, 8, ["active", "query"]),
-							c(T, { to: C(W).projects }, {
-								default: D(() => [c(y, { variant: "white" }, {
-									left: D((e) => [c(h, {
+							c(T, { to: w(W).projects }, {
+								default: D(() => [c(b, { variant: "white" }, {
+									left: D((e) => [c(g, {
 										name: "FolderIcon",
-										class: f(e.class)
+										class: p(e.class)
 									}, null, 8, ["class"])]),
-									default: D(() => [s(" " + S(C(i)("tasks_projects.projects.title")), 1)]),
+									default: D(() => [s(" " + C(w(i)("tasks_projects.projects.title")), 1)]),
 									_: 1
 								})]),
 								_: 1
 							}, 8, ["to"]),
-							c(T, { to: C(W).reports }, {
-								default: D(() => [c(y, { variant: "white" }, {
-									left: D((e) => [c(h, {
+							c(T, { to: w(W).reports }, {
+								default: D(() => [c(b, { variant: "white" }, {
+									left: D((e) => [c(g, {
 										name: "ChartBarIcon",
-										class: f(e.class)
+										class: p(e.class)
 									}, null, 8, ["class"])]),
-									default: D(() => [s(" " + S(C(i)("tasks_projects.reports.title")), 1)]),
+									default: D(() => [s(" " + C(w(i)("tasks_projects.reports.title")), 1)]),
 									_: 1
 								})]),
 								_: 1
 							}, 8, ["to"]),
-							c(y, {
+							c(b, {
 								variant: "primary",
-								onClick: n[0] ||= (e) => p.value = !0
+								onClick: n[0] ||= (e) => f.value = !0
 							}, {
-								left: D((e) => [c(h, {
+								left: D((e) => [c(g, {
 									name: "PlusIcon",
-									class: f(e.class)
+									class: p(e.class)
 								}, null, 8, ["class"])]),
-								default: D(() => [s(" " + S(C(i)("tasks_projects.tasks.new_task")), 1)]),
+								default: D(() => [s(" " + C(w(i)("tasks_projects.tasks.new_task")), 1)]),
 								_: 1
 							})
 						])]),
 						default: D(() => [c(m, null, {
 							default: D(() => [c(a, {
-								title: C(i)("tasks_projects.general.home"),
+								title: w(i)("tasks_projects.general.home"),
 								to: "/admin/dashboard"
 							}, null, 8, ["title"]), c(a, {
-								title: C(i)("tasks_projects.tasks.title"),
+								title: w(i)("tasks_projects.tasks.title"),
 								to: "#",
 								active: ""
 							}, null, 8, ["title"])]),
@@ -5806,7 +5900,7 @@ var Ks = { en: { tasks_projects: {
 						notify: e.notify
 					}, null, 8, ["client", "notify"]),
 					c(oa, {
-						"model-value": g.value,
+						"model-value": h.value,
 						projects: d.value,
 						members: u.value,
 						statuses: l.value,
@@ -5818,7 +5912,7 @@ var Ks = { en: { tasks_projects: {
 						"statuses"
 					]),
 					c(O, {
-						filters: g.value,
+						filters: h.value,
 						statuses: l.value,
 						members: u.value,
 						projects: d.value
@@ -5829,16 +5923,16 @@ var Ks = { en: { tasks_projects: {
 						"projects"
 					]),
 					c(ya, {
-						show: p.value,
+						show: f.value,
 						client: e.client,
 						notify: e.notify,
 						task: null,
 						statuses: l.value,
 						members: u.value,
-						projects: w.value,
-						defaults: { project_id: g.value.project === "" ? null : Number(g.value.project) },
+						projects: x.value,
+						defaults: { project_id: h.value.project === "" ? null : Number(h.value.project) },
 						compact: "",
-						onClose: n[1] ||= (e) => p.value = !1,
+						onClose: n[1] ||= (e) => f.value = !1,
 						onSaved: j
 					}, null, 8, [
 						"show",
@@ -5857,24 +5951,24 @@ var Ks = { en: { tasks_projects: {
 });
 //#endregion
 //#region node_modules/.pnpm/sortablejs@1.15.7/node_modules/sortablejs/modular/sortable.esm.js
-function ul(e, t, n) {
-	return (t = _l(t)) in e ? Object.defineProperty(e, t, {
+function dl(e, t, n) {
+	return (t = vl(t)) in e ? Object.defineProperty(e, t, {
 		value: n,
 		enumerable: !0,
 		configurable: !0,
 		writable: !0
 	}) : e[t] = n, e;
 }
-function dl() {
-	return dl = Object.assign ? Object.assign.bind() : function(e) {
+function fl() {
+	return fl = Object.assign ? Object.assign.bind() : function(e) {
 		for (var t = 1; t < arguments.length; t++) {
 			var n = arguments[t];
 			for (var r in n) ({}).hasOwnProperty.call(n, r) && (e[r] = n[r]);
 		}
 		return e;
-	}, dl.apply(null, arguments);
+	}, fl.apply(null, arguments);
 }
-function fl(e, t) {
+function pl(e, t) {
 	var n = Object.keys(e);
 	if (Object.getOwnPropertySymbols) {
 		var r = Object.getOwnPropertySymbols(e);
@@ -5884,27 +5978,27 @@ function fl(e, t) {
 	}
 	return n;
 }
-function pl(e) {
+function ml(e) {
 	for (var t = 1; t < arguments.length; t++) {
 		var n = arguments[t] == null ? {} : arguments[t];
-		t % 2 ? fl(Object(n), !0).forEach(function(t) {
-			ul(e, t, n[t]);
-		}) : Object.getOwnPropertyDescriptors ? Object.defineProperties(e, Object.getOwnPropertyDescriptors(n)) : fl(Object(n)).forEach(function(t) {
+		t % 2 ? pl(Object(n), !0).forEach(function(t) {
+			dl(e, t, n[t]);
+		}) : Object.getOwnPropertyDescriptors ? Object.defineProperties(e, Object.getOwnPropertyDescriptors(n)) : pl(Object(n)).forEach(function(t) {
 			Object.defineProperty(e, t, Object.getOwnPropertyDescriptor(n, t));
 		});
 	}
 	return e;
 }
-function ml(e, t) {
+function hl(e, t) {
 	if (e == null) return {};
-	var n, r, i = hl(e, t);
+	var n, r, i = gl(e, t);
 	if (Object.getOwnPropertySymbols) {
 		var a = Object.getOwnPropertySymbols(e);
 		for (r = 0; r < a.length; r++) n = a[r], t.indexOf(n) === -1 && {}.propertyIsEnumerable.call(e, n) && (i[n] = e[n]);
 	}
 	return i;
 }
-function hl(e, t) {
+function gl(e, t) {
 	if (e == null) return {};
 	var n = {};
 	for (var r in e) if ({}.hasOwnProperty.call(e, r)) {
@@ -5913,7 +6007,7 @@ function hl(e, t) {
 	}
 	return n;
 }
-function gl(e, t) {
+function _l(e, t) {
 	if (typeof e != "object" || !e) return e;
 	var n = e[Symbol.toPrimitive];
 	if (n !== void 0) {
@@ -5923,33 +6017,33 @@ function gl(e, t) {
 	}
 	return (t === "string" ? String : Number)(e);
 }
-function _l(e) {
-	var t = gl(e, "string");
+function vl(e) {
+	var t = _l(e, "string");
 	return typeof t == "symbol" ? t : t + "";
 }
-function vl(e) {
+function yl(e) {
 	"@babel/helpers - typeof";
-	return vl = typeof Symbol == "function" && typeof Symbol.iterator == "symbol" ? function(e) {
+	return yl = typeof Symbol == "function" && typeof Symbol.iterator == "symbol" ? function(e) {
 		return typeof e;
 	} : function(e) {
 		return e && typeof Symbol == "function" && e.constructor === Symbol && e !== Symbol.prototype ? "symbol" : typeof e;
-	}, vl(e);
+	}, yl(e);
 }
-var yl = "1.15.7";
-function bl(e) {
+var bl = "1.15.7";
+function xl(e) {
 	if (typeof window < "u" && window.navigator) return !!/*@__PURE__*/ navigator.userAgent.match(e);
 }
-var xl = bl(/(?:Trident.*rv[ :]?11\.|msie|iemobile|Windows Phone)/i), Sl = bl(/Edge/i), Cl = bl(/firefox/i), wl = bl(/safari/i) && !bl(/chrome/i) && !bl(/android/i), Tl = bl(/iP(ad|od|hone)/i), El = bl(/chrome/i) && bl(/android/i), Dl = {
+var Sl = xl(/(?:Trident.*rv[ :]?11\.|msie|iemobile|Windows Phone)/i), Cl = xl(/Edge/i), wl = xl(/firefox/i), Tl = xl(/safari/i) && !xl(/chrome/i) && !xl(/android/i), El = xl(/iP(ad|od|hone)/i), Dl = xl(/chrome/i) && xl(/android/i), Ol = {
 	capture: !1,
 	passive: !1
 };
-function q(e, t, n) {
-	e.addEventListener(t, n, !xl && Dl);
-}
 function J(e, t, n) {
-	e.removeEventListener(t, n, !xl && Dl);
+	e.addEventListener(t, n, !Sl && Ol);
 }
-function Ol(e, t) {
+function Y(e, t, n) {
+	e.removeEventListener(t, n, !Sl && Ol);
+}
+function kl(e, t) {
 	if (t) {
 		if (t[0] === ">" && (t = t.substring(1)), e) try {
 			if (e.matches) return e.matches(t);
@@ -5961,41 +6055,41 @@ function Ol(e, t) {
 		return !1;
 	}
 }
-function kl(e) {
+function Al(e) {
 	return e.host && e !== document && e.host.nodeType && e.host !== e ? e.host : e.parentNode;
 }
-function Al(e, t, n, r) {
+function jl(e, t, n, r) {
 	if (e) {
 		n ||= document;
 		do {
-			if (t != null && (t[0] === ">" ? e.parentNode === n && Ol(e, t) : Ol(e, t)) || r && e === n) return e;
+			if (t != null && (t[0] === ">" ? e.parentNode === n && kl(e, t) : kl(e, t)) || r && e === n) return e;
 			if (e === n) break;
-		} while (e = kl(e));
+		} while (e = Al(e));
 	}
 	return null;
 }
-var jl = /\s+/g;
-function Ml(e, t, n) {
-	e && t && (e.classList ? e.classList[n ? "add" : "remove"](t) : e.className = ((" " + e.className + " ").replace(jl, " ").replace(" " + t + " ", " ") + (n ? " " + t : "")).replace(jl, " "));
+var Ml = /\s+/g;
+function Nl(e, t, n) {
+	e && t && (e.classList ? e.classList[n ? "add" : "remove"](t) : e.className = ((" " + e.className + " ").replace(Ml, " ").replace(" " + t + " ", " ") + (n ? " " + t : "")).replace(Ml, " "));
 }
-function Y(e, t, n) {
+function X(e, t, n) {
 	var r = e && e.style;
 	if (r) {
 		if (n === void 0) return document.defaultView && document.defaultView.getComputedStyle ? n = document.defaultView.getComputedStyle(e, "") : e.currentStyle && (n = e.currentStyle), t === void 0 ? n : n[t];
 		!(t in r) && t.indexOf("webkit") === -1 && (t = "-webkit-" + t), r[t] = n + (typeof n == "string" ? "" : "px");
 	}
 }
-function Nl(e, t) {
+function Pl(e, t) {
 	var n = "";
 	if (typeof e == "string") n = e;
 	else do {
-		var r = Y(e, "transform");
+		var r = X(e, "transform");
 		r && r !== "none" && (n = r + " " + n);
 	} while (!t && (e = e.parentNode));
 	var i = window.DOMMatrix || window.WebKitCSSMatrix || window.CSSMatrix || window.MSCSSMatrix;
 	return i && new i(n);
 }
-function Pl(e, t, n) {
+function Fl(e, t, n) {
 	if (e) {
 		var r = e.getElementsByTagName(t), i = 0, a = r.length;
 		if (n) for (; i < a; i++) n(r[i], i);
@@ -6003,21 +6097,21 @@ function Pl(e, t, n) {
 	}
 	return [];
 }
-function Fl() {
+function Il() {
 	return document.scrollingElement || document.documentElement;
 }
-function Il(e, t, n, r, i) {
+function Ll(e, t, n, r, i) {
 	if (e.getBoundingClientRect || e === window) {
 		var a, o, s, c, l, u, d;
-		if (e !== window && e.parentNode && e !== Fl() ? (a = e.getBoundingClientRect(), o = a.top, s = a.left, c = a.bottom, l = a.right, u = a.height, d = a.width) : (o = 0, s = 0, c = window.innerHeight, l = window.innerWidth, u = window.innerHeight, d = window.innerWidth), (t || n) && e !== window && (i ||= e.parentNode, !xl)) do
-			if (i && i.getBoundingClientRect && (Y(i, "transform") !== "none" || n && Y(i, "position") !== "static")) {
+		if (e !== window && e.parentNode && e !== Il() ? (a = e.getBoundingClientRect(), o = a.top, s = a.left, c = a.bottom, l = a.right, u = a.height, d = a.width) : (o = 0, s = 0, c = window.innerHeight, l = window.innerWidth, u = window.innerHeight, d = window.innerWidth), (t || n) && e !== window && (i ||= e.parentNode, !Sl)) do
+			if (i && i.getBoundingClientRect && (X(i, "transform") !== "none" || n && X(i, "position") !== "static")) {
 				var f = i.getBoundingClientRect();
-				o -= f.top + parseInt(Y(i, "border-top-width")), s -= f.left + parseInt(Y(i, "border-left-width")), c = o + a.height, l = s + a.width;
+				o -= f.top + parseInt(X(i, "border-top-width")), s -= f.left + parseInt(X(i, "border-left-width")), c = o + a.height, l = s + a.width;
 				break;
 			}
 		while (i = i.parentNode);
 		if (r && e !== window) {
-			var p = Nl(i || e), m = p && p.a, h = p && p.d;
+			var p = Pl(i || e), m = p && p.a, h = p && p.d;
 			p && (o /= h, s /= m, d /= m, u /= h, c = o + u, l = s + d);
 		}
 		return {
@@ -6030,18 +6124,18 @@ function Il(e, t, n, r, i) {
 		};
 	}
 }
-function Ll(e, t, n) {
-	for (var r = Ul(e, !0), i = Il(e)[t]; r;) {
-		var a = Il(r)[n], o = void 0;
+function Rl(e, t, n) {
+	for (var r = Wl(e, !0), i = Ll(e)[t]; r;) {
+		var a = Ll(r)[n], o = void 0;
 		if (o = n === "top" || n === "left" ? i >= a : i <= a, !o) return r;
-		if (r === Fl()) break;
-		r = Ul(r, !1);
+		if (r === Il()) break;
+		r = Wl(r, !1);
 	}
 	return !1;
 }
-function Rl(e, t, n, r) {
+function zl(e, t, n, r) {
 	for (var i = 0, a = 0, o = e.children; a < o.length;) {
-		if (o[a].style.display !== "none" && o[a] !== $.ghost && (r || o[a] !== $.dragged) && Al(o[a], n.draggable, e, !1)) {
+		if (o[a].style.display !== "none" && o[a] !== $.ghost && (r || o[a] !== $.dragged) && jl(o[a], n.draggable, e, !1)) {
 			if (i === t) return o[a];
 			i++;
 		}
@@ -6049,96 +6143,96 @@ function Rl(e, t, n, r) {
 	}
 	return null;
 }
-function zl(e, t) {
-	for (var n = e.lastElementChild; n && (n === $.ghost || Y(n, "display") === "none" || t && !Ol(n, t));) n = n.previousElementSibling;
+function Bl(e, t) {
+	for (var n = e.lastElementChild; n && (n === $.ghost || X(n, "display") === "none" || t && !kl(n, t));) n = n.previousElementSibling;
 	return n || null;
 }
-function Bl(e, t) {
+function Vl(e, t) {
 	var n = 0;
 	if (!e || !e.parentNode) return -1;
-	for (; e = e.previousElementSibling;) e.nodeName.toUpperCase() !== "TEMPLATE" && e !== $.clone && (!t || Ol(e, t)) && n++;
+	for (; e = e.previousElementSibling;) e.nodeName.toUpperCase() !== "TEMPLATE" && e !== $.clone && (!t || kl(e, t)) && n++;
 	return n;
 }
-function Vl(e) {
-	var t = 0, n = 0, r = Fl();
+function Hl(e) {
+	var t = 0, n = 0, r = Il();
 	if (e) do {
-		var i = Nl(e), a = i.a, o = i.d;
+		var i = Pl(e), a = i.a, o = i.d;
 		t += e.scrollLeft * a, n += e.scrollTop * o;
 	} while (e !== r && (e = e.parentNode));
 	return [t, n];
 }
-function Hl(e, t) {
+function Ul(e, t) {
 	for (var n in e) if (e.hasOwnProperty(n)) {
 		for (var r in t) if (t.hasOwnProperty(r) && t[r] === e[n][r]) return Number(n);
 	}
 	return -1;
 }
-function Ul(e, t) {
-	if (!e || !e.getBoundingClientRect) return Fl();
+function Wl(e, t) {
+	if (!e || !e.getBoundingClientRect) return Il();
 	var n = e, r = !1;
 	do
 		if (n.clientWidth < n.scrollWidth || n.clientHeight < n.scrollHeight) {
-			var i = Y(n);
+			var i = X(n);
 			if (n.clientWidth < n.scrollWidth && (i.overflowX == "auto" || i.overflowX == "scroll") || n.clientHeight < n.scrollHeight && (i.overflowY == "auto" || i.overflowY == "scroll")) {
-				if (!n.getBoundingClientRect || n === document.body) return Fl();
+				if (!n.getBoundingClientRect || n === document.body) return Il();
 				if (r || t) return n;
 				r = !0;
 			}
 		}
 	while (n = n.parentNode);
-	return Fl();
+	return Il();
 }
-function Wl(e, t) {
+function Gl(e, t) {
 	if (e && t) for (var n in t) t.hasOwnProperty(n) && (e[n] = t[n]);
 	return e;
 }
-function Gl(e, t) {
+function Kl(e, t) {
 	return Math.round(e.top) === Math.round(t.top) && Math.round(e.left) === Math.round(t.left) && Math.round(e.height) === Math.round(t.height) && Math.round(e.width) === Math.round(t.width);
 }
-var Kl;
-function ql(e, t) {
+var ql;
+function Jl(e, t) {
 	return function() {
-		if (!Kl) {
+		if (!ql) {
 			var n = arguments, r = this;
-			n.length === 1 ? e.call(r, n[0]) : e.apply(r, n), Kl = setTimeout(function() {
-				Kl = void 0;
+			n.length === 1 ? e.call(r, n[0]) : e.apply(r, n), ql = setTimeout(function() {
+				ql = void 0;
 			}, t);
 		}
 	};
 }
-function Jl() {
-	clearTimeout(Kl), Kl = void 0;
+function Yl() {
+	clearTimeout(ql), ql = void 0;
 }
-function Yl(e, t, n) {
+function Xl(e, t, n) {
 	e.scrollLeft += t, e.scrollTop += n;
 }
-function Xl(e) {
+function Zl(e) {
 	var t = window.Polymer, n = window.jQuery || window.Zepto;
 	return t && t.dom ? t.dom(e).cloneNode(!0) : n ? n(e).clone(!0)[0] : e.cloneNode(!0);
 }
-function Zl(e, t, n) {
+function Ql(e, t, n) {
 	var r = {};
 	return Array.from(e.children).forEach(function(i) {
-		if (Al(i, t.draggable, e, !1) && !i.animated && i !== n) {
-			var a = Il(i);
+		if (jl(i, t.draggable, e, !1) && !i.animated && i !== n) {
+			var a = Ll(i);
 			r.left = Math.min(r.left ?? Infinity, a.left), r.top = Math.min(r.top ?? Infinity, a.top), r.right = Math.max(r.right ?? -Infinity, a.right), r.bottom = Math.max(r.bottom ?? -Infinity, a.bottom);
 		}
 	}), r.width = r.right - r.left, r.height = r.bottom - r.top, r.x = r.left, r.y = r.top, r;
 }
-var Ql = "Sortable" + (/* @__PURE__ */ new Date()).getTime();
-function $l() {
+var $l = "Sortable" + (/* @__PURE__ */ new Date()).getTime();
+function eu() {
 	var e = [], t;
 	return {
 		captureAnimationState: function() {
 			e = [], this.options.animation && [].slice.call(this.el.children).forEach(function(t) {
-				if (Y(t, "display") !== "none" && t !== $.ghost) {
+				if (X(t, "display") !== "none" && t !== $.ghost) {
 					e.push({
 						target: t,
-						rect: Il(t)
+						rect: Ll(t)
 					});
-					var n = pl({}, e[e.length - 1].rect);
+					var n = ml({}, e[e.length - 1].rect);
 					if (t.thisAnimationDuration) {
-						var r = Nl(t, !0);
+						var r = Pl(t, !0);
 						r && (n.top -= r.f, n.left -= r.e);
 					}
 					t.fromRect = n;
@@ -6149,7 +6243,7 @@ function $l() {
 			e.push(t);
 		},
 		removeAnimationState: function(t) {
-			e.splice(Hl(e, { target: t }), 1);
+			e.splice(Ul(e, { target: t }), 1);
 		},
 		animateAll: function(n) {
 			var r = this;
@@ -6159,8 +6253,8 @@ function $l() {
 			}
 			var i = !1, a = 0;
 			e.forEach(function(e) {
-				var t = 0, n = e.target, o = n.fromRect, s = Il(n), c = n.prevFromRect, l = n.prevToRect, u = e.rect, d = Nl(n, !0);
-				d && (s.top -= d.f, s.left -= d.e), n.toRect = s, n.thisAnimationDuration && Gl(c, s) && !Gl(o, s) && (u.top - s.top) / (u.left - s.left) === (o.top - s.top) / (o.left - s.left) && (t = tu(u, c, l, r.options)), Gl(s, o) || (n.prevFromRect = o, n.prevToRect = s, t ||= r.options.animation, r.animate(n, u, s, t)), t && (i = !0, a = Math.max(a, t), clearTimeout(n.animationResetTimer), n.animationResetTimer = setTimeout(function() {
+				var t = 0, n = e.target, o = n.fromRect, s = Ll(n), c = n.prevFromRect, l = n.prevToRect, u = e.rect, d = Pl(n, !0);
+				d && (s.top -= d.f, s.left -= d.e), n.toRect = s, n.thisAnimationDuration && Kl(c, s) && !Kl(o, s) && (u.top - s.top) / (u.left - s.left) === (o.top - s.top) / (o.left - s.left) && (t = nu(u, c, l, r.options)), Kl(s, o) || (n.prevFromRect = o, n.prevToRect = s, t ||= r.options.animation, r.animate(n, u, s, t)), t && (i = !0, a = Math.max(a, t), clearTimeout(n.animationResetTimer), n.animationResetTimer = setTimeout(function() {
 					n.animationTime = 0, n.prevFromRect = null, n.fromRect = null, n.prevToRect = null, n.thisAnimationDuration = null;
 				}, t), n.thisAnimationDuration = t);
 			}), clearTimeout(t), i ? t = setTimeout(function() {
@@ -6169,27 +6263,27 @@ function $l() {
 		},
 		animate: function(e, t, n, r) {
 			if (r) {
-				Y(e, "transition", ""), Y(e, "transform", "");
-				var i = Nl(this.el), a = i && i.a, o = i && i.d, s = (t.left - n.left) / (a || 1), c = (t.top - n.top) / (o || 1);
-				e.animatingX = !!s, e.animatingY = !!c, Y(e, "transform", "translate3d(" + s + "px," + c + "px,0)"), this.forRepaintDummy = eu(e), Y(e, "transition", "transform " + r + "ms" + (this.options.easing ? " " + this.options.easing : "")), Y(e, "transform", "translate3d(0,0,0)"), typeof e.animated == "number" && clearTimeout(e.animated), e.animated = setTimeout(function() {
-					Y(e, "transition", ""), Y(e, "transform", ""), e.animated = !1, e.animatingX = !1, e.animatingY = !1;
+				X(e, "transition", ""), X(e, "transform", "");
+				var i = Pl(this.el), a = i && i.a, o = i && i.d, s = (t.left - n.left) / (a || 1), c = (t.top - n.top) / (o || 1);
+				e.animatingX = !!s, e.animatingY = !!c, X(e, "transform", "translate3d(" + s + "px," + c + "px,0)"), this.forRepaintDummy = tu(e), X(e, "transition", "transform " + r + "ms" + (this.options.easing ? " " + this.options.easing : "")), X(e, "transform", "translate3d(0,0,0)"), typeof e.animated == "number" && clearTimeout(e.animated), e.animated = setTimeout(function() {
+					X(e, "transition", ""), X(e, "transform", ""), e.animated = !1, e.animatingX = !1, e.animatingY = !1;
 				}, r);
 			}
 		}
 	};
 }
-function eu(e) {
+function tu(e) {
 	return e.offsetWidth;
 }
-function tu(e, t, n, r) {
+function nu(e, t, n, r) {
 	return Math.sqrt((t.top - e.top) ** 2 + (t.left - e.left) ** 2) / Math.sqrt((t.top - n.top) ** 2 + (t.left - n.left) ** 2) * r.animation;
 }
-var nu = [], ru = { initializeByDefault: !0 }, iu = {
+var ru = [], iu = { initializeByDefault: !0 }, au = {
 	mount: function(e) {
-		for (var t in ru) ru.hasOwnProperty(t) && !(t in e) && (e[t] = ru[t]);
-		nu.forEach(function(t) {
+		for (var t in iu) iu.hasOwnProperty(t) && !(t in e) && (e[t] = iu[t]);
+		ru.forEach(function(t) {
 			if (t.pluginName === e.pluginName) throw `Sortable: Cannot mount plugin ${e.pluginName} more than once`;
-		}), nu.push(e);
+		}), ru.push(e);
 	},
 	pluginEvent: function(e, t, n) {
 		var r = this;
@@ -6197,16 +6291,16 @@ var nu = [], ru = { initializeByDefault: !0 }, iu = {
 			r.eventCanceled = !0;
 		};
 		var i = e + "Global";
-		nu.forEach(function(r) {
-			t[r.pluginName] && (t[r.pluginName][i] && t[r.pluginName][i](pl({ sortable: t }, n)), t.options[r.pluginName] && t[r.pluginName][e] && t[r.pluginName][e](pl({ sortable: t }, n)));
+		ru.forEach(function(r) {
+			t[r.pluginName] && (t[r.pluginName][i] && t[r.pluginName][i](ml({ sortable: t }, n)), t.options[r.pluginName] && t[r.pluginName][e] && t[r.pluginName][e](ml({ sortable: t }, n)));
 		});
 	},
 	initializePlugins: function(e, t, n, r) {
-		for (var i in nu.forEach(function(r) {
+		for (var i in ru.forEach(function(r) {
 			var i = r.pluginName;
 			if (e.options[i] || r.initializeByDefault) {
 				var a = new r(e, t, e.options);
-				a.sortable = e, a.options = e.options, e[i] = a, dl(n, a.defaults);
+				a.sortable = e, a.options = e.options, e[i] = a, fl(n, a.defaults);
 			}
 		}), e.options) if (e.options.hasOwnProperty(i)) {
 			var a = this.modifyOption(e, i, e.options[i]);
@@ -6215,59 +6309,59 @@ var nu = [], ru = { initializeByDefault: !0 }, iu = {
 	},
 	getEventProperties: function(e, t) {
 		var n = {};
-		return nu.forEach(function(r) {
-			typeof r.eventProperties == "function" && dl(n, r.eventProperties.call(t[r.pluginName], e));
+		return ru.forEach(function(r) {
+			typeof r.eventProperties == "function" && fl(n, r.eventProperties.call(t[r.pluginName], e));
 		}), n;
 	},
 	modifyOption: function(e, t, n) {
 		var r;
-		return nu.forEach(function(i) {
+		return ru.forEach(function(i) {
 			e[i.pluginName] && i.optionListeners && typeof i.optionListeners[t] == "function" && (r = i.optionListeners[t].call(e[i.pluginName], n));
 		}), r;
 	}
 };
-function au(e) {
+function ou(e) {
 	var t = e.sortable, n = e.rootEl, r = e.name, i = e.targetEl, a = e.cloneEl, o = e.toEl, s = e.fromEl, c = e.oldIndex, l = e.newIndex, u = e.oldDraggableIndex, d = e.newDraggableIndex, f = e.originalEvent, p = e.putSortable, m = e.extraEventProperties;
-	if (t ||= n && n[Ql], t) {
+	if (t ||= n && n[$l], t) {
 		var h, g = t.options, _ = "on" + r.charAt(0).toUpperCase() + r.substr(1);
-		window.CustomEvent && !xl && !Sl ? h = new CustomEvent(r, {
+		window.CustomEvent && !Sl && !Cl ? h = new CustomEvent(r, {
 			bubbles: !0,
 			cancelable: !0
 		}) : (h = document.createEvent("Event"), h.initEvent(r, !0, !0)), h.to = o || n, h.from = s || n, h.item = i || n, h.clone = a, h.oldIndex = c, h.newIndex = l, h.oldDraggableIndex = u, h.newDraggableIndex = d, h.originalEvent = f, h.pullMode = p ? p.lastPutMode : void 0;
-		var v = pl(pl({}, m), iu.getEventProperties(r, t));
+		var v = ml(ml({}, m), au.getEventProperties(r, t));
 		for (var y in v) h[y] = v[y];
 		n && n.dispatchEvent(h), g[_] && g[_].call(t, h);
 	}
 }
-var ou = ["evt"], su = function(e, t) {
-	var n = arguments.length > 2 && arguments[2] !== void 0 ? arguments[2] : {}, r = n.evt, i = ml(n, ou);
-	iu.pluginEvent.bind($)(e, t, pl({
-		dragEl: X,
-		parentEl: lu,
-		ghostEl: Z,
-		rootEl: Q,
-		nextEl: uu,
-		lastDownEl: du,
-		cloneEl: fu,
-		cloneHidden: pu,
-		dragStarted: ku,
-		putSortable: yu,
+var su = ["evt"], cu = function(e, t) {
+	var n = arguments.length > 2 && arguments[2] !== void 0 ? arguments[2] : {}, r = n.evt, i = hl(n, su);
+	au.pluginEvent.bind($)(e, t, ml({
+		dragEl: Z,
+		parentEl: uu,
+		ghostEl: Q,
+		rootEl: du,
+		nextEl: fu,
+		lastDownEl: pu,
+		cloneEl: mu,
+		cloneHidden: hu,
+		dragStarted: ju,
+		putSortable: xu,
 		activeSortable: $.active,
 		originalEvent: r,
-		oldIndex: mu,
-		oldDraggableIndex: gu,
-		newIndex: hu,
-		newDraggableIndex: _u,
-		hideGhostForTarget: Ju,
-		unhideGhostForTarget: Yu,
+		oldIndex: gu,
+		oldDraggableIndex: vu,
+		newIndex: _u,
+		newDraggableIndex: yu,
+		hideGhostForTarget: Xu,
+		unhideGhostForTarget: Zu,
 		cloneNowHidden: function() {
-			pu = !0;
+			hu = !0;
 		},
 		cloneNowShown: function() {
-			pu = !1;
+			hu = !1;
 		},
 		dispatchSortableEvent: function(e) {
-			cu({
+			lu({
 				sortable: t,
 				name: e,
 				originalEvent: r
@@ -6275,46 +6369,46 @@ var ou = ["evt"], su = function(e, t) {
 		}
 	}, i));
 };
-function cu(e) {
-	au(pl({
-		putSortable: yu,
-		cloneEl: fu,
-		targetEl: X,
-		rootEl: Q,
-		oldIndex: mu,
-		oldDraggableIndex: gu,
-		newIndex: hu,
-		newDraggableIndex: _u
+function lu(e) {
+	ou(ml({
+		putSortable: xu,
+		cloneEl: mu,
+		targetEl: Z,
+		rootEl: du,
+		oldIndex: gu,
+		oldDraggableIndex: vu,
+		newIndex: _u,
+		newDraggableIndex: yu
 	}, e));
 }
-var X, lu, Z, Q, uu, du, fu, pu, mu, hu, gu, _u, vu, yu, bu = !1, xu = !1, Su = [], Cu, wu, Tu, Eu, Du, Ou, ku, Au, ju, Mu = !1, Nu = !1, Pu, Fu, Iu = [], Lu = !1, Ru = [], zu = typeof document < "u", Bu = Tl, Vu = Sl || xl ? "cssFloat" : "float", Hu = zu && !El && !Tl && "draggable" in document.createElement("div"), Uu = function() {
-	if (zu) {
-		if (xl) return !1;
+var Z, uu, Q, du, fu, pu, mu, hu, gu, _u, vu, yu, bu, xu, Su = !1, Cu = !1, wu = [], Tu, Eu, Du, Ou, ku, Au, ju, Mu, Nu, Pu = !1, Fu = !1, Iu, Lu, Ru = [], zu = !1, Bu = [], Vu = typeof document < "u", Hu = El, Uu = Cl || Sl ? "cssFloat" : "float", Wu = Vu && !Dl && !El && "draggable" in document.createElement("div"), Gu = function() {
+	if (Vu) {
+		if (Sl) return !1;
 		var e = document.createElement("x");
 		return e.style.cssText = "pointer-events:auto", e.style.pointerEvents === "auto";
 	}
-}(), Wu = function(e, t) {
-	var n = Y(e), r = parseInt(n.width) - parseInt(n.paddingLeft) - parseInt(n.paddingRight) - parseInt(n.borderLeftWidth) - parseInt(n.borderRightWidth), i = Rl(e, 0, t), a = Rl(e, 1, t), o = i && Y(i), s = a && Y(a), c = o && parseInt(o.marginLeft) + parseInt(o.marginRight) + Il(i).width, l = s && parseInt(s.marginLeft) + parseInt(s.marginRight) + Il(a).width;
+}(), Ku = function(e, t) {
+	var n = X(e), r = parseInt(n.width) - parseInt(n.paddingLeft) - parseInt(n.paddingRight) - parseInt(n.borderLeftWidth) - parseInt(n.borderRightWidth), i = zl(e, 0, t), a = zl(e, 1, t), o = i && X(i), s = a && X(a), c = o && parseInt(o.marginLeft) + parseInt(o.marginRight) + Ll(i).width, l = s && parseInt(s.marginLeft) + parseInt(s.marginRight) + Ll(a).width;
 	if (n.display === "flex") return n.flexDirection === "column" || n.flexDirection === "column-reverse" ? "vertical" : "horizontal";
 	if (n.display === "grid") return n.gridTemplateColumns.split(" ").length <= 1 ? "vertical" : "horizontal";
 	if (i && o.float && o.float !== "none") {
 		var u = o.float === "left" ? "left" : "right";
 		return a && (s.clear === "both" || s.clear === u) ? "vertical" : "horizontal";
 	}
-	return i && (o.display === "block" || o.display === "flex" || o.display === "table" || o.display === "grid" || c >= r && n[Vu] === "none" || a && n[Vu] === "none" && c + l > r) ? "vertical" : "horizontal";
-}, Gu = function(e, t, n) {
+	return i && (o.display === "block" || o.display === "flex" || o.display === "table" || o.display === "grid" || c >= r && n[Uu] === "none" || a && n[Uu] === "none" && c + l > r) ? "vertical" : "horizontal";
+}, qu = function(e, t, n) {
 	var r = n ? e.left : e.top, i = n ? e.right : e.bottom, a = n ? e.width : e.height, o = n ? t.left : t.top, s = n ? t.right : t.bottom, c = n ? t.width : t.height;
 	return r === o || i === s || r + a / 2 === o + c / 2;
-}, Ku = function(e, t) {
+}, Ju = function(e, t) {
 	var n;
-	return Su.some(function(r) {
-		var i = r[Ql].options.emptyInsertThreshold;
-		if (i && !zl(r)) {
-			var a = Il(r), o = e >= a.left - i && e <= a.right + i, s = t >= a.top - i && t <= a.bottom + i;
+	return wu.some(function(r) {
+		var i = r[$l].options.emptyInsertThreshold;
+		if (i && !Bl(r)) {
+			var a = Ll(r), o = e >= a.left - i && e <= a.right + i, s = t >= a.top - i && t <= a.bottom + i;
 			if (o && s) return n = r;
 		}
 	}), n;
-}, qu = function(e) {
+}, Yu = function(e) {
 	function t(e, n) {
 		return function(r, i, a, o) {
 			var s = r.options.group.name && i.options.group.name && r.options.group.name === i.options.group.name;
@@ -6327,31 +6421,31 @@ var X, lu, Z, Q, uu, du, fu, pu, mu, hu, gu, _u, vu, yu, bu = !1, xu = !1, Su = 
 		};
 	}
 	var n = {}, r = e.group;
-	(!r || vl(r) != "object") && (r = { name: r }), n.name = r.name, n.checkPull = t(r.pull, !0), n.checkPut = t(r.put), n.revertClone = r.revertClone, e.group = n;
-}, Ju = function() {
-	!Uu && Z && Y(Z, "display", "none");
-}, Yu = function() {
-	!Uu && Z && Y(Z, "display", "");
+	(!r || yl(r) != "object") && (r = { name: r }), n.name = r.name, n.checkPull = t(r.pull, !0), n.checkPut = t(r.put), n.revertClone = r.revertClone, e.group = n;
+}, Xu = function() {
+	!Gu && Q && X(Q, "display", "none");
+}, Zu = function() {
+	!Gu && Q && X(Q, "display", "");
 };
-zu && !El && document.addEventListener("click", function(e) {
-	if (xu) return e.preventDefault(), e.stopPropagation && e.stopPropagation(), e.stopImmediatePropagation && e.stopImmediatePropagation(), xu = !1, !1;
+Vu && !Dl && document.addEventListener("click", function(e) {
+	if (Cu) return e.preventDefault(), e.stopPropagation && e.stopPropagation(), e.stopImmediatePropagation && e.stopImmediatePropagation(), Cu = !1, !1;
 }, !0);
-var Xu = function(e) {
-	if (X) {
+var Qu = function(e) {
+	if (Z) {
 		e = e.touches ? e.touches[0] : e;
-		var t = Ku(e.clientX, e.clientY);
+		var t = Ju(e.clientX, e.clientY);
 		if (t) {
 			var n = {};
 			for (var r in e) e.hasOwnProperty(r) && (n[r] = e[r]);
-			n.target = n.rootEl = t, n.preventDefault = void 0, n.stopPropagation = void 0, t[Ql]._onDragOver(n);
+			n.target = n.rootEl = t, n.preventDefault = void 0, n.stopPropagation = void 0, t[$l]._onDragOver(n);
 		}
 	}
-}, Zu = function(e) {
-	X && X.parentNode[Ql]._isOutsideThisEl(e.target);
+}, $u = function(e) {
+	Z && Z.parentNode[$l]._isOutsideThisEl(e.target);
 };
 function $(e, t) {
 	if (!(e && e.nodeType && e.nodeType === 1)) throw `Sortable: \`el\` must be an HTMLElement, not ${{}.toString.call(e)}`;
-	this.el = e, this.options = t = dl({}, t), e[Ql] = this;
+	this.el = e, this.options = t = fl({}, t), e[$l] = this;
 	var n = {
 		group: null,
 		sort: !0,
@@ -6364,7 +6458,7 @@ function $(e, t) {
 		invertedSwapThreshold: null,
 		removeCloneOnHide: !0,
 		direction: function() {
-			return Wu(e, this.options);
+			return Ku(e, this.options);
 		},
 		ghostClass: "sortable-ghost",
 		chosenClass: "sortable-chosen",
@@ -6391,80 +6485,80 @@ function $(e, t) {
 			x: 0,
 			y: 0
 		},
-		supportPointer: $.supportPointer !== !1 && "PointerEvent" in window && (!wl || Tl),
+		supportPointer: $.supportPointer !== !1 && "PointerEvent" in window && (!Tl || El),
 		emptyInsertThreshold: 5
 	};
-	for (var r in iu.initializePlugins(this, e, n), n) !(r in t) && (t[r] = n[r]);
-	for (var i in qu(t), this) i.charAt(0) === "_" && typeof this[i] == "function" && (this[i] = this[i].bind(this));
-	this.nativeDraggable = !t.forceFallback && Hu, this.nativeDraggable && (this.options.touchStartThreshold = 1), t.supportPointer ? q(e, "pointerdown", this._onTapStart) : (q(e, "mousedown", this._onTapStart), q(e, "touchstart", this._onTapStart)), this.nativeDraggable && (q(e, "dragover", this), q(e, "dragenter", this)), Su.push(this.el), t.store && t.store.get && this.sort(t.store.get(this) || []), dl(this, $l());
+	for (var r in au.initializePlugins(this, e, n), n) !(r in t) && (t[r] = n[r]);
+	for (var i in Yu(t), this) i.charAt(0) === "_" && typeof this[i] == "function" && (this[i] = this[i].bind(this));
+	this.nativeDraggable = !t.forceFallback && Wu, this.nativeDraggable && (this.options.touchStartThreshold = 1), t.supportPointer ? J(e, "pointerdown", this._onTapStart) : (J(e, "mousedown", this._onTapStart), J(e, "touchstart", this._onTapStart)), this.nativeDraggable && (J(e, "dragover", this), J(e, "dragenter", this)), wu.push(this.el), t.store && t.store.get && this.sort(t.store.get(this) || []), fl(this, eu());
 }
 $.prototype = {
 	constructor: $,
 	_isOutsideThisEl: function(e) {
-		!this.el.contains(e) && e !== this.el && (Au = null);
+		!this.el.contains(e) && e !== this.el && (Mu = null);
 	},
 	_getDirection: function(e, t) {
-		return typeof this.options.direction == "function" ? this.options.direction.call(this, e, t, X) : this.options.direction;
+		return typeof this.options.direction == "function" ? this.options.direction.call(this, e, t, Z) : this.options.direction;
 	},
 	_onTapStart: function(e) {
 		if (e.cancelable) {
 			var t = this, n = this.el, r = this.options, i = r.preventOnFilter, a = e.type, o = e.touches && e.touches[0] || e.pointerType && e.pointerType === "touch" && e, s = (o || e).target, c = e.target.shadowRoot && (e.path && e.path[0] || e.composedPath && e.composedPath()[0]) || s, l = r.filter;
-			if (sd(n), !X && !(/mousedown|pointerdown/.test(a) && e.button !== 0 || r.disabled) && !c.isContentEditable && !(!this.nativeDraggable && wl && s && s.tagName.toUpperCase() === "SELECT") && (s = Al(s, r.draggable, n, !1), !(s && s.animated) && du !== s)) {
-				if (mu = Bl(s), gu = Bl(s, r.draggable), typeof l == "function") {
+			if (ld(n), !Z && !(/mousedown|pointerdown/.test(a) && e.button !== 0 || r.disabled) && !c.isContentEditable && !(!this.nativeDraggable && Tl && s && s.tagName.toUpperCase() === "SELECT") && (s = jl(s, r.draggable, n, !1), !(s && s.animated) && pu !== s)) {
+				if (gu = Vl(s), vu = Vl(s, r.draggable), typeof l == "function") {
 					if (l.call(this, e, s, this)) {
-						cu({
+						lu({
 							sortable: t,
 							rootEl: c,
 							name: "filter",
 							targetEl: s,
 							toEl: n,
 							fromEl: n
-						}), su("filter", t, { evt: e }), i && e.preventDefault();
+						}), cu("filter", t, { evt: e }), i && e.preventDefault();
 						return;
 					}
 				} else if (l && (l = l.split(",").some(function(r) {
-					if (r = Al(c, r.trim(), n, !1), r) return cu({
+					if (r = jl(c, r.trim(), n, !1), r) return lu({
 						sortable: t,
 						rootEl: r,
 						name: "filter",
 						targetEl: s,
 						fromEl: n,
 						toEl: n
-					}), su("filter", t, { evt: e }), !0;
+					}), cu("filter", t, { evt: e }), !0;
 				}), l)) {
 					i && e.preventDefault();
 					return;
 				}
-				(!r.handle || Al(c, r.handle, n, !1)) && this._prepareDragStart(e, o, s);
+				(!r.handle || jl(c, r.handle, n, !1)) && this._prepareDragStart(e, o, s);
 			}
 		}
 	},
 	_prepareDragStart: function(e, t, n) {
 		var r = this, i = r.el, a = r.options, o = i.ownerDocument, s;
-		if (n && !X && n.parentNode === i) {
-			var c = Il(n);
-			if (Q = i, X = n, lu = X.parentNode, uu = X.nextSibling, du = n, vu = a.group, $.dragged = X, Cu = {
-				target: X,
+		if (n && !Z && n.parentNode === i) {
+			var c = Ll(n);
+			if (du = i, Z = n, uu = Z.parentNode, fu = Z.nextSibling, pu = n, bu = a.group, $.dragged = Z, Tu = {
+				target: Z,
 				clientX: (t || e).clientX,
 				clientY: (t || e).clientY
-			}, Du = Cu.clientX - c.left, Ou = Cu.clientY - c.top, this._lastX = (t || e).clientX, this._lastY = (t || e).clientY, X.style["will-change"] = "all", s = function() {
-				if (su("delayEnded", r, { evt: e }), $.eventCanceled) {
+			}, ku = Tu.clientX - c.left, Au = Tu.clientY - c.top, this._lastX = (t || e).clientX, this._lastY = (t || e).clientY, Z.style["will-change"] = "all", s = function() {
+				if (cu("delayEnded", r, { evt: e }), $.eventCanceled) {
 					r._onDrop();
 					return;
 				}
-				r._disableDelayedDragEvents(), !Cl && r.nativeDraggable && (X.draggable = !0), r._triggerDragStart(e, t), cu({
+				r._disableDelayedDragEvents(), !wl && r.nativeDraggable && (Z.draggable = !0), r._triggerDragStart(e, t), lu({
 					sortable: r,
 					name: "choose",
 					originalEvent: e
-				}), Ml(X, a.chosenClass, !0);
+				}), Nl(Z, a.chosenClass, !0);
 			}, a.ignore.split(",").forEach(function(e) {
-				Pl(X, e.trim(), ed);
-			}), q(o, "dragover", Xu), q(o, "mousemove", Xu), q(o, "touchmove", Xu), a.supportPointer ? (q(o, "pointerup", r._onDrop), !this.nativeDraggable && q(o, "pointercancel", r._onDrop)) : (q(o, "mouseup", r._onDrop), q(o, "touchend", r._onDrop), q(o, "touchcancel", r._onDrop)), Cl && this.nativeDraggable && (this.options.touchStartThreshold = 4, X.draggable = !0), su("delayStart", this, { evt: e }), a.delay && (!a.delayOnTouchOnly || t) && (!this.nativeDraggable || !(Sl || xl))) {
+				Fl(Z, e.trim(), nd);
+			}), J(o, "dragover", Qu), J(o, "mousemove", Qu), J(o, "touchmove", Qu), a.supportPointer ? (J(o, "pointerup", r._onDrop), !this.nativeDraggable && J(o, "pointercancel", r._onDrop)) : (J(o, "mouseup", r._onDrop), J(o, "touchend", r._onDrop), J(o, "touchcancel", r._onDrop)), wl && this.nativeDraggable && (this.options.touchStartThreshold = 4, Z.draggable = !0), cu("delayStart", this, { evt: e }), a.delay && (!a.delayOnTouchOnly || t) && (!this.nativeDraggable || !(Cl || Sl))) {
 				if ($.eventCanceled) {
 					this._onDrop();
 					return;
 				}
-				a.supportPointer ? (q(o, "pointerup", r._disableDelayedDrag), q(o, "pointercancel", r._disableDelayedDrag)) : (q(o, "mouseup", r._disableDelayedDrag), q(o, "touchend", r._disableDelayedDrag), q(o, "touchcancel", r._disableDelayedDrag)), q(o, "mousemove", r._delayedDragTouchMoveHandler), q(o, "touchmove", r._delayedDragTouchMoveHandler), a.supportPointer && q(o, "pointermove", r._delayedDragTouchMoveHandler), r._dragStartTimer = setTimeout(s, a.delay);
+				a.supportPointer ? (J(o, "pointerup", r._disableDelayedDrag), J(o, "pointercancel", r._disableDelayedDrag)) : (J(o, "mouseup", r._disableDelayedDrag), J(o, "touchend", r._disableDelayedDrag), J(o, "touchcancel", r._disableDelayedDrag)), J(o, "mousemove", r._delayedDragTouchMoveHandler), J(o, "touchmove", r._delayedDragTouchMoveHandler), a.supportPointer && J(o, "pointermove", r._delayedDragTouchMoveHandler), r._dragStartTimer = setTimeout(s, a.delay);
 			} else s();
 		}
 	},
@@ -6473,25 +6567,25 @@ $.prototype = {
 		Math.max(Math.abs(t.clientX - this._lastX), Math.abs(t.clientY - this._lastY)) >= Math.floor(this.options.touchStartThreshold / (this.nativeDraggable && window.devicePixelRatio || 1)) && this._disableDelayedDrag();
 	},
 	_disableDelayedDrag: function() {
-		X && ed(X), clearTimeout(this._dragStartTimer), this._disableDelayedDragEvents();
+		Z && nd(Z), clearTimeout(this._dragStartTimer), this._disableDelayedDragEvents();
 	},
 	_disableDelayedDragEvents: function() {
 		var e = this.el.ownerDocument;
-		J(e, "mouseup", this._disableDelayedDrag), J(e, "touchend", this._disableDelayedDrag), J(e, "touchcancel", this._disableDelayedDrag), J(e, "pointerup", this._disableDelayedDrag), J(e, "pointercancel", this._disableDelayedDrag), J(e, "mousemove", this._delayedDragTouchMoveHandler), J(e, "touchmove", this._delayedDragTouchMoveHandler), J(e, "pointermove", this._delayedDragTouchMoveHandler);
+		Y(e, "mouseup", this._disableDelayedDrag), Y(e, "touchend", this._disableDelayedDrag), Y(e, "touchcancel", this._disableDelayedDrag), Y(e, "pointerup", this._disableDelayedDrag), Y(e, "pointercancel", this._disableDelayedDrag), Y(e, "mousemove", this._delayedDragTouchMoveHandler), Y(e, "touchmove", this._delayedDragTouchMoveHandler), Y(e, "pointermove", this._delayedDragTouchMoveHandler);
 	},
 	_triggerDragStart: function(e, t) {
-		t ||= e.pointerType == "touch" && e, !this.nativeDraggable || t ? this.options.supportPointer ? q(document, "pointermove", this._onTouchMove) : t ? q(document, "touchmove", this._onTouchMove) : q(document, "mousemove", this._onTouchMove) : (q(X, "dragend", this), q(Q, "dragstart", this._onDragStart));
+		t ||= e.pointerType == "touch" && e, !this.nativeDraggable || t ? this.options.supportPointer ? J(document, "pointermove", this._onTouchMove) : t ? J(document, "touchmove", this._onTouchMove) : J(document, "mousemove", this._onTouchMove) : (J(Z, "dragend", this), J(du, "dragstart", this._onDragStart));
 		try {
-			document.selection ? cd(function() {
+			document.selection ? ud(function() {
 				document.selection.empty();
 			}) : window.getSelection().removeAllRanges();
 		} catch {}
 	},
 	_dragStarted: function(e, t) {
-		if (bu = !1, Q && X) {
-			su("dragStarted", this, { evt: t }), this.nativeDraggable && q(document, "dragover", Zu);
+		if (Su = !1, du && Z) {
+			cu("dragStarted", this, { evt: t }), this.nativeDraggable && J(document, "dragover", $u);
 			var n = this.options;
-			!e && Ml(X, n.dragClass, !1), Ml(X, n.ghostClass, !0), $.active = this, e && this._appendGhost(), cu({
+			!e && Nl(Z, n.dragClass, !1), Nl(Z, n.ghostClass, !0), $.active = this, e && this._appendGhost(), lu({
 				sortable: this,
 				name: "start",
 				originalEvent: t
@@ -6499,33 +6593,33 @@ $.prototype = {
 		} else this._nulling();
 	},
 	_emulateDragOver: function() {
-		if (wu) {
-			this._lastX = wu.clientX, this._lastY = wu.clientY, Ju();
-			for (var e = document.elementFromPoint(wu.clientX, wu.clientY), t = e; e && e.shadowRoot && (e = e.shadowRoot.elementFromPoint(wu.clientX, wu.clientY), e !== t);) t = e;
-			if (X.parentNode[Ql]._isOutsideThisEl(e), t) do {
-				if (t[Ql]) {
+		if (Eu) {
+			this._lastX = Eu.clientX, this._lastY = Eu.clientY, Xu();
+			for (var e = document.elementFromPoint(Eu.clientX, Eu.clientY), t = e; e && e.shadowRoot && (e = e.shadowRoot.elementFromPoint(Eu.clientX, Eu.clientY), e !== t);) t = e;
+			if (Z.parentNode[$l]._isOutsideThisEl(e), t) do {
+				if (t[$l]) {
 					var n = void 0;
-					if (n = t[Ql]._onDragOver({
-						clientX: wu.clientX,
-						clientY: wu.clientY,
+					if (n = t[$l]._onDragOver({
+						clientX: Eu.clientX,
+						clientY: Eu.clientY,
 						target: e,
 						rootEl: t
 					}), n && !this.options.dragoverBubble) break;
 				}
 				e = t;
-			} while (t = kl(t));
-			Yu();
+			} while (t = Al(t));
+			Zu();
 		}
 	},
 	_onTouchMove: function(e) {
-		if (Cu) {
-			var t = this.options, n = t.fallbackTolerance, r = t.fallbackOffset, i = e.touches ? e.touches[0] : e, a = Z && Nl(Z, !0), o = Z && a && a.a, s = Z && a && a.d, c = Bu && Fu && Vl(Fu), l = (i.clientX - Cu.clientX + r.x) / (o || 1) + (c ? c[0] - Iu[0] : 0) / (o || 1), u = (i.clientY - Cu.clientY + r.y) / (s || 1) + (c ? c[1] - Iu[1] : 0) / (s || 1);
-			if (!$.active && !bu) {
+		if (Tu) {
+			var t = this.options, n = t.fallbackTolerance, r = t.fallbackOffset, i = e.touches ? e.touches[0] : e, a = Q && Pl(Q, !0), o = Q && a && a.a, s = Q && a && a.d, c = Hu && Lu && Hl(Lu), l = (i.clientX - Tu.clientX + r.x) / (o || 1) + (c ? c[0] - Ru[0] : 0) / (o || 1), u = (i.clientY - Tu.clientY + r.y) / (s || 1) + (c ? c[1] - Ru[1] : 0) / (s || 1);
+			if (!$.active && !Su) {
 				if (n && Math.max(Math.abs(i.clientX - this._lastX), Math.abs(i.clientY - this._lastY)) < n) return;
 				this._onDragStart(e, !0);
 			}
-			if (Z) {
-				a ? (a.e += l - (Tu || 0), a.f += u - (Eu || 0)) : a = {
+			if (Q) {
+				a ? (a.e += l - (Du || 0), a.f += u - (Ou || 0)) : a = {
 					a: 1,
 					b: 0,
 					c: 0,
@@ -6534,39 +6628,39 @@ $.prototype = {
 					f: u
 				};
 				var d = `matrix(${a.a},${a.b},${a.c},${a.d},${a.e},${a.f})`;
-				Y(Z, "webkitTransform", d), Y(Z, "mozTransform", d), Y(Z, "msTransform", d), Y(Z, "transform", d), Tu = l, Eu = u, wu = i;
+				X(Q, "webkitTransform", d), X(Q, "mozTransform", d), X(Q, "msTransform", d), X(Q, "transform", d), Du = l, Ou = u, Eu = i;
 			}
 			e.cancelable && e.preventDefault();
 		}
 	},
 	_appendGhost: function() {
-		if (!Z) {
-			var e = this.options.fallbackOnBody ? document.body : Q, t = Il(X, !0, Bu, !0, e), n = this.options;
-			if (Bu) {
-				for (Fu = e; Y(Fu, "position") === "static" && Y(Fu, "transform") === "none" && Fu !== document;) Fu = Fu.parentNode;
-				Fu !== document.body && Fu !== document.documentElement ? (Fu === document && (Fu = Fl()), t.top += Fu.scrollTop, t.left += Fu.scrollLeft) : Fu = Fl(), Iu = Vl(Fu);
+		if (!Q) {
+			var e = this.options.fallbackOnBody ? document.body : du, t = Ll(Z, !0, Hu, !0, e), n = this.options;
+			if (Hu) {
+				for (Lu = e; X(Lu, "position") === "static" && X(Lu, "transform") === "none" && Lu !== document;) Lu = Lu.parentNode;
+				Lu !== document.body && Lu !== document.documentElement ? (Lu === document && (Lu = Il()), t.top += Lu.scrollTop, t.left += Lu.scrollLeft) : Lu = Il(), Ru = Hl(Lu);
 			}
-			Z = X.cloneNode(!0), Ml(Z, n.ghostClass, !1), Ml(Z, n.fallbackClass, !0), Ml(Z, n.dragClass, !0), Y(Z, "transition", ""), Y(Z, "transform", ""), Y(Z, "box-sizing", "border-box"), Y(Z, "margin", 0), Y(Z, "top", t.top), Y(Z, "left", t.left), Y(Z, "width", t.width), Y(Z, "height", t.height), Y(Z, "opacity", "0.8"), Y(Z, "position", Bu ? "absolute" : "fixed"), Y(Z, "zIndex", "100000"), Y(Z, "pointerEvents", "none"), $.ghost = Z, e.appendChild(Z), Y(Z, "transform-origin", Du / parseInt(Z.style.width) * 100 + "% " + Ou / parseInt(Z.style.height) * 100 + "%");
+			Q = Z.cloneNode(!0), Nl(Q, n.ghostClass, !1), Nl(Q, n.fallbackClass, !0), Nl(Q, n.dragClass, !0), X(Q, "transition", ""), X(Q, "transform", ""), X(Q, "box-sizing", "border-box"), X(Q, "margin", 0), X(Q, "top", t.top), X(Q, "left", t.left), X(Q, "width", t.width), X(Q, "height", t.height), X(Q, "opacity", "0.8"), X(Q, "position", Hu ? "absolute" : "fixed"), X(Q, "zIndex", "100000"), X(Q, "pointerEvents", "none"), $.ghost = Q, e.appendChild(Q), X(Q, "transform-origin", ku / parseInt(Q.style.width) * 100 + "% " + Au / parseInt(Q.style.height) * 100 + "%");
 		}
 	},
 	_onDragStart: function(e, t) {
 		var n = this, r = e.dataTransfer, i = n.options;
-		if (su("dragStart", this, { evt: e }), $.eventCanceled) {
+		if (cu("dragStart", this, { evt: e }), $.eventCanceled) {
 			this._onDrop();
 			return;
 		}
-		su("setupClone", this), $.eventCanceled || (fu = Xl(X), fu.removeAttribute("id"), fu.draggable = !1, fu.style["will-change"] = "", this._hideClone(), Ml(fu, this.options.chosenClass, !1), $.clone = fu), n.cloneId = cd(function() {
-			su("clone", n), !$.eventCanceled && (n.options.removeCloneOnHide || Q.insertBefore(fu, X), n._hideClone(), cu({
+		cu("setupClone", this), $.eventCanceled || (mu = Zl(Z), mu.removeAttribute("id"), mu.draggable = !1, mu.style["will-change"] = "", this._hideClone(), Nl(mu, this.options.chosenClass, !1), $.clone = mu), n.cloneId = ud(function() {
+			cu("clone", n), !$.eventCanceled && (n.options.removeCloneOnHide || du.insertBefore(mu, Z), n._hideClone(), lu({
 				sortable: n,
 				name: "clone"
 			}));
-		}), !t && Ml(X, i.dragClass, !0), t ? (xu = !0, n._loopId = setInterval(n._emulateDragOver, 50)) : (J(document, "mouseup", n._onDrop), J(document, "touchend", n._onDrop), J(document, "touchcancel", n._onDrop), r && (r.effectAllowed = "move", i.setData && i.setData.call(n, r, X)), q(document, "drop", n), Y(X, "transform", "translateZ(0)")), bu = !0, n._dragStartId = cd(n._dragStarted.bind(n, t, e)), q(document, "selectstart", n), ku = !0, window.getSelection().removeAllRanges(), wl && Y(document.body, "user-select", "none");
+		}), !t && Nl(Z, i.dragClass, !0), t ? (Cu = !0, n._loopId = setInterval(n._emulateDragOver, 50)) : (Y(document, "mouseup", n._onDrop), Y(document, "touchend", n._onDrop), Y(document, "touchcancel", n._onDrop), r && (r.effectAllowed = "move", i.setData && i.setData.call(n, r, Z)), J(document, "drop", n), X(Z, "transform", "translateZ(0)")), Su = !0, n._dragStartId = ud(n._dragStarted.bind(n, t, e)), J(document, "selectstart", n), ju = !0, window.getSelection().removeAllRanges(), Tl && X(document.body, "user-select", "none");
 	},
 	_onDragOver: function(e) {
-		var t = this.el, n = e.target, r, i, a, o = this.options, s = o.group, c = $.active, l = vu === s, u = o.sort, d = yu || c, f, p = this, m = !1;
-		if (Lu) return;
+		var t = this.el, n = e.target, r, i, a, o = this.options, s = o.group, c = $.active, l = bu === s, u = o.sort, d = xu || c, f, p = this, m = !1;
+		if (zu) return;
 		function h(o, s) {
-			su(o, p, pl({
+			cu(o, p, ml({
 				evt: e,
 				isOwner: l,
 				axis: f ? "vertical" : "horizontal",
@@ -6578,7 +6672,7 @@ $.prototype = {
 				target: n,
 				completed: _,
 				onMove: function(n, i) {
-					return $u(Q, t, X, r, n, Il(n), e, i);
+					return td(du, t, Z, r, n, Ll(n), e, i);
 				},
 				changed: v
 			}, s));
@@ -6587,121 +6681,121 @@ $.prototype = {
 			h("dragOverAnimationCapture"), p.captureAnimationState(), p !== d && d.captureAnimationState();
 		}
 		function _(r) {
-			return h("dragOverCompleted", { insertion: r }), r && (l ? c._hideClone() : c._showClone(p), p !== d && (Ml(X, yu ? yu.options.ghostClass : c.options.ghostClass, !1), Ml(X, o.ghostClass, !0)), yu !== p && p !== $.active ? yu = p : p === $.active && yu && (yu = null), d === p && (p._ignoreWhileAnimating = n), p.animateAll(function() {
+			return h("dragOverCompleted", { insertion: r }), r && (l ? c._hideClone() : c._showClone(p), p !== d && (Nl(Z, xu ? xu.options.ghostClass : c.options.ghostClass, !1), Nl(Z, o.ghostClass, !0)), xu !== p && p !== $.active ? xu = p : p === $.active && xu && (xu = null), d === p && (p._ignoreWhileAnimating = n), p.animateAll(function() {
 				h("dragOverAnimationComplete"), p._ignoreWhileAnimating = null;
-			}), p !== d && (d.animateAll(), d._ignoreWhileAnimating = null)), (n === X && !X.animated || n === t && !n.animated) && (Au = null), !o.dragoverBubble && !e.rootEl && n !== document && (X.parentNode[Ql]._isOutsideThisEl(e.target), !r && Xu(e)), !o.dragoverBubble && e.stopPropagation && e.stopPropagation(), m = !0;
+			}), p !== d && (d.animateAll(), d._ignoreWhileAnimating = null)), (n === Z && !Z.animated || n === t && !n.animated) && (Mu = null), !o.dragoverBubble && !e.rootEl && n !== document && (Z.parentNode[$l]._isOutsideThisEl(e.target), !r && Qu(e)), !o.dragoverBubble && e.stopPropagation && e.stopPropagation(), m = !0;
 		}
 		function v() {
-			hu = Bl(X), _u = Bl(X, o.draggable), cu({
+			_u = Vl(Z), yu = Vl(Z, o.draggable), lu({
 				sortable: p,
 				name: "change",
 				toEl: t,
-				newIndex: hu,
-				newDraggableIndex: _u,
+				newIndex: _u,
+				newDraggableIndex: yu,
 				originalEvent: e
 			});
 		}
-		if (e.preventDefault !== void 0 && e.cancelable && e.preventDefault(), n = Al(n, o.draggable, t, !0), h("dragOver"), $.eventCanceled) return m;
-		if (X.contains(e.target) || n.animated && n.animatingX && n.animatingY || p._ignoreWhileAnimating === n) return _(!1);
-		if (xu = !1, c && !o.disabled && (l ? u || (a = lu !== Q) : yu === this || (this.lastPutMode = vu.checkPull(this, c, X, e)) && s.checkPut(this, c, X, e))) {
-			if (f = this._getDirection(e, n) === "vertical", r = Il(X), h("dragOverValid"), $.eventCanceled) return m;
-			if (a) return lu = Q, g(), this._hideClone(), h("revert"), $.eventCanceled || (uu ? Q.insertBefore(X, uu) : Q.appendChild(X)), _(!0);
-			var y = zl(t, o.draggable);
-			if (!y || rd(e, f, this) && !y.animated) {
-				if (y === X) return _(!1);
-				if (y && t === e.target && (n = y), n && (i = Il(n)), $u(Q, t, X, r, n, i, e, !!n) !== !1) return g(), y && y.nextSibling ? t.insertBefore(X, y.nextSibling) : t.appendChild(X), lu = t, v(), _(!0);
-			} else if (y && nd(e, f, this)) {
-				var b = Rl(t, 0, o, !0);
-				if (b === X) return _(!1);
-				if (n = b, i = Il(n), $u(Q, t, X, r, n, i, e, !1) !== !1) return g(), t.insertBefore(X, b), lu = t, v(), _(!0);
+		if (e.preventDefault !== void 0 && e.cancelable && e.preventDefault(), n = jl(n, o.draggable, t, !0), h("dragOver"), $.eventCanceled) return m;
+		if (Z.contains(e.target) || n.animated && n.animatingX && n.animatingY || p._ignoreWhileAnimating === n) return _(!1);
+		if (Cu = !1, c && !o.disabled && (l ? u || (a = uu !== du) : xu === this || (this.lastPutMode = bu.checkPull(this, c, Z, e)) && s.checkPut(this, c, Z, e))) {
+			if (f = this._getDirection(e, n) === "vertical", r = Ll(Z), h("dragOverValid"), $.eventCanceled) return m;
+			if (a) return uu = du, g(), this._hideClone(), h("revert"), $.eventCanceled || (fu ? du.insertBefore(Z, fu) : du.appendChild(Z)), _(!0);
+			var y = Bl(t, o.draggable);
+			if (!y || ad(e, f, this) && !y.animated) {
+				if (y === Z) return _(!1);
+				if (y && t === e.target && (n = y), n && (i = Ll(n)), td(du, t, Z, r, n, i, e, !!n) !== !1) return g(), y && y.nextSibling ? t.insertBefore(Z, y.nextSibling) : t.appendChild(Z), uu = t, v(), _(!0);
+			} else if (y && id(e, f, this)) {
+				var b = zl(t, 0, o, !0);
+				if (b === Z) return _(!1);
+				if (n = b, i = Ll(n), td(du, t, Z, r, n, i, e, !1) !== !1) return g(), t.insertBefore(Z, b), uu = t, v(), _(!0);
 			} else if (n.parentNode === t) {
-				i = Il(n);
-				var x = 0, S, C = X.parentNode !== t, w = !Gu(X.animated && X.toRect || r, n.animated && n.toRect || i, f), T = f ? "top" : "left", E = Ll(n, "top", "top") || Ll(X, "top", "top"), D = E ? E.scrollTop : void 0;
-				Au !== n && (S = i[T], Mu = !1, Nu = !w && o.invertSwap || C), x = id(e, n, i, f, w ? 1 : o.swapThreshold, o.invertedSwapThreshold == null ? o.swapThreshold : o.invertedSwapThreshold, Nu, Au === n);
+				i = Ll(n);
+				var x = 0, S, C = Z.parentNode !== t, w = !qu(Z.animated && Z.toRect || r, n.animated && n.toRect || i, f), T = f ? "top" : "left", E = Rl(n, "top", "top") || Rl(Z, "top", "top"), D = E ? E.scrollTop : void 0;
+				Mu !== n && (S = i[T], Pu = !1, Fu = !w && o.invertSwap || C), x = od(e, n, i, f, w ? 1 : o.swapThreshold, o.invertedSwapThreshold == null ? o.swapThreshold : o.invertedSwapThreshold, Fu, Mu === n);
 				var O;
 				if (x !== 0) {
-					var k = Bl(X);
+					var k = Vl(Z);
 					do
-						k -= x, O = lu.children[k];
-					while (O && (Y(O, "display") === "none" || O === Z));
+						k -= x, O = uu.children[k];
+					while (O && (X(O, "display") === "none" || O === Q));
 				}
 				if (x === 0 || O === n) return _(!1);
-				Au = n, ju = x;
+				Mu = n, Nu = x;
 				var A = n.nextElementSibling, j = !1;
 				j = x === 1;
-				var M = $u(Q, t, X, r, n, i, e, j);
-				if (M !== !1) return (M === 1 || M === -1) && (j = M === 1), Lu = !0, setTimeout(td, 30), g(), j && !A ? t.appendChild(X) : n.parentNode.insertBefore(X, j ? A : n), E && Yl(E, 0, D - E.scrollTop), lu = X.parentNode, S !== void 0 && !Nu && (Pu = Math.abs(S - Il(n)[T])), v(), _(!0);
+				var M = td(du, t, Z, r, n, i, e, j);
+				if (M !== !1) return (M === 1 || M === -1) && (j = M === 1), zu = !0, setTimeout(rd, 30), g(), j && !A ? t.appendChild(Z) : n.parentNode.insertBefore(Z, j ? A : n), E && Xl(E, 0, D - E.scrollTop), uu = Z.parentNode, S !== void 0 && !Fu && (Iu = Math.abs(S - Ll(n)[T])), v(), _(!0);
 			}
-			if (t.contains(X)) return _(!1);
+			if (t.contains(Z)) return _(!1);
 		}
 		return !1;
 	},
 	_ignoreWhileAnimating: null,
 	_offMoveEvents: function() {
-		J(document, "mousemove", this._onTouchMove), J(document, "touchmove", this._onTouchMove), J(document, "pointermove", this._onTouchMove), J(document, "dragover", Xu), J(document, "mousemove", Xu), J(document, "touchmove", Xu);
+		Y(document, "mousemove", this._onTouchMove), Y(document, "touchmove", this._onTouchMove), Y(document, "pointermove", this._onTouchMove), Y(document, "dragover", Qu), Y(document, "mousemove", Qu), Y(document, "touchmove", Qu);
 	},
 	_offUpEvents: function() {
 		var e = this.el.ownerDocument;
-		J(e, "mouseup", this._onDrop), J(e, "touchend", this._onDrop), J(e, "pointerup", this._onDrop), J(e, "pointercancel", this._onDrop), J(e, "touchcancel", this._onDrop), J(document, "selectstart", this);
+		Y(e, "mouseup", this._onDrop), Y(e, "touchend", this._onDrop), Y(e, "pointerup", this._onDrop), Y(e, "pointercancel", this._onDrop), Y(e, "touchcancel", this._onDrop), Y(document, "selectstart", this);
 	},
 	_onDrop: function(e) {
 		var t = this.el, n = this.options;
-		if (hu = Bl(X), _u = Bl(X, n.draggable), su("drop", this, { evt: e }), lu = X && X.parentNode, hu = Bl(X), _u = Bl(X, n.draggable), $.eventCanceled) {
+		if (_u = Vl(Z), yu = Vl(Z, n.draggable), cu("drop", this, { evt: e }), uu = Z && Z.parentNode, _u = Vl(Z), yu = Vl(Z, n.draggable), $.eventCanceled) {
 			this._nulling();
 			return;
 		}
-		bu = !1, Nu = !1, Mu = !1, clearInterval(this._loopId), clearTimeout(this._dragStartTimer), ld(this.cloneId), ld(this._dragStartId), this.nativeDraggable && (J(document, "drop", this), J(t, "dragstart", this._onDragStart)), this._offMoveEvents(), this._offUpEvents(), wl && Y(document.body, "user-select", ""), Y(X, "transform", ""), e && (ku && (e.cancelable && e.preventDefault(), !n.dropBubble && e.stopPropagation()), Z && Z.parentNode && Z.parentNode.removeChild(Z), (Q === lu || yu && yu.lastPutMode !== "clone") && fu && fu.parentNode && fu.parentNode.removeChild(fu), X && (this.nativeDraggable && J(X, "dragend", this), ed(X), X.style["will-change"] = "", ku && !bu && Ml(X, yu ? yu.options.ghostClass : this.options.ghostClass, !1), Ml(X, this.options.chosenClass, !1), cu({
+		Su = !1, Fu = !1, Pu = !1, clearInterval(this._loopId), clearTimeout(this._dragStartTimer), dd(this.cloneId), dd(this._dragStartId), this.nativeDraggable && (Y(document, "drop", this), Y(t, "dragstart", this._onDragStart)), this._offMoveEvents(), this._offUpEvents(), Tl && X(document.body, "user-select", ""), X(Z, "transform", ""), e && (ju && (e.cancelable && e.preventDefault(), !n.dropBubble && e.stopPropagation()), Q && Q.parentNode && Q.parentNode.removeChild(Q), (du === uu || xu && xu.lastPutMode !== "clone") && mu && mu.parentNode && mu.parentNode.removeChild(mu), Z && (this.nativeDraggable && Y(Z, "dragend", this), nd(Z), Z.style["will-change"] = "", ju && !Su && Nl(Z, xu ? xu.options.ghostClass : this.options.ghostClass, !1), Nl(Z, this.options.chosenClass, !1), lu({
 			sortable: this,
 			name: "unchoose",
-			toEl: lu,
+			toEl: uu,
 			newIndex: null,
 			newDraggableIndex: null,
 			originalEvent: e
-		}), Q === lu ? hu !== mu && hu >= 0 && (cu({
+		}), du === uu ? _u !== gu && _u >= 0 && (lu({
 			sortable: this,
 			name: "update",
-			toEl: lu,
+			toEl: uu,
 			originalEvent: e
-		}), cu({
+		}), lu({
 			sortable: this,
 			name: "sort",
-			toEl: lu,
+			toEl: uu,
 			originalEvent: e
-		})) : (hu >= 0 && (cu({
-			rootEl: lu,
+		})) : (_u >= 0 && (lu({
+			rootEl: uu,
 			name: "add",
-			toEl: lu,
-			fromEl: Q,
+			toEl: uu,
+			fromEl: du,
 			originalEvent: e
-		}), cu({
+		}), lu({
 			sortable: this,
 			name: "remove",
-			toEl: lu,
+			toEl: uu,
 			originalEvent: e
-		}), cu({
-			rootEl: lu,
+		}), lu({
+			rootEl: uu,
 			name: "sort",
-			toEl: lu,
-			fromEl: Q,
+			toEl: uu,
+			fromEl: du,
 			originalEvent: e
-		}), cu({
+		}), lu({
 			sortable: this,
 			name: "sort",
-			toEl: lu,
+			toEl: uu,
 			originalEvent: e
-		})), yu && yu.save()), $.active && ((hu == null || hu === -1) && (hu = mu, _u = gu), cu({
+		})), xu && xu.save()), $.active && ((_u == null || _u === -1) && (_u = gu, yu = vu), lu({
 			sortable: this,
 			name: "end",
-			toEl: lu,
+			toEl: uu,
 			originalEvent: e
 		}), this.save()))), this._nulling();
 	},
 	_nulling: function() {
-		su("nulling", this), Q = X = lu = Z = uu = fu = du = pu = Cu = wu = ku = hu = _u = mu = gu = Au = ju = yu = vu = $.dragged = $.ghost = $.clone = $.active = null;
+		cu("nulling", this), du = Z = uu = Q = fu = mu = pu = hu = Tu = Eu = ju = _u = yu = gu = vu = Mu = Nu = xu = bu = $.dragged = $.ghost = $.clone = $.active = null;
 		var e = this.el;
-		Ru.forEach(function(t) {
+		Bu.forEach(function(t) {
 			e.contains(t) && (t.checked = !0);
-		}), Ru.length = Tu = Eu = 0;
+		}), Bu.length = Du = Ou = 0;
 	},
 	handleEvent: function(e) {
 		switch (e.type) {
@@ -6711,20 +6805,20 @@ $.prototype = {
 				break;
 			case "dragenter":
 			case "dragover":
-				X && (this._onDragOver(e), Qu(e));
+				Z && (this._onDragOver(e), ed(e));
 				break;
 			case "selectstart": e.preventDefault();
 		}
 	},
 	toArray: function() {
-		for (var e = [], t, n = this.el.children, r = 0, i = n.length, a = this.options; r < i; r++) t = n[r], Al(t, a.draggable, this.el, !1) && e.push(t.getAttribute(a.dataIdAttr) || od(t));
+		for (var e = [], t, n = this.el.children, r = 0, i = n.length, a = this.options; r < i; r++) t = n[r], jl(t, a.draggable, this.el, !1) && e.push(t.getAttribute(a.dataIdAttr) || cd(t));
 		return e;
 	},
 	sort: function(e, t) {
 		var n = {}, r = this.el;
 		this.toArray().forEach(function(e, t) {
 			var i = r.children[t];
-			Al(i, this.options.draggable, r, !1) && (n[e] = i);
+			jl(i, this.options.draggable, r, !1) && (n[e] = i);
 		}, this), t && this.captureAnimationState(), e.forEach(function(e) {
 			n[e] && (r.removeChild(n[e]), r.appendChild(n[e]));
 		}), t && this.animateAll();
@@ -6734,25 +6828,25 @@ $.prototype = {
 		e && e.set && e.set(this);
 	},
 	closest: function(e, t) {
-		return Al(e, t || this.options.draggable, this.el, !1);
+		return jl(e, t || this.options.draggable, this.el, !1);
 	},
 	option: function(e, t) {
 		var n = this.options;
 		if (t === void 0) return n[e];
-		var r = iu.modifyOption(this, e, t);
-		n[e] = r === void 0 ? t : r, e === "group" && qu(n);
+		var r = au.modifyOption(this, e, t);
+		n[e] = r === void 0 ? t : r, e === "group" && Yu(n);
 	},
 	destroy: function() {
-		su("destroy", this);
+		cu("destroy", this);
 		var e = this.el;
-		e[Ql] = null, J(e, "mousedown", this._onTapStart), J(e, "touchstart", this._onTapStart), J(e, "pointerdown", this._onTapStart), this.nativeDraggable && (J(e, "dragover", this), J(e, "dragenter", this)), Array.prototype.forEach.call(e.querySelectorAll("[draggable]"), function(e) {
+		e[$l] = null, Y(e, "mousedown", this._onTapStart), Y(e, "touchstart", this._onTapStart), Y(e, "pointerdown", this._onTapStart), this.nativeDraggable && (Y(e, "dragover", this), Y(e, "dragenter", this)), Array.prototype.forEach.call(e.querySelectorAll("[draggable]"), function(e) {
 			e.removeAttribute("draggable");
-		}), this._onDrop(), this._disableDelayedDragEvents(), Su.splice(Su.indexOf(this.el), 1), this.el = e = null;
+		}), this._onDrop(), this._disableDelayedDragEvents(), wu.splice(wu.indexOf(this.el), 1), this.el = e = null;
 	},
 	_hideClone: function() {
-		if (!pu) {
-			if (su("hideClone", this), $.eventCanceled) return;
-			Y(fu, "display", "none"), this.options.removeCloneOnHide && fu.parentNode && fu.parentNode.removeChild(fu), pu = !0;
+		if (!hu) {
+			if (cu("hideClone", this), $.eventCanceled) return;
+			X(mu, "display", "none"), this.options.removeCloneOnHide && mu.parentNode && mu.parentNode.removeChild(mu), hu = !0;
 		}
 	},
 	_showClone: function(e) {
@@ -6760,100 +6854,100 @@ $.prototype = {
 			this._hideClone();
 			return;
 		}
-		if (pu) {
-			if (su("showClone", this), $.eventCanceled) return;
-			X.parentNode == Q && !this.options.group.revertClone ? Q.insertBefore(fu, X) : uu ? Q.insertBefore(fu, uu) : Q.appendChild(fu), this.options.group.revertClone && this.animate(X, fu), Y(fu, "display", ""), pu = !1;
+		if (hu) {
+			if (cu("showClone", this), $.eventCanceled) return;
+			Z.parentNode == du && !this.options.group.revertClone ? du.insertBefore(mu, Z) : fu ? du.insertBefore(mu, fu) : du.appendChild(mu), this.options.group.revertClone && this.animate(Z, mu), X(mu, "display", ""), hu = !1;
 		}
 	}
 };
-function Qu(e) {
+function ed(e) {
 	e.dataTransfer && (e.dataTransfer.dropEffect = "move"), e.cancelable && e.preventDefault();
 }
-function $u(e, t, n, r, i, a, o, s) {
-	var c, l = e[Ql], u = l.options.onMove, d;
-	return window.CustomEvent && !xl && !Sl ? c = new CustomEvent("move", {
+function td(e, t, n, r, i, a, o, s) {
+	var c, l = e[$l], u = l.options.onMove, d;
+	return window.CustomEvent && !Sl && !Cl ? c = new CustomEvent("move", {
 		bubbles: !0,
 		cancelable: !0
-	}) : (c = document.createEvent("Event"), c.initEvent("move", !0, !0)), c.to = t, c.from = e, c.dragged = n, c.draggedRect = r, c.related = i || t, c.relatedRect = a || Il(t), c.willInsertAfter = s, c.originalEvent = o, e.dispatchEvent(c), u && (d = u.call(l, c, o)), d;
+	}) : (c = document.createEvent("Event"), c.initEvent("move", !0, !0)), c.to = t, c.from = e, c.dragged = n, c.draggedRect = r, c.related = i || t, c.relatedRect = a || Ll(t), c.willInsertAfter = s, c.originalEvent = o, e.dispatchEvent(c), u && (d = u.call(l, c, o)), d;
 }
-function ed(e) {
+function nd(e) {
 	e.draggable = !1;
 }
-function td() {
-	Lu = !1;
+function rd() {
+	zu = !1;
 }
-function nd(e, t, n) {
-	var r = Il(Rl(n.el, 0, n.options, !0)), i = Zl(n.el, n.options, Z), a = 10;
+function id(e, t, n) {
+	var r = Ll(zl(n.el, 0, n.options, !0)), i = Ql(n.el, n.options, Q), a = 10;
 	return t ? e.clientX < i.left - a || e.clientY < r.top && e.clientX < r.right : e.clientY < i.top - a || e.clientY < r.bottom && e.clientX < r.left;
 }
-function rd(e, t, n) {
-	var r = Il(zl(n.el, n.options.draggable)), i = Zl(n.el, n.options, Z), a = 10;
+function ad(e, t, n) {
+	var r = Ll(Bl(n.el, n.options.draggable)), i = Ql(n.el, n.options, Q), a = 10;
 	return t ? e.clientX > i.right + a || e.clientY > r.bottom && e.clientX > r.left : e.clientY > i.bottom + a || e.clientX > r.right && e.clientY > r.top;
 }
-function id(e, t, n, r, i, a, o, s) {
+function od(e, t, n, r, i, a, o, s) {
 	var c = r ? e.clientY : e.clientX, l = r ? n.height : n.width, u = r ? n.top : n.left, d = r ? n.bottom : n.right, f = !1;
 	if (!o) {
-		if (s && Pu < l * i) {
-			if (!Mu && (ju === 1 ? c > u + l * a / 2 : c < d - l * a / 2) && (Mu = !0), Mu) f = !0;
-			else if (ju === 1 ? c < u + Pu : c > d - Pu) return -ju;
-		} else if (c > u + l * (1 - i) / 2 && c < d - l * (1 - i) / 2) return ad(t);
+		if (s && Iu < l * i) {
+			if (!Pu && (Nu === 1 ? c > u + l * a / 2 : c < d - l * a / 2) && (Pu = !0), Pu) f = !0;
+			else if (Nu === 1 ? c < u + Iu : c > d - Iu) return -Nu;
+		} else if (c > u + l * (1 - i) / 2 && c < d - l * (1 - i) / 2) return sd(t);
 	}
 	return f ||= o, f && (c < u + l * a / 2 || c > d - l * a / 2) ? c > u + l / 2 ? 1 : -1 : 0;
 }
-function ad(e) {
-	return Bl(X) < Bl(e) ? 1 : -1;
+function sd(e) {
+	return Vl(Z) < Vl(e) ? 1 : -1;
 }
-function od(e) {
+function cd(e) {
 	for (var t = e.tagName + e.className + e.src + e.href + e.textContent, n = t.length, r = 0; n--;) r += t.charCodeAt(n);
 	return r.toString(36);
 }
-function sd(e) {
-	Ru.length = 0;
+function ld(e) {
+	Bu.length = 0;
 	for (var t = e.getElementsByTagName("input"), n = t.length; n--;) {
 		var r = t[n];
-		r.checked && Ru.push(r);
+		r.checked && Bu.push(r);
 	}
 }
-function cd(e) {
+function ud(e) {
 	return setTimeout(e, 0);
 }
-function ld(e) {
+function dd(e) {
 	return clearTimeout(e);
 }
-zu && q(document, "touchmove", function(e) {
-	($.active || bu) && e.cancelable && e.preventDefault();
+Vu && J(document, "touchmove", function(e) {
+	($.active || Su) && e.cancelable && e.preventDefault();
 }), $.utils = {
-	on: q,
-	off: J,
-	css: Y,
-	find: Pl,
+	on: J,
+	off: Y,
+	css: X,
+	find: Fl,
 	is: function(e, t) {
-		return !!Al(e, t, e, !1);
+		return !!jl(e, t, e, !1);
 	},
-	extend: Wl,
-	throttle: ql,
-	closest: Al,
-	toggleClass: Ml,
-	clone: Xl,
-	index: Bl,
-	nextTick: cd,
-	cancelNextTick: ld,
-	detectDirection: Wu,
-	getChild: Rl,
-	expando: Ql
+	extend: Gl,
+	throttle: Jl,
+	closest: jl,
+	toggleClass: Nl,
+	clone: Zl,
+	index: Vl,
+	nextTick: ud,
+	cancelNextTick: dd,
+	detectDirection: Ku,
+	getChild: zl,
+	expando: $l
 }, $.get = function(e) {
-	return e[Ql];
+	return e[$l];
 }, $.mount = function() {
 	var e = [...arguments];
 	e[0].constructor === Array && (e = e[0]), e.forEach(function(e) {
 		if (!e.prototype || !e.prototype.constructor) throw `Sortable: Mounted plugin must be a constructor function, not ${{}.toString.call(e)}`;
-		e.utils && ($.utils = pl(pl({}, $.utils), e.utils)), iu.mount(e);
+		e.utils && ($.utils = ml(ml({}, $.utils), e.utils)), au.mount(e);
 	});
 }, $.create = function(e, t) {
 	return new $(e, t);
-}, $.version = yl;
-var ud = [], dd, fd, pd = !1, md, hd, gd, _d;
-function vd() {
+}, $.version = bl;
+var fd = [], pd, md, hd = !1, gd, _d, vd, yd;
+function bd() {
 	function e() {
 		for (var e in this.defaults = {
 			scroll: !0,
@@ -6866,70 +6960,70 @@ function vd() {
 	return e.prototype = {
 		dragStarted: function(e) {
 			var t = e.originalEvent;
-			this.sortable.nativeDraggable ? q(document, "dragover", this._handleAutoScroll) : this.options.supportPointer ? q(document, "pointermove", this._handleFallbackAutoScroll) : t.touches ? q(document, "touchmove", this._handleFallbackAutoScroll) : q(document, "mousemove", this._handleFallbackAutoScroll);
+			this.sortable.nativeDraggable ? J(document, "dragover", this._handleAutoScroll) : this.options.supportPointer ? J(document, "pointermove", this._handleFallbackAutoScroll) : t.touches ? J(document, "touchmove", this._handleFallbackAutoScroll) : J(document, "mousemove", this._handleFallbackAutoScroll);
 		},
 		dragOverCompleted: function(e) {
 			var t = e.originalEvent;
 			!this.options.dragOverBubble && !t.rootEl && this._handleAutoScroll(t);
 		},
 		drop: function() {
-			this.sortable.nativeDraggable ? J(document, "dragover", this._handleAutoScroll) : (J(document, "pointermove", this._handleFallbackAutoScroll), J(document, "touchmove", this._handleFallbackAutoScroll), J(document, "mousemove", this._handleFallbackAutoScroll)), bd(), yd(), Jl();
+			this.sortable.nativeDraggable ? Y(document, "dragover", this._handleAutoScroll) : (Y(document, "pointermove", this._handleFallbackAutoScroll), Y(document, "touchmove", this._handleFallbackAutoScroll), Y(document, "mousemove", this._handleFallbackAutoScroll)), Sd(), xd(), Yl();
 		},
 		nulling: function() {
-			gd = fd = dd = pd = _d = md = hd = null, ud.length = 0;
+			vd = md = pd = hd = yd = gd = _d = null, fd.length = 0;
 		},
 		_handleFallbackAutoScroll: function(e) {
 			this._handleAutoScroll(e, !0);
 		},
 		_handleAutoScroll: function(e, t) {
 			var n = this, r = (e.touches ? e.touches[0] : e).clientX, i = (e.touches ? e.touches[0] : e).clientY, a = document.elementFromPoint(r, i);
-			if (gd = e, t || this.options.forceAutoScrollFallback || Sl || xl || wl) {
-				xd(e, this.options, a, t);
-				var o = Ul(a, !0);
-				pd && (!_d || r !== md || i !== hd) && (_d && bd(), _d = setInterval(function() {
-					var a = Ul(document.elementFromPoint(r, i), !0);
-					a !== o && (o = a, yd()), xd(e, n.options, a, t);
-				}, 10), md = r, hd = i);
+			if (vd = e, t || this.options.forceAutoScrollFallback || Cl || Sl || Tl) {
+				Cd(e, this.options, a, t);
+				var o = Wl(a, !0);
+				hd && (!yd || r !== gd || i !== _d) && (yd && Sd(), yd = setInterval(function() {
+					var a = Wl(document.elementFromPoint(r, i), !0);
+					a !== o && (o = a, xd()), Cd(e, n.options, a, t);
+				}, 10), gd = r, _d = i);
 			} else {
-				if (!this.options.bubbleScroll || Ul(a, !0) === Fl()) {
-					yd();
+				if (!this.options.bubbleScroll || Wl(a, !0) === Il()) {
+					xd();
 					return;
 				}
-				xd(e, this.options, Ul(a, !1), !1);
+				Cd(e, this.options, Wl(a, !1), !1);
 			}
 		}
-	}, dl(e, {
+	}, fl(e, {
 		pluginName: "scroll",
 		initializeByDefault: !0
 	});
 }
-function yd() {
-	ud.forEach(function(e) {
+function xd() {
+	fd.forEach(function(e) {
 		clearInterval(e.pid);
-	}), ud = [];
+	}), fd = [];
 }
-function bd() {
-	clearInterval(_d);
+function Sd() {
+	clearInterval(yd);
 }
-var xd = ql(function(e, t, n, r) {
+var Cd = Jl(function(e, t, n, r) {
 	if (t.scroll) {
-		var i = (e.touches ? e.touches[0] : e).clientX, a = (e.touches ? e.touches[0] : e).clientY, o = t.scrollSensitivity, s = t.scrollSpeed, c = Fl(), l = !1, u;
-		fd !== n && (fd = n, yd(), dd = t.scroll, u = t.scrollFn, dd === !0 && (dd = Ul(n, !0)));
-		var d = 0, f = dd;
+		var i = (e.touches ? e.touches[0] : e).clientX, a = (e.touches ? e.touches[0] : e).clientY, o = t.scrollSensitivity, s = t.scrollSpeed, c = Il(), l = !1, u;
+		md !== n && (md = n, xd(), pd = t.scroll, u = t.scrollFn, pd === !0 && (pd = Wl(n, !0)));
+		var d = 0, f = pd;
 		do {
-			var p = f, m = Il(p), h = m.top, g = m.bottom, _ = m.left, v = m.right, y = m.width, b = m.height, x = void 0, S = void 0, C = p.scrollWidth, w = p.scrollHeight, T = Y(p), E = p.scrollLeft, D = p.scrollTop;
+			var p = f, m = Ll(p), h = m.top, g = m.bottom, _ = m.left, v = m.right, y = m.width, b = m.height, x = void 0, S = void 0, C = p.scrollWidth, w = p.scrollHeight, T = X(p), E = p.scrollLeft, D = p.scrollTop;
 			p === c ? (x = y < C && (T.overflowX === "auto" || T.overflowX === "scroll" || T.overflowX === "visible"), S = b < w && (T.overflowY === "auto" || T.overflowY === "scroll" || T.overflowY === "visible")) : (x = y < C && (T.overflowX === "auto" || T.overflowX === "scroll"), S = b < w && (T.overflowY === "auto" || T.overflowY === "scroll"));
 			var O = x && (Math.abs(v - i) <= o && E + y < C) - (Math.abs(_ - i) <= o && !!E), k = S && (Math.abs(g - a) <= o && D + b < w) - (Math.abs(h - a) <= o && !!D);
-			if (!ud[d]) for (var A = 0; A <= d; A++) ud[A] || (ud[A] = {});
-			(ud[d].vx != O || ud[d].vy != k || ud[d].el !== p) && (ud[d].el = p, ud[d].vx = O, ud[d].vy = k, clearInterval(ud[d].pid), (O != 0 || k != 0) && (l = !0, ud[d].pid = setInterval(function() {
-				r && this.layer === 0 && $.active._onTouchMove(gd);
-				var t = ud[this.layer].vy ? ud[this.layer].vy * s : 0, n = ud[this.layer].vx ? ud[this.layer].vx * s : 0;
-				(typeof u != "function" || u.call($.dragged.parentNode[Ql], n, t, e, gd, ud[this.layer].el) === "continue") && Yl(ud[this.layer].el, n, t);
+			if (!fd[d]) for (var A = 0; A <= d; A++) fd[A] || (fd[A] = {});
+			(fd[d].vx != O || fd[d].vy != k || fd[d].el !== p) && (fd[d].el = p, fd[d].vx = O, fd[d].vy = k, clearInterval(fd[d].pid), (O != 0 || k != 0) && (l = !0, fd[d].pid = setInterval(function() {
+				r && this.layer === 0 && $.active._onTouchMove(vd);
+				var t = fd[this.layer].vy ? fd[this.layer].vy * s : 0, n = fd[this.layer].vx ? fd[this.layer].vx * s : 0;
+				(typeof u != "function" || u.call($.dragged.parentNode[$l], n, t, e, vd, fd[this.layer].el) === "continue") && Xl(fd[this.layer].el, n, t);
 			}.bind({ layer: d }), 24))), d++;
-		} while (t.bubbleScroll && f !== c && (f = Ul(f, !1)));
-		pd = l;
+		} while (t.bubbleScroll && f !== c && (f = Wl(f, !1)));
+		hd = l;
 	}
-}, 30), Sd = function(e) {
+}, 30), wd = function(e) {
 	var t = e.originalEvent, n = e.putSortable, r = e.dragEl, i = e.activeSortable, a = e.dispatchSortableEvent, o = e.hideGhostForTarget, s = e.unhideGhostForTarget;
 	if (t) {
 		var c = n || i;
@@ -6941,8 +7035,8 @@ var xd = ql(function(e, t, n, r) {
 		}));
 	}
 };
-function Cd() {}
-Cd.prototype = {
+function Td() {}
+Td.prototype = {
 	startIndex: null,
 	dragStart: function(e) {
 		var t = e.oldDraggableIndex;
@@ -6951,28 +7045,28 @@ Cd.prototype = {
 	onSpill: function(e) {
 		var t = e.dragEl, n = e.putSortable;
 		this.sortable.captureAnimationState(), n && n.captureAnimationState();
-		var r = Rl(this.sortable.el, this.startIndex, this.options);
+		var r = zl(this.sortable.el, this.startIndex, this.options);
 		r ? this.sortable.el.insertBefore(t, r) : this.sortable.el.appendChild(t), this.sortable.animateAll(), n && n.animateAll();
 	},
-	drop: Sd
-}, dl(Cd, { pluginName: "revertOnSpill" });
-function wd() {}
-wd.prototype = {
+	drop: wd
+}, fl(Td, { pluginName: "revertOnSpill" });
+function Ed() {}
+Ed.prototype = {
 	onSpill: function(e) {
 		var t = e.dragEl, n = e.putSortable || this.sortable;
 		n.captureAnimationState(), t.parentNode && t.parentNode.removeChild(t), n.animateAll();
 	},
-	drop: Sd
-}, dl(wd, { pluginName: "removeOnSpill" }), $.mount(new vd()), $.mount(wd, Cd);
+	drop: wd
+}, fl(Ed, { pluginName: "removeOnSpill" }), $.mount(new bd()), $.mount(Ed, Td);
 //#endregion
 //#region resources/js/components/TaskCard.vue?vue&type=script&setup=true&lang.ts
-var Td = { class: "flex items-start justify-between gap-2" }, Ed = { class: "text-sm font-medium text-heading" }, Dd = { class: "mt-2 flex flex-wrap items-center gap-2 text-xs text-muted" }, Od = ["title"], kd = { class: "mt-3 flex items-center justify-between gap-2" }, Ad = {
+var Dd = { class: "flex items-start justify-between gap-2" }, Od = { class: "text-sm font-medium text-heading" }, kd = { class: "mt-2 flex flex-wrap items-center gap-2 text-xs text-muted" }, Ad = ["title"], jd = { class: "mt-3 flex items-center justify-between gap-2" }, Md = {
 	key: 0,
 	class: "text-xs tabular-nums text-muted"
-}, jd = { class: "mt-2 flex items-center justify-between" }, Md = {
+}, Nd = { class: "mt-2 flex items-center justify-between" }, Pd = {
 	key: 1,
 	class: "text-xs text-subtle"
-}, Nd = ["title"], Pd = /* @__PURE__ */ l({
+}, Fd = ["title"], Id = /* @__PURE__ */ l({
 	__name: "TaskCard",
 	props: {
 		client: {},
@@ -6988,28 +7082,28 @@ var Td = { class: "flex items-start justify-between gap-2" }, Ed = { class: "tex
 			NORMAL: "bg-primary-50 text-primary-500",
 			HIGH: "bg-alert-warning-bg text-alert-warning-text",
 			URGENT: "bg-alert-error-bg text-alert-error-text"
-		}, u = B(), d = n(() => nt(r.task)), p = n(() => r.projects.find((e) => e.id === r.task.project_id)), m = n(() => r.task.project_id === null ? null : p.value?.identifier || p.value?.name || null), h = n(() => [p.value?.name, $t(r.task.customer_id)].filter(Boolean).join(" · ")), g = n(() => r.members.find((e) => e.id === r.task.assignee_id)), v = n(() => r.task.assignee_id === null ? null : g.value ? pt(g.value.name) : `#${r.task.assignee_id}`), y = n(() => g.value?.name ?? (r.task.assignee_id === null ? u("tasks_projects.tasks.unassigned") : `#${r.task.assignee_id}`)), b = n(() => Pa(d.value.logged_minutes));
+		}, u = B(), d = n(() => nt(r.task)), f = n(() => r.projects.find((e) => e.id === r.task.project_id)), m = n(() => r.task.project_id === null ? null : f.value?.identifier || f.value?.name || null), h = n(() => [f.value?.name, $t(r.task.customer_id)].filter(Boolean).join(" · ")), g = n(() => r.members.find((e) => e.id === r.task.assignee_id)), _ = n(() => r.task.assignee_id === null ? null : g.value ? pt(g.value.name) : `#${r.task.assignee_id}`), y = n(() => g.value?.name ?? (r.task.assignee_id === null ? u("tasks_projects.tasks.unassigned") : `#${r.task.assignee_id}`)), b = n(() => Na(d.value.logged_minutes));
 		function x(e) {
 			return u(`tasks_projects.tasks.priority.${e.toLowerCase()}`);
 		}
-		return (t, n) => (_(), a("article", {
+		return (t, n) => (v(), a("article", {
 			class: "cursor-pointer rounded-lg border border-line-default bg-surface p-3 shadow-sm hover:bg-hover",
 			onClick: n[1] ||= (t) => s("open", e.task)
 		}, [
-			o("div", Td, [o("p", Ed, S(e.task.name), 1), e.task.priority ? (_(), a("span", {
+			o("div", Dd, [o("p", Od, C(e.task.name), 1), e.task.priority ? (v(), a("span", {
 				key: 0,
-				class: f(["shrink-0 rounded-full px-2 py-0.5 text-[11px] font-medium", l[e.task.priority]])
-			}, S(x(e.task.priority)), 3)) : i("", !0)]),
-			o("div", Dd, [
-				o("span", null, "#" + S(e.task.number), 1),
-				m.value ? (_(), a("span", {
+				class: p(["shrink-0 rounded-full px-2 py-0.5 text-[11px] font-medium", l[e.task.priority]])
+			}, C(x(e.task.priority)), 3)) : i("", !0)]),
+			o("div", kd, [
+				o("span", null, "#" + C(e.task.number), 1),
+				m.value ? (v(), a("span", {
 					key: 0,
 					class: "rounded-sm bg-surface-tertiary px-1.5 py-0.5 text-[11px] text-body",
 					title: h.value
-				}, S(m.value), 9, Od)) : i("", !0),
+				}, C(m.value), 9, Ad)) : i("", !0),
 				c(da, { state: d.value.invoiced }, null, 8, ["state"])
 			]),
-			o("div", kd, [c(ho, {
+			o("div", jd, [c(go, {
 				client: e.client,
 				notify: e.notify,
 				task: e.task,
@@ -7020,34 +7114,34 @@ var Td = { class: "flex items-start justify-between gap-2" }, Ed = { class: "tex
 				"notify",
 				"task",
 				"members"
-			]), d.value.logged_minutes > 0 ? (_(), a("span", Ad, S(b.value), 1)) : i("", !0)]),
-			o("div", jd, [e.task.due_date ? (_(), a("span", {
+			]), d.value.logged_minutes > 0 ? (v(), a("span", Md, C(b.value), 1)) : i("", !0)]),
+			o("div", Nd, [e.task.due_date ? (v(), a("span", {
 				key: 0,
-				class: f(["text-xs", C(mt)(e.task.due_date) && !e.task.closed_at ? "font-medium text-status-red" : "text-muted"])
-			}, S(C(ut)(e.task.due_date)), 3)) : (_(), a("span", Md, "-")), v.value ? (_(), a("span", {
+				class: p(["text-xs", w(mt)(e.task.due_date) && !e.task.closed_at ? "font-medium text-status-red" : "text-muted"])
+			}, C(w(ut)(e.task.due_date)), 3)) : (v(), a("span", Pd, "-")), _.value ? (v(), a("span", {
 				key: 2,
 				class: "flex h-6 w-6 items-center justify-center rounded-full bg-primary-50 text-[11px] font-semibold text-primary-500",
 				title: y.value
-			}, S(v.value), 9, Nd)) : i("", !0)])
+			}, C(_.value), 9, Fd)) : i("", !0)])
 		]));
 	}
-}), Fd = { class: "mt-4" }, Id = {
+}), Ld = { class: "mt-4" }, Rd = {
 	key: 0,
 	class: "mb-3 text-xs text-subtle"
-}, Ld = {
+}, zd = {
 	key: 1,
 	class: "flex justify-center py-16"
-}, Rd = {
+}, Bd = {
 	key: 3,
 	class: "flex items-start gap-4 overflow-x-auto pb-4"
-}, zd = { class: "flex items-center justify-between border-b border-line-light px-3 py-2.5" }, Bd = { class: "flex items-center" }, Vd = { class: "text-sm font-semibold text-heading" }, Hd = { class: "ml-2 text-xs text-muted" }, Ud = [
+}, Vd = { class: "flex items-center justify-between border-b border-line-light px-3 py-2.5" }, Hd = { class: "flex items-center" }, Ud = { class: "text-sm font-semibold text-heading" }, Wd = { class: "ml-2 text-xs text-muted" }, Gd = [
 	"aria-label",
 	"title",
 	"onClick"
-], Wd = ["data-status-id"], Gd = {
+], Kd = ["data-status-id"], qd = {
 	key: 0,
 	class: "px-3 pt-2 text-xs text-subtle"
-}, Kd = { class: "px-3 pt-2 pb-3" }, qd = ["onClick"], Jd = /* @__PURE__ */ l({
+}, Jd = { class: "px-3 pt-2 pb-3" }, Yd = ["onClick"], Xd = /* @__PURE__ */ l({
 	__name: "TasksBoardView",
 	props: {
 		client: { type: [Function, Object] },
@@ -7058,29 +7152,29 @@ var Td = { class: "flex items-start justify-between gap-2" }, Ed = { class: "tex
 		projects: {}
 	},
 	setup(t, { expose: s }) {
-		let l = t, u = B(), d = y([]), h = y(!0), g = y(!1), v = y(null), w = y({}), T = /* @__PURE__ */ new Map(), O = /* @__PURE__ */ new Map(), k = !1, A = n(() => l.projects.map((e) => ({
+		let l = t, u = B(), d = b([]), f = b(!0), g = b(!1), _ = b(null), y = b({}), T = /* @__PURE__ */ new Map(), O = /* @__PURE__ */ new Map(), k = !1, A = n(() => l.projects.map((e) => ({
 			id: e.id,
 			label: e.name
-		}))), j = n(() => !h.value && d.value.length === 0), M = n(() => xa.settings.hide_invoiced_on_board);
+		}))), j = n(() => !f.value && d.value.length === 0), M = n(() => G.settings.hide_invoiced_on_board);
 		function N(e) {
 			return (e.tasks ?? []).filter((e) => {
 				let t = nt(e).invoiced;
 				return M.value && t === "invoiced" ? !1 : zi(l.filters.status) ? l.filters.status === "invoiced" ? t === "invoiced" : t !== "invoiced" : !0;
 			});
 		}
-		E(() => `${l.filters.project}|${l.filters.user}`, () => void P(), { immediate: !0 }), E(et, () => void P()), m(() => {
+		E(() => `${l.filters.project}|${l.filters.user}`, () => void P(), { immediate: !0 }), E(et, () => void P()), h(() => {
 			for (let e of T.values()) e.destroy();
 			T.clear(), O.clear();
 		});
 		async function P() {
 			let e = {}, t = Ki(l.filters.project), n = Ki(l.filters.user);
-			t !== null && (e.project_id = t), n !== null && (e.assignee_id = n), h.value = !0;
+			t !== null && (e.project_id = t), n !== null && (e.assignee_id = n), f.value = !0;
 			try {
 				d.value = await ar(l.client, e), d.value.some((e) => e.tasks.some((e) => e.customer_id !== null)) && en(l.client);
 			} catch (e) {
 				l.notify("error", H(e, u("tasks_projects.board.load_failed")));
 			} finally {
-				h.value = !1;
+				f.value = !1;
 			}
 		}
 		function F(e, t) {
@@ -7137,62 +7231,62 @@ var Td = { class: "flex items-start justify-between gap-2" }, Ed = { class: "tex
 		}
 		function z(e) {
 			let t = e ?? l.statuses.find((e) => e.is_default) ?? l.statuses[0];
-			v.value = null, w.value = {
+			_.value = null, y.value = {
 				task_status_id: t?.id ?? null,
 				project_id: Ki(l.filters.project)
 			}, g.value = !0;
 		}
 		function ee(e) {
-			k || (v.value = e, w.value = {}, g.value = !0);
+			k || (_.value = e, y.value = {}, g.value = !0);
 		}
 		function te(e) {
-			let t = v.value ? u("tasks_projects.tasks.updated", { name: e.name }) : u("tasks_projects.tasks.created", { name: e.name });
-			g.value = !1, v.value = null, l.notify("success", t), V();
+			let t = _.value ? u("tasks_projects.tasks.updated", { name: e.name }) : u("tasks_projects.tasks.created", { name: e.name });
+			g.value = !1, _.value = null, l.notify("success", t), V();
 		}
 		function ne(e) {
-			g.value = !1, v.value = null, l.notify("success", u("tasks_projects.tasks.deleted", { name: e.name })), V();
+			g.value = !1, _.value = null, l.notify("success", u("tasks_projects.tasks.deleted", { name: e.name })), V();
 		}
 		return s({ openCreate: () => z(null) }), (n, s) => {
-			let l = x("BaseSpinner"), m = x("BaseIcon"), y = x("BaseEmptyPlaceholder");
-			return _(), a("section", Fd, [
-				M.value ? (_(), a("p", Id, S(C(u)("tasks_projects.board.hidden_invoiced")), 1)) : i("", !0),
-				h.value && d.value.length === 0 ? (_(), a("div", Ld, [c(l, { class: "h-8 w-8 text-primary-500" })])) : j.value ? (_(), r(y, {
+			let l = S("BaseSpinner"), h = S("BaseIcon"), b = S("BaseEmptyPlaceholder");
+			return v(), a("section", Ld, [
+				M.value ? (v(), a("p", Rd, C(w(u)("tasks_projects.board.hidden_invoiced")), 1)) : i("", !0),
+				f.value && d.value.length === 0 ? (v(), a("div", zd, [c(l, { class: "h-8 w-8 text-primary-500" })])) : j.value ? (v(), r(b, {
 					key: 2,
-					title: C(u)("tasks_projects.task_statuses.none"),
-					description: C(u)("tasks_projects.tasks.empty_description")
+					title: w(u)("tasks_projects.task_statuses.none"),
+					description: w(u)("tasks_projects.tasks.empty_description")
 				}, {
-					default: D(() => [c(m, {
+					default: D(() => [c(h, {
 						name: "ViewColumnsIcon",
 						class: "mt-5 mb-4 h-16 w-16 text-subtle"
 					})]),
 					_: 1
-				}, 8, ["title", "description"])) : (_(), a("div", Rd, [(_(!0), a(e, null, b(d.value, (n) => (_(), a("section", {
+				}, 8, ["title", "description"])) : (v(), a("div", Bd, [(v(!0), a(e, null, x(d.value, (n) => (v(), a("section", {
 					key: n.status.id,
 					class: "w-64 shrink-0 rounded-xl border border-line-default bg-surface-secondary"
 				}, [
-					o("header", zd, [o("div", Bd, [
+					o("header", Vd, [o("div", Hd, [
 						o("span", {
-							class: f(["mr-2 inline-block h-2.5 w-2.5 shrink-0 rounded-full", n.status.colour ? "" : "bg-line-default"]),
-							style: p(n.status.colour ? { backgroundColor: n.status.colour } : void 0)
+							class: p(["mr-2 inline-block h-2.5 w-2.5 shrink-0 rounded-full", n.status.colour ? "" : "bg-line-default"]),
+							style: m(n.status.colour ? { backgroundColor: n.status.colour } : void 0)
 						}, null, 6),
-						o("h3", Vd, S(n.status.name), 1),
-						o("span", Hd, S(N(n).length), 1)
+						o("h3", Ud, C(n.status.name), 1),
+						o("span", Wd, C(N(n).length), 1)
 					]), o("button", {
 						type: "button",
 						class: "rounded-md p-1 text-subtle hover:bg-hover hover:text-body",
-						"aria-label": C(u)("tasks_projects.tasks.new_task"),
-						title: C(u)("tasks_projects.tasks.new_task"),
+						"aria-label": w(u)("tasks_projects.tasks.new_task"),
+						title: w(u)("tasks_projects.tasks.new_task"),
 						onClick: (e) => z(n.status)
-					}, [c(m, {
+					}, [c(h, {
 						name: "PlusIcon",
 						class: "h-4 w-4"
-					})], 8, Ud)]),
+					})], 8, Gd)]),
 					o("div", {
 						ref_for: !0,
 						ref: (e) => F(n.status.id, e),
 						"data-status-id": n.status.id,
 						class: "min-h-20 space-y-2 px-3 pt-3"
-					}, [(_(!0), a(e, null, b(N(n), (e) => (_(), r(Pd, {
+					}, [(v(!0), a(e, null, x(N(n), (e) => (v(), r(Id, {
 						key: e.id,
 						"data-task-id": e.id,
 						client: t.client,
@@ -7208,24 +7302,24 @@ var Td = { class: "flex items-start justify-between gap-2" }, Ed = { class: "tex
 						"task",
 						"projects",
 						"members"
-					]))), 128))], 8, Wd),
-					N(n).length === 0 ? (_(), a("p", Gd, S(C(u)("tasks_projects.board.empty_column")), 1)) : i("", !0),
-					o("div", Kd, [o("button", {
+					]))), 128))], 8, Kd),
+					N(n).length === 0 ? (v(), a("p", qd, C(w(u)("tasks_projects.board.empty_column")), 1)) : i("", !0),
+					o("div", Jd, [o("button", {
 						type: "button",
 						class: "w-full rounded-md border border-dashed border-line-default py-1.5 text-xs text-muted hover:bg-hover hover:text-body",
 						onClick: (e) => z(n.status)
-					}, " + " + S(C(u)("tasks_projects.tasks.new_task")), 9, qd)])
+					}, " + " + C(w(u)("tasks_projects.tasks.new_task")), 9, Yd)])
 				]))), 128))])),
 				c(ya, {
 					show: g.value,
 					client: t.client,
 					notify: t.notify,
-					task: v.value,
+					task: _.value,
 					statuses: t.statuses,
 					members: t.members,
 					projects: A.value,
-					defaults: w.value,
-					compact: v.value === null,
+					defaults: y.value,
+					compact: _.value === null,
 					onClose: s[0] ||= (e) => g.value = !1,
 					onSaved: te,
 					onDeleted: ne
@@ -7243,7 +7337,7 @@ var Td = { class: "flex items-start justify-between gap-2" }, Ed = { class: "tex
 			]);
 		};
 	}
-}), Yd = /* @__PURE__ */ l({
+}), Zd = /* @__PURE__ */ l({
 	__name: "TasksListView",
 	props: {
 		client: { type: [Function, Object] },
@@ -7255,8 +7349,8 @@ var Td = { class: "flex items-start justify-between gap-2" }, Ed = { class: "tex
 		projects: {}
 	},
 	setup(e, { expose: t }) {
-		let n = y(null);
-		return t({ openCreate: () => n.value?.openCreate() }), (t, i) => (_(), r(wo, {
+		let n = b(null);
+		return t({ openCreate: () => n.value?.openCreate() }), (t, i) => (v(), r(To, {
 			ref_key: "listRef",
 			ref: n,
 			client: e.client,
@@ -7276,10 +7370,10 @@ var Td = { class: "flex items-start justify-between gap-2" }, Ed = { class: "tex
 			"projects"
 		]));
 	}
-}), Xd = { class: "relative table-container" }, Zd = { class: "block max-w-64 truncate" }, Qd = { class: "tabular-nums" }, $d = {
+}), Qd = { class: "relative table-container" }, $d = { class: "block max-w-64 truncate" }, ef = { class: "tabular-nums" }, tf = {
 	key: 1,
 	class: "text-subtle"
-}, ef = /* @__PURE__ */ l({
+}, nf = /* @__PURE__ */ l({
 	__name: "AllTimeTable",
 	props: {
 		client: { type: [Function, Object] },
@@ -7291,7 +7385,7 @@ var Td = { class: "flex items-start justify-between gap-2" }, Ed = { class: "tex
 	},
 	emits: ["edit", "delete"],
 	setup(e, { emit: t }) {
-		let l = e, u = t, d = B(), p = y(null), m = v({
+		let l = e, u = t, d = B(), f = b(null), m = y({
 			from: "",
 			to: "",
 			billing: "ALL"
@@ -7309,11 +7403,11 @@ var Td = { class: "flex items-start justify-between gap-2" }, Ed = { class: "tex
 				label: d("tasks_projects.time.unbilled")
 			}
 		]), g = n({
-			get: () => w(h.value, m.billing),
+			get: () => x(h.value, m.billing),
 			set: (e) => {
 				m.billing = typeof e.id == "string" ? e.id : "ALL";
 			}
-		}), b = n(() => [
+		}), _ = n(() => [
 			{
 				key: "date",
 				label: d("tasks_projects.time.columns.date"),
@@ -7358,11 +7452,11 @@ var Td = { class: "flex items-start justify-between gap-2" }, Ed = { class: "tex
 			}
 		]);
 		E(m, () => T()), E([() => l.memberId, () => l.projectId], () => T()), E(() => l.reloadToken, () => T(!0));
-		function w(e, t) {
+		function x(e, t) {
 			return e.find((e) => e.id === t) ?? e[0];
 		}
 		function T(e = !1) {
-			p.value?.refresh(e);
+			f.value?.refresh(e);
 		}
 		function O() {
 			m.from = "", m.to = "", m.billing = "ALL";
@@ -7406,8 +7500,8 @@ var Td = { class: "flex items-start justify-between gap-2" }, Ed = { class: "tex
 			};
 		}
 		return (e, t) => {
-			let n = x("BaseDatePicker"), l = x("BaseInputGroup"), v = x("BaseSelectInput"), y = x("BaseFilterWrapper"), w = x("BaseBadge"), T = x("BaseFormatMoney"), E = x("BaseIcon"), N = x("BaseDropdownItem"), P = x("BaseDropdown"), F = x("BaseTable");
-			return _(), a("section", null, [c(y, {
+			let n = S("BaseDatePicker"), l = S("BaseInputGroup"), y = S("BaseSelectInput"), b = S("BaseFilterWrapper"), x = S("BaseBadge"), T = S("BaseFormatMoney"), E = S("BaseIcon"), N = S("BaseDropdownItem"), P = S("BaseDropdown"), F = S("BaseTable");
+			return v(), a("section", null, [c(b, {
 				show: "",
 				"row-on-xl": "",
 				class: "mt-3",
@@ -7415,7 +7509,7 @@ var Td = { class: "flex items-start justify-between gap-2" }, Ed = { class: "tex
 			}, {
 				default: D(() => [
 					c(l, {
-						label: C(d)("tasks_projects.time.filters.from"),
+						label: w(d)("tasks_projects.time.filters.from"),
 						class: "mt-2 flex-1"
 					}, {
 						default: D(() => [c(n, {
@@ -7425,7 +7519,7 @@ var Td = { class: "flex items-start justify-between gap-2" }, Ed = { class: "tex
 						_: 1
 					}, 8, ["label"]),
 					c(l, {
-						label: C(d)("tasks_projects.time.filters.to"),
+						label: w(d)("tasks_projects.time.filters.to"),
 						class: "mt-2 flex-1"
 					}, {
 						default: D(() => [c(n, {
@@ -7435,10 +7529,10 @@ var Td = { class: "flex items-start justify-between gap-2" }, Ed = { class: "tex
 						_: 1
 					}, 8, ["label"]),
 					c(l, {
-						label: C(d)("tasks_projects.time.filters.billing"),
+						label: w(d)("tasks_projects.time.filters.billing"),
 						class: "mt-2 flex-1"
 					}, {
-						default: D(() => [c(v, {
+						default: D(() => [c(y, {
 							modelValue: g.value,
 							"onUpdate:modelValue": t[0] ||= (e) => g.value = e,
 							options: h.value,
@@ -7448,26 +7542,26 @@ var Td = { class: "flex items-start justify-between gap-2" }, Ed = { class: "tex
 					}, 8, ["label"])
 				]),
 				_: 1
-			}), o("div", Xd, [c(F, {
+			}), o("div", Qd, [c(F, {
 				ref_key: "tableRef",
-				ref: p,
+				ref: f,
 				data: M,
-				columns: b.value,
+				columns: _.value,
 				class: "mt-3"
 			}, {
-				"cell-date": D(({ row: e }) => [s(S(C(ut)(C(Ia)(e.data.started_at))), 1)]),
-				"cell-member": D(({ row: e }) => [s(S(j(e.data.user_id)), 1)]),
-				"cell-task": D(({ row: e }) => [s(S(C(Ze)(e.data.task_id)), 1)]),
-				"cell-description": D(({ row: e }) => [o("span", Zd, S(e.data.description || "-"), 1)]),
-				"cell-duration": D(({ row: e }) => [o("span", Qd, S(C(Pa)(e.data.duration_minutes)), 1)]),
-				"cell-billable": D(({ row: e }) => [c(w, { class: f(["rounded-full", e.data.billable ? "bg-primary-50! text-primary-500!" : "bg-surface-tertiary! text-muted!"]) }, {
-					default: D(() => [s(S(e.data.billable ? C(d)("tasks_projects.time.billable") : C(d)("tasks_projects.time.non_billable")), 1)]),
+				"cell-date": D(({ row: e }) => [s(C(w(ut)(w(Ia)(e.data.started_at))), 1)]),
+				"cell-member": D(({ row: e }) => [s(C(j(e.data.user_id)), 1)]),
+				"cell-task": D(({ row: e }) => [s(C(w(Ze)(e.data.task_id)), 1)]),
+				"cell-description": D(({ row: e }) => [o("span", $d, C(e.data.description || "-"), 1)]),
+				"cell-duration": D(({ row: e }) => [o("span", ef, C(w(Na)(e.data.duration_minutes)), 1)]),
+				"cell-billable": D(({ row: e }) => [c(x, { class: p(["rounded-full", e.data.billable ? "bg-primary-50! text-primary-500!" : "bg-surface-tertiary! text-muted!"]) }, {
+					default: D(() => [s(C(e.data.billable ? w(d)("tasks_projects.time.billable") : w(d)("tasks_projects.time.non_billable")), 1)]),
 					_: 2
 				}, 1032, ["class"])]),
-				"cell-amount": D(({ row: e }) => [e.data.billable ? (_(), r(T, {
+				"cell-amount": D(({ row: e }) => [e.data.billable ? (v(), r(T, {
 					key: 0,
 					amount: e.data.amount
-				}, null, 8, ["amount"])) : (_(), a("span", $d, "-"))]),
+				}, null, 8, ["amount"])) : (v(), a("span", tf, "-"))]),
 				"cell-actions": D(({ row: e }) => [c(P, null, {
 					activator: D(() => [c(E, {
 						name: "EllipsisHorizontalIcon",
@@ -7477,16 +7571,16 @@ var Td = { class: "flex items-start justify-between gap-2" }, Ed = { class: "tex
 						default: D(() => [c(E, {
 							name: "PencilIcon",
 							class: "mr-3 h-5 w-5 text-subtle group-hover:text-muted"
-						}), s(" " + S(C(d)("tasks_projects.general.edit")), 1)]),
+						}), s(" " + C(w(d)("tasks_projects.general.edit")), 1)]),
 						_: 1
-					}, 8, ["onClick"]), e.data.invoice_id === null ? (_(), r(N, {
+					}, 8, ["onClick"]), e.data.invoice_id === null ? (v(), r(N, {
 						key: 0,
 						onClick: (t) => u("delete", e.data)
 					}, {
 						default: D(() => [c(E, {
 							name: "TrashIcon",
 							class: "mr-3 h-5 w-5 text-subtle group-hover:text-muted"
-						}), s(" " + S(C(d)("tasks_projects.general.delete")), 1)]),
+						}), s(" " + C(w(d)("tasks_projects.general.delete")), 1)]),
 						_: 1
 					}, 8, ["onClick"])) : i("", !0)]),
 					_: 2
@@ -7495,25 +7589,25 @@ var Td = { class: "flex items-start justify-between gap-2" }, Ed = { class: "tex
 			}, 8, ["columns"])])]);
 		};
 	}
-}), tf = { class: "mt-4 flex flex-wrap items-center justify-between gap-3" }, nf = { class: "flex items-center gap-2" }, rf = { class: "ml-1 text-sm text-muted" }, af = { class: "flex items-center gap-2 text-sm" }, of = { class: "text-muted" }, sf = { class: "text-lg font-semibold tabular-nums text-heading" }, cf = {
+}), rf = { class: "mt-4 flex flex-wrap items-center justify-between gap-3" }, af = { class: "flex items-center gap-2" }, of = { class: "ml-1 text-sm text-muted" }, sf = { class: "flex items-center gap-2 text-sm" }, cf = { class: "text-muted" }, lf = { class: "text-lg font-semibold tabular-nums text-heading" }, uf = {
 	key: 0,
 	class: "mt-6 text-sm text-muted"
-}, lf = {
+}, df = {
 	key: 1,
 	class: "mt-4 grid gap-3 sm:grid-cols-2 lg:grid-cols-4 xl:grid-cols-7"
-}, uf = { class: "flex items-baseline justify-between" }, df = { class: "text-xs font-semibold tracking-wide text-heading uppercase" }, ff = { class: "text-xs text-muted" }, pf = { class: "text-sm font-medium tabular-nums text-heading" }, mf = { class: "mt-3 flex-1 space-y-2" }, hf = ["onClick"], gf = { class: "flex items-center justify-between gap-2" }, _f = { class: "truncate text-xs font-medium text-heading" }, vf = { class: "shrink-0 text-xs tabular-nums text-muted" }, yf = {
+}, ff = { class: "flex items-baseline justify-between" }, pf = { class: "text-xs font-semibold tracking-wide text-heading uppercase" }, mf = { class: "text-xs text-muted" }, hf = { class: "text-sm font-medium tabular-nums text-heading" }, gf = { class: "mt-3 flex-1 space-y-2" }, _f = ["onClick"], vf = { class: "flex items-center justify-between gap-2" }, yf = { class: "truncate text-xs font-medium text-heading" }, bf = { class: "shrink-0 text-xs tabular-nums text-muted" }, xf = {
 	key: 0,
 	class: "mt-1 block truncate text-xs text-muted"
-}, bf = { class: "mt-1 flex items-center gap-1" }, xf = { class: "text-[11px] text-subtle" }, Sf = {
+}, Sf = { class: "mt-1 flex items-center gap-1" }, Cf = { class: "text-[11px] text-subtle" }, wf = {
 	key: 0,
 	class: "text-[11px] text-subtle"
-}, Cf = {
+}, Tf = {
 	key: 0,
 	class: "py-2 text-xs text-subtle"
-}, wf = ["onClick"], Tf = {
+}, Ef = ["onClick"], Df = {
 	key: 2,
 	class: "mt-4 text-center text-sm text-subtle"
-}, Ef = /* @__PURE__ */ l({
+}, Of = /* @__PURE__ */ l({
 	__name: "WeekTimesheet",
 	props: {
 		client: { type: [Function, Object] },
@@ -7525,10 +7619,10 @@ var Td = { class: "flex items-start justify-between gap-2" }, Ed = { class: "tex
 	},
 	emits: ["add", "edit"],
 	setup(t, { emit: l }) {
-		let u = t, d = l, p = B(), m = y(Ba(/* @__PURE__ */ new Date(), u.weekStart)), h = y([]), g = y(!1), v = n(() => Va(m.value)), w = n(() => {
-			let e = v.value[0], t = v.value[v.value.length - 1];
+		let u = t, d = l, f = B(), m = b(Ba(/* @__PURE__ */ new Date(), u.weekStart)), h = b([]), g = b(!1), _ = n(() => Va(m.value)), y = n(() => {
+			let e = _.value[0], t = _.value[_.value.length - 1];
 			return `${Wa(e).day} - ${Wa(t).day}`;
-		}), T = n(() => v.value.map((e) => {
+		}), T = n(() => _.value.map((e) => {
 			let t = Ua(e), n = h.value.filter((e) => Ia(e.started_at) === t), r = Wa(e);
 			return {
 				key: t,
@@ -7559,14 +7653,14 @@ var Td = { class: "flex items-start justify-between gap-2" }, Ed = { class: "tex
 			try {
 				let e = {
 					user_id: u.userId,
-					from: Ua(v.value[0]),
-					to: Ua(v.value[v.value.length - 1])
+					from: Ua(_.value[0]),
+					to: Ua(_.value[_.value.length - 1])
 				};
 				u.projectId && (e.project_id = u.projectId);
 				let t = await Oe(u.client, e);
 				h.value = t, $e(u.client, t.map((e) => e.task_id).filter((e) => typeof e == "number"));
 			} catch (e) {
-				h.value = [], u.notify("error", H(e, p("tasks_projects.time.load_failed")));
+				h.value = [], u.notify("error", H(e, f("tasks_projects.time.load_failed")));
 			} finally {
 				g.value = !1;
 			}
@@ -7578,13 +7672,13 @@ var Td = { class: "flex items-start justify-between gap-2" }, Ed = { class: "tex
 			m.value = Ba(/* @__PURE__ */ new Date(), u.weekStart);
 		}
 		return (n, l) => {
-			let u = x("BaseIcon"), m = x("BaseButton"), h = x("BaseSpinner");
-			return _(), a("section", null, [
-				o("header", tf, [o("div", nf, [
+			let u = S("BaseIcon"), m = S("BaseButton"), h = S("BaseSpinner");
+			return v(), a("section", null, [
+				o("header", rf, [o("div", af, [
 					c(m, {
 						variant: "white",
 						size: "sm",
-						title: C(p)("tasks_projects.time.previous_week"),
+						title: w(f)("tasks_projects.time.previous_week"),
 						onClick: l[0] ||= (e) => M(-1)
 					}, {
 						default: D(() => [c(u, {
@@ -7598,13 +7692,13 @@ var Td = { class: "flex items-start justify-between gap-2" }, Ed = { class: "tex
 						size: "sm",
 						onClick: N
 					}, {
-						default: D(() => [s(S(C(p)("tasks_projects.time.this_week")), 1)]),
+						default: D(() => [s(C(w(f)("tasks_projects.time.this_week")), 1)]),
 						_: 1
 					}),
 					c(m, {
 						variant: "white",
 						size: "sm",
-						title: C(p)("tasks_projects.time.next_week"),
+						title: w(f)("tasks_projects.time.next_week"),
 						onClick: l[1] ||= (e) => M(1)
 					}, {
 						default: D(() => [c(u, {
@@ -7613,33 +7707,33 @@ var Td = { class: "flex items-start justify-between gap-2" }, Ed = { class: "tex
 						})]),
 						_: 1
 					}, 8, ["title"]),
-					o("span", rf, S(w.value), 1)
-				]), o("div", af, [
-					o("span", of, S(C(p)("tasks_projects.time.week_total")), 1),
-					o("span", sf, S(C(Pa)(O.value)), 1),
-					g.value ? (_(), r(h, {
+					o("span", of, C(y.value), 1)
+				]), o("div", sf, [
+					o("span", cf, C(w(f)("tasks_projects.time.week_total")), 1),
+					o("span", lf, C(w(Na)(O.value)), 1),
+					g.value ? (v(), r(h, {
 						key: 0,
 						class: "h-4 w-4 text-primary-500"
 					})) : i("", !0)
 				])]),
-				t.userId === null ? (_(), a("p", cf, S(C(p)("tasks_projects.time.unknown_user")), 1)) : (_(), a("div", lf, [(_(!0), a(e, null, b(T.value, (t) => (_(), a("article", {
+				t.userId === null ? (v(), a("p", uf, C(w(f)("tasks_projects.time.unknown_user")), 1)) : (v(), a("div", df, [(v(!0), a(e, null, x(T.value, (t) => (v(), a("article", {
 					key: t.key,
-					class: f(["flex min-h-40 flex-col rounded-xl border bg-surface p-3", t.today ? "border-primary-400" : "border-line-default"])
+					class: p(["flex min-h-40 flex-col rounded-xl border bg-surface p-3", t.today ? "border-primary-400" : "border-line-default"])
 				}, [
-					o("header", uf, [o("div", null, [o("p", df, S(t.weekday), 1), o("p", ff, S(t.day), 1)]), o("span", pf, S(C(Pa)(t.minutes)), 1)]),
-					o("ul", mf, [(_(!0), a(e, null, b(t.entries, (e) => (_(), a("li", { key: e.id }, [o("button", {
+					o("header", ff, [o("div", null, [o("p", pf, C(t.weekday), 1), o("p", mf, C(t.day), 1)]), o("span", hf, C(w(Na)(t.minutes)), 1)]),
+					o("ul", gf, [(v(!0), a(e, null, x(t.entries, (e) => (v(), a("li", { key: e.id }, [o("button", {
 						type: "button",
 						class: "w-full rounded-md border border-line-light px-2 py-2 text-left hover:bg-hover",
 						onClick: (t) => d("edit", e)
 					}, [
-						o("span", gf, [o("span", _f, S(C(Ze)(e.task_id)), 1), o("span", vf, S(C(Pa)(e.duration_minutes)), 1)]),
-						e.description ? (_(), a("span", yf, S(e.description), 1)) : i("", !0),
-						o("span", bf, [
-							o("span", { class: f(["inline-block h-1.5 w-1.5 rounded-full", e.billable ? "bg-status-green" : "bg-line-strong"]) }, null, 2),
-							o("span", xf, S(e.billable ? C(p)("tasks_projects.time.billable") : C(p)("tasks_projects.time.non_billable")), 1),
-							e.invoice_id === null ? i("", !0) : (_(), a("span", Sf, " - " + S(C(p)("tasks_projects.time.billed")), 1))
+						o("span", vf, [o("span", yf, C(w(Ze)(e.task_id)), 1), o("span", bf, C(w(Na)(e.duration_minutes)), 1)]),
+						e.description ? (v(), a("span", xf, C(e.description), 1)) : i("", !0),
+						o("span", Sf, [
+							o("span", { class: p(["inline-block h-1.5 w-1.5 rounded-full", e.billable ? "bg-status-green" : "bg-line-strong"]) }, null, 2),
+							o("span", Cf, C(e.billable ? w(f)("tasks_projects.time.billable") : w(f)("tasks_projects.time.non_billable")), 1),
+							e.invoice_id === null ? i("", !0) : (v(), a("span", wf, " - " + C(w(f)("tasks_projects.time.billed")), 1))
 						])
-					], 8, hf)]))), 128)), t.entries.length === 0 ? (_(), a("li", Cf, S(C(p)("tasks_projects.time.no_entries")), 1)) : i("", !0)]),
+					], 8, _f)]))), 128)), t.entries.length === 0 ? (v(), a("li", Tf, C(w(f)("tasks_projects.time.no_entries")), 1)) : i("", !0)]),
 					o("button", {
 						type: "button",
 						class: "mt-2 flex items-center justify-center gap-1 rounded-md border border-dashed border-line-default py-1.5 text-xs text-muted hover:bg-hover hover:text-heading",
@@ -7647,16 +7741,16 @@ var Td = { class: "flex items-start justify-between gap-2" }, Ed = { class: "tex
 					}, [c(u, {
 						name: "PlusIcon",
 						class: "h-4 w-4"
-					}), s(" " + S(C(p)("tasks_projects.time.add_entry")), 1)], 8, wf)
+					}), s(" " + C(w(f)("tasks_projects.time.add_entry")), 1)], 8, Ef)
 				], 2))), 128))])),
-				k.value && t.userId !== null ? (_(), a("p", Tf, S(C(p)("tasks_projects.time.empty_description")), 1)) : i("", !0)
+				k.value && t.userId !== null ? (v(), a("p", Df, C(w(f)("tasks_projects.time.empty_description")), 1)) : i("", !0)
 			]);
 		};
 	}
-}), Df = {
+}), kf = {
 	key: 0,
 	class: "mt-4 flex gap-6 border-b border-line-default"
-}, Of = 5, kf = /* @__PURE__ */ l({
+}, Af = 5, jf = /* @__PURE__ */ l({
 	__name: "TasksWeekView",
 	props: {
 		client: { type: [Function, Object] },
@@ -7667,36 +7761,36 @@ var Td = { class: "flex items-start justify-between gap-2" }, Ed = { class: "tex
 		projects: {}
 	},
 	setup(e) {
-		let t = e, s = B(), l = y("MINE"), u = y(!1), d = y(!1), p = y(null), m = y(Ua(/* @__PURE__ */ new Date())), g = y(0), v = n(() => xa.settings.week_start), b = n(() => Ki(t.filters.project)), x = n(() => Ki(t.filters.user) ?? xa.userId);
-		h(() => void w()), E(et, () => {
-			g.value += 1;
+		let t = e, s = B(), l = b("MINE"), u = b(!1), d = b(!1), f = b(null), m = b(Ua(/* @__PURE__ */ new Date())), h = b(0), _ = n(() => G.settings.week_start), y = n(() => Ki(t.filters.project)), x = n(() => Ki(t.filters.user) ?? G.userId);
+		g(() => void S()), E(et, () => {
+			h.value += 1;
 		});
-		async function w() {
-			xa.userId === null && await Sa(t.client), u.value = xa.settings.members_see_all_time || await T();
+		async function S() {
+			G.userId === null && await xa(t.client), u.value = G.settings.members_see_all_time || await T();
 		}
 		async function T() {
 			try {
-				return ((await De(t.client, { limit: Of })).data ?? []).some((e) => e.user_id !== xa.userId);
+				return ((await De(t.client, { limit: Af })).data ?? []).some((e) => e.user_id !== G.userId);
 			} catch {
 				return !1;
 			}
 		}
 		function D(e) {
-			p.value = null, m.value = e ?? Ua(/* @__PURE__ */ new Date()), d.value = !0;
+			f.value = null, m.value = e ?? Ua(/* @__PURE__ */ new Date()), d.value = !0;
 		}
 		function O(e) {
-			p.value = e, d.value = !0;
+			f.value = e, d.value = !0;
 		}
 		function k() {
-			let e = p.value ? s("tasks_projects.time.updated") : s("tasks_projects.time.created");
-			d.value = !1, p.value = null, t.notify("success", e), g.value += 1, V();
+			let e = f.value ? s("tasks_projects.time.updated") : s("tasks_projects.time.created");
+			d.value = !1, f.value = null, t.notify("success", e), h.value += 1, V();
 		}
 		function A() {
-			d.value = !1, p.value = null, t.notify("success", s("tasks_projects.time.deleted")), g.value += 1, V();
+			d.value = !1, f.value = null, t.notify("success", s("tasks_projects.time.deleted")), h.value += 1, V();
 		}
 		async function j(e) {
 			if (window.confirm(s("tasks_projects.time.delete_confirm"))) try {
-				await je(t.client, e.id), t.notify("success", s("tasks_projects.time.deleted")), g.value += 1, V();
+				await je(t.client, e.id), t.notify("success", s("tasks_projects.time.deleted")), h.value += 1, V();
 			} catch (e) {
 				t.notify("error", H(e, s("tasks_projects.time.delete_failed")));
 			}
@@ -7704,24 +7798,24 @@ var Td = { class: "flex items-start justify-between gap-2" }, Ed = { class: "tex
 		function M(e) {
 			return l.value === e ? "border-primary-500 text-primary-500" : "border-transparent text-muted hover:border-line-strong hover:text-heading";
 		}
-		return (t, n) => (_(), a("section", null, [
-			u.value ? (_(), a("nav", Df, [o("button", {
+		return (t, n) => (v(), a("section", null, [
+			u.value ? (v(), a("nav", kf, [o("button", {
 				type: "button",
-				class: f(["-mb-px border-b-2 px-1 pb-3 text-sm font-medium", M("MINE")]),
+				class: p(["-mb-px border-b-2 px-1 pb-3 text-sm font-medium", M("MINE")]),
 				onClick: n[0] ||= (e) => l.value = "MINE"
-			}, S(C(s)("tasks_projects.time.my_time")), 3), o("button", {
+			}, C(w(s)("tasks_projects.time.my_time")), 3), o("button", {
 				type: "button",
-				class: f(["-mb-px border-b-2 px-1 pb-3 text-sm font-medium", M("ALL")]),
+				class: p(["-mb-px border-b-2 px-1 pb-3 text-sm font-medium", M("ALL")]),
 				onClick: n[1] ||= (e) => l.value = "ALL"
-			}, S(C(s)("tasks_projects.time.all_time")), 3)])) : i("", !0),
-			l.value === "MINE" ? (_(), r(Ef, {
+			}, C(w(s)("tasks_projects.time.all_time")), 3)])) : i("", !0),
+			l.value === "MINE" ? (v(), r(Of, {
 				key: 1,
 				client: e.client,
 				notify: e.notify,
 				"user-id": x.value,
-				"project-id": b.value,
-				"week-start": v.value,
-				"reload-token": g.value,
+				"project-id": y.value,
+				"week-start": _.value,
+				"reload-token": h.value,
 				onAdd: D,
 				onEdit: O
 			}, null, 8, [
@@ -7731,14 +7825,14 @@ var Td = { class: "flex items-start justify-between gap-2" }, Ed = { class: "tex
 				"project-id",
 				"week-start",
 				"reload-token"
-			])) : (_(), r(ef, {
+			])) : (v(), r(nf, {
 				key: 2,
 				client: e.client,
 				notify: e.notify,
 				members: e.members,
-				"member-id": C(Ki)(e.filters.user),
-				"project-id": b.value,
-				"reload-token": g.value,
+				"member-id": w(Ki)(e.filters.user),
+				"project-id": y.value,
+				"reload-token": h.value,
 				onEdit: O,
 				onDelete: j
 			}, null, 8, [
@@ -7749,11 +7843,11 @@ var Td = { class: "flex items-start justify-between gap-2" }, Ed = { class: "tex
 				"project-id",
 				"reload-token"
 			])),
-			c(Ro, {
+			c(zo, {
 				show: d.value,
 				client: e.client,
 				notify: e.notify,
-				entry: p.value,
+				entry: f.value,
 				"default-date": m.value,
 				onClose: n[2] ||= (e) => d.value = !1,
 				onSaved: k,
@@ -7767,45 +7861,45 @@ var Td = { class: "flex items-start justify-between gap-2" }, Ed = { class: "tex
 			])
 		]));
 	}
-}), Af = {
+}), Mf = {
 	viewTask: `${U}:view-task`,
 	viewOwnTime: `${U}:view-own-time`
 };
-function jf(e) {
-	e.addMessages(Ks), e.registerPage({
+function Nf(e) {
+	e.addMessages(qs), e.registerPage({
 		id: "tasks",
 		module: U,
 		path: "",
-		component: sn(e, ll),
+		component: sn(e, ul),
 		meta: {
-			ability: Af.viewTask,
+			ability: Mf.viewTask,
 			title: "tasks_projects.tasks.title"
 		},
 		children: [
 			{
 				id: "list",
 				path: "",
-				component: sn(e, Yd),
+				component: sn(e, Zd),
 				meta: {
-					ability: Af.viewTask,
+					ability: Mf.viewTask,
 					title: "tasks_projects.tasks.views.list"
 				}
 			},
 			{
 				id: "board",
 				path: "board",
-				component: sn(e, Jd),
+				component: sn(e, Xd),
 				meta: {
-					ability: Af.viewTask,
+					ability: Mf.viewTask,
 					title: "tasks_projects.board.title"
 				}
 			},
 			{
 				id: "week",
 				path: "week",
-				component: sn(e, kf),
+				component: sn(e, jf),
 				meta: {
-					ability: Af.viewOwnTime,
+					ability: Mf.viewOwnTime,
 					title: "tasks_projects.time.title"
 				}
 			}
@@ -7814,51 +7908,36 @@ function jf(e) {
 		id: "task",
 		module: U,
 		path: "tasks/:id",
-		component: sn(e, nl),
+		component: sn(e, rl),
 		meta: {
-			ability: Af.viewTask,
+			ability: Mf.viewTask,
 			title: "tasks_projects.tasks.title"
 		}
 	}), e.registerPage({
 		id: "time",
 		module: U,
 		path: "time",
-		component: Mf(e),
+		component: Pf(e),
 		meta: {
-			ability: Af.viewOwnTime,
+			ability: Mf.viewOwnTime,
 			title: "tasks_projects.time.title"
 		}
 	});
 }
-function Mf(e) {
-	return l({ setup: () => (h(() => {
+function Pf(e) {
+	return l({ setup: () => (g(() => {
 		e.router.replace(W.week);
 	}), () => null) });
 }
 //#endregion
 //#region resources/js/components/QuickStartOverlay.vue?vue&type=script&setup=true&lang.ts
-var Nf = ["aria-label"], Pf = { class: "flex items-center justify-between border-b border-line-default px-4 py-3" }, Ff = { class: "text-sm font-semibold text-heading" }, If = ["aria-label"], Lf = {
-	key: 0,
-	class: "space-y-4 px-4 py-4"
-}, Rf = { class: "truncate text-sm font-medium text-heading" }, zf = { class: "mt-1 text-2xl font-semibold tabular-nums text-primary-500" }, Bf = {
+var Ff = ["aria-label"], If = { class: "flex items-center justify-between border-b border-line-default px-4 py-3" }, Lf = { class: "text-sm font-semibold text-heading" }, Rf = ["aria-label"], zf = { class: "space-y-4 px-4 py-4" }, Bf = { class: "truncate text-sm font-medium text-heading" }, Vf = { class: "mt-1 text-2xl font-semibold tabular-nums text-primary-500" }, Hf = {
 	key: 0,
 	class: "mt-1 text-xs text-muted"
-}, Vf = { class: "flex items-center gap-2" }, Hf = {
-	key: 1,
-	class: "space-y-3 px-4 py-4"
-}, Uf = { class: "block" }, Wf = { class: "sr-only" }, Gf = ["placeholder"], Kf = {
-	key: 0,
-	class: "text-xs text-muted"
-}, qf = {
-	key: 1,
-	class: "max-h-48 space-y-1 overflow-y-auto"
-}, Jf = ["onClick"], Yf = {
-	key: 2,
-	class: "text-xs text-muted"
-}, Xf = ["placeholder", "aria-label"], Zf = { class: "flex items-center justify-between" }, Qf = ["title", "aria-label"], $f = {
+}, Uf = { class: "flex items-center justify-between" }, Wf = ["title", "aria-label"], Gf = {
 	key: 0,
 	class: "tabular-nums"
-}, ep = "[aria-label=\"Open AI Assistant\"]", tp = "/admin/settings", np = 300, rp = /* @__PURE__ */ l({
+}, Kf = "[aria-label=\"Open AI Assistant\"]", qf = "/admin/settings", Jf = /* @__PURE__ */ l({
 	__name: "QuickStartOverlay",
 	props: {
 		client: { type: [Function, Object] },
@@ -7866,155 +7945,394 @@ var Nf = ["aria-label"], Pf = { class: "flex items-center justify-between border
 		enabled: { type: Boolean },
 		router: {}
 	},
-	emits: ["open-week"],
-	setup(l, { emit: u }) {
-		let d = l, p = u, g = B(), v = y(!1), T = y(""), A = y([]), j = y(!1), M = y(null), N = y(""), P = y(window.location.pathname), F = y(!1), I, L, R = n(() => ({
-			notify: d.notify,
-			t: g
-		})), z = n(() => Ze(K.running?.task_id ?? null)), ee = n(() => Na(K.elapsedSeconds)), te = n(() => P.value.startsWith(tp)), ne = n(() => F.value ? "bottom-36" : "bottom-20");
-		function re() {
-			F.value = Array.from(document.querySelectorAll(ep)).some((e) => window.getComputedStyle(e).position === "fixed");
+	emits: ["open-task"],
+	setup(e, { emit: l }) {
+		let u = e, d = l, f = B(), m = b(!1), _ = b(window.location.pathname), y = b(!1), x, T = n(() => ({
+			notify: u.notify,
+			t: f
+		})), O = n(() => Ze(q.running?.task_id ?? null)), A = n(() => Ma(q.elapsedSeconds)), j = n(() => q.stopPrompt !== null || q.startPrompt !== null), M = n(() => j.value || _.value.startsWith(qf)), N = n(() => y.value ? "bottom-36" : "bottom-20");
+		function P() {
+			y.value = Array.from(document.querySelectorAll(Kf)).some((e) => window.getComputedStyle(e).position === "fixed");
 		}
-		E(() => d.enabled, (e) => {
-			e || oe();
+		E(() => u.enabled, (e) => {
+			e || F();
+		}), E(() => q.running, (e) => {
+			e === null && F();
+		}), g(() => {
+			_.value = u.router.currentRoute.value.path, x = u.router.afterEach((e) => {
+				_.value = e.path, P();
+			}), P();
 		}), h(() => {
-			P.value = d.router.currentRoute.value.path, L = d.router.afterEach((e) => {
-				P.value = e.path, re();
-			}), re();
-		}), E(v, (e) => {
-			e && K.running === null && ie();
-		}), E(T, () => {
-			clearTimeout(I), I = setTimeout(() => void ie(), np);
-		}), m(() => {
-			clearTimeout(I), L?.();
+			x?.();
 		});
-		async function ie() {
-			j.value = !0;
-			try {
-				let e = await Ve(d.client, T.value);
-				A.value = e, e.forEach(Qe);
-			} catch (e) {
-				A.value = [], d.notify("error", H(e, g("tasks_projects.time.tasks_failed")));
-			} finally {
-				j.value = !1;
+		function F() {
+			m.value = !1;
+		}
+		function I() {
+			if (q.running === null) {
+				q.startWithPrompt(u.client, T.value);
+				return;
 			}
+			m.value = !m.value;
 		}
-		function ae(e) {
-			M.value = e, Qe(e);
+		function L() {
+			q.stopWithPrompt(u.client, T.value);
 		}
-		function oe() {
-			v.value = !1, T.value = "", A.value = [], M.value = null, N.value = "";
+		function R() {
+			F(), d("open-task");
 		}
-		async function se() {
-			let e = M.value;
-			e !== null && await K.start(d.client, e.id, N.value.trim() || null, R.value) !== null && (d.notify("success", g("tasks_projects.timer.started", { name: e.name })), oe());
-		}
-		async function ce() {
-			let e = z.value, t = await K.stop(d.client, R.value);
-			t !== null && (d.notify("success", g("tasks_projects.timer.stopped", {
-				name: e,
-				duration: Pa(t.duration_minutes)
-			})), oe());
-		}
-		async function le() {
-			window.confirm(g("tasks_projects.timer.discard_confirm")) && await K.discard(d.client, R.value) && (d.notify("success", g("tasks_projects.timer.discarded")), oe());
-		}
-		return (n, u) => {
-			let d = x("BaseIcon"), m = x("BaseButton");
-			return _(), r(t, { to: "body" }, [l.enabled && !te.value ? (_(), a("div", {
+		return (n, l) => {
+			let u = S("BaseIcon"), d = S("BaseButton");
+			return v(), r(t, { to: "body" }, [e.enabled && !M.value ? (v(), a("div", {
 				key: 0,
-				class: f(["fixed right-6 z-40 flex flex-col items-end gap-3", ne.value])
-			}, [v.value ? (_(), a("section", {
+				class: p(["fixed right-6 z-40 flex flex-col items-end gap-3", N.value])
+			}, [m.value && w(q).running !== null ? (v(), a("section", {
 				key: 0,
 				class: "w-80 max-w-[calc(100vw-3rem)] rounded-xl border border-line-default bg-surface shadow-2xl",
-				"aria-label": C(g)("tasks_projects.timer.panel_title"),
-				onKeydown: k(oe, ["esc"])
-			}, [o("header", Pf, [o("h2", Ff, S(C(g)("tasks_projects.timer.panel_title")), 1), o("button", {
+				"aria-label": w(f)("tasks_projects.timer.panel_title"),
+				onKeydown: k(F, ["esc"])
+			}, [o("header", If, [o("h2", Lf, C(w(f)("tasks_projects.timer.running")), 1), o("button", {
 				type: "button",
 				class: "rounded p-1 text-subtle hover:bg-hover hover:text-heading",
-				"aria-label": C(g)("tasks_projects.timer.close"),
-				onClick: oe
-			}, [c(d, {
+				"aria-label": w(f)("tasks_projects.timer.close"),
+				onClick: F
+			}, [c(u, {
 				name: "XMarkIcon",
 				class: "h-5 w-5"
-			})], 8, If)]), C(K).running === null ? (_(), a("div", Hf, [
-				o("label", Uf, [o("span", Wf, S(C(g)("tasks_projects.timer.search_tasks")), 1), O(o("input", {
-					"onUpdate:modelValue": u[0] ||= (e) => T.value = e,
-					type: "search",
-					autocomplete: "off",
-					class: "w-full rounded-md border border-line-default bg-surface px-3 py-2 text-sm text-body outline-hidden focus:border-primary-400 focus:ring-1 focus:ring-primary-400",
-					placeholder: C(g)("tasks_projects.timer.search_tasks")
-				}, null, 8, Gf), [[w, T.value]])]),
-				j.value ? (_(), a("p", Kf, S(C(g)("tasks_projects.general.search")), 1)) : A.value.length > 0 ? (_(), a("ul", qf, [(_(!0), a(e, null, b(A.value, (e) => (_(), a("li", { key: e.id }, [o("button", {
-					type: "button",
-					class: f(["w-full truncate rounded-md px-2 py-2 text-left text-sm hover:bg-hover", M.value?.id === e.id ? "bg-hover-strong font-medium text-heading" : "text-body"]),
-					onClick: (t) => ae(e)
-				}, S(e.name), 11, Jf)]))), 128))])) : (_(), a("p", Yf, S(C(g)("tasks_projects.timer.no_tasks")), 1)),
-				O(o("input", {
-					"onUpdate:modelValue": u[1] ||= (e) => N.value = e,
-					type: "text",
-					class: "w-full rounded-md border border-line-default bg-surface px-3 py-2 text-sm text-body outline-hidden focus:border-primary-400 focus:ring-1 focus:ring-primary-400",
-					placeholder: C(g)("tasks_projects.timer.description_placeholder"),
-					"aria-label": C(g)("tasks_projects.time.fields.description")
-				}, null, 8, Xf), [[w, N.value]]),
-				o("div", Zf, [o("button", {
-					type: "button",
-					class: "text-xs text-primary-500 hover:underline",
-					onClick: u[2] ||= (e) => p("open-week")
-				}, S(C(g)("tasks_projects.timer.open_timesheet")), 1), c(m, {
-					variant: "primary",
-					disabled: M.value === null || C(K).busy,
-					onClick: se
-				}, {
-					left: D((e) => [c(d, {
-						name: "PlayIcon",
-						class: f(e.class)
-					}, null, 8, ["class"])]),
-					default: D(() => [s(" " + S(C(g)("tasks_projects.timer.start")), 1)]),
-					_: 1
-				}, 8, ["disabled"])])
-			])) : (_(), a("div", Lf, [o("div", null, [
-				o("p", Rf, S(z.value), 1),
-				o("p", zf, S(ee.value), 1),
-				C(K).running.description ? (_(), a("p", Bf, S(C(K).running.description), 1)) : i("", !0)
-			]), o("div", Vf, [c(m, {
+			})], 8, Rf)]), o("div", zf, [o("div", null, [
+				o("p", Bf, C(O.value), 1),
+				o("p", Vf, C(A.value), 1),
+				w(q).running.description ? (v(), a("p", Hf, C(w(q).running.description), 1)) : i("", !0)
+			]), o("div", Uf, [o("button", {
+				type: "button",
+				class: "text-xs text-primary-500 hover:underline",
+				onClick: R
+			}, C(w(f)("tasks_projects.timer.open_task")), 1), c(d, {
 				variant: "primary",
-				disabled: C(K).busy,
-				onClick: ce
+				disabled: w(q).busy,
+				onClick: L
 			}, {
-				left: D((e) => [c(d, {
+				left: D((e) => [c(u, {
 					name: "StopIcon",
-					class: f(e.class)
+					class: p(e.class)
 				}, null, 8, ["class"])]),
-				default: D(() => [s(" " + S(C(g)("tasks_projects.timer.stop")), 1)]),
+				default: D(() => [s(" " + C(w(f)("tasks_projects.timer.stop")), 1)]),
 				_: 1
-			}, 8, ["disabled"]), c(m, {
-				variant: "primary-outline",
-				disabled: C(K).busy,
-				onClick: le
-			}, {
-				default: D(() => [s(S(C(g)("tasks_projects.timer.discard")), 1)]),
-				_: 1
-			}, 8, ["disabled"])])]))], 40, Nf)) : i("", !0), o("button", {
+			}, 8, ["disabled"])])])], 40, Ff)) : i("", !0), o("button", {
 				type: "button",
 				class: "flex items-center gap-2 rounded-full bg-btn-primary px-4 py-3 text-sm font-medium text-white shadow-lg hover:bg-btn-primary-hover",
-				title: C(g)("tasks_projects.timer.quick_start"),
-				"aria-label": C(g)("tasks_projects.timer.quick_start"),
-				onClick: u[3] ||= (e) => v.value = !v.value
-			}, [c(d, {
-				name: C(K).running === null ? "ClockIcon" : "StopIcon",
+				title: w(f)("tasks_projects.timer.quick_start"),
+				"aria-label": w(f)("tasks_projects.timer.quick_start"),
+				onClick: I
+			}, [c(u, {
+				name: w(q).running === null ? "ClockIcon" : "StopIcon",
 				class: "h-5 w-5 text-white"
-			}, null, 8, ["name"]), C(K).running === null ? i("", !0) : (_(), a("span", $f, S(ee.value), 1))], 8, Qf)], 2)) : i("", !0)]);
+			}, null, 8, ["name"]), w(q).running === null ? i("", !0) : (v(), a("span", Gf, C(A.value), 1))], 8, Wf)], 2)) : i("", !0)]);
 		};
 	}
-}), ip = {
+}), Yf = { class: "flex w-full items-center justify-between" }, Xf = { class: "space-y-5 px-6 py-6" }, Zf = { class: "flex justify-end space-x-3 border-t border-line-default px-6 py-4" }, Qf = 0, $f = -1, ep = 100, tp = 10, np = /* @__PURE__ */ l({
+	__name: "StartTimerModal",
+	props: {
+		client: { type: [Function, Object] },
+		notify: { type: Function }
+	},
+	setup(e) {
+		let t = e, i = B(), a = b([]), l = b(Qf), u = b(null), d = b(""), m = b(!0), h = n(() => q.startPrompt !== null), g = n(() => [{
+			id: Qf,
+			label: i("tasks_projects.timer.any_project")
+		}, ...a.value]), _ = n(() => g.value.find((e) => e.id === l.value) ?? null);
+		E(() => q.startPrompt, (e) => {
+			e !== null && (l.value = typeof e.projectId == "number" ? e.projectId : Qf, u.value = null, d.value = "", m.value = !0, y(), typeof e.taskId == "number" && x(e.taskId));
+		}), E(l, () => {
+			u.value = null;
+		});
+		async function y() {
+			try {
+				let e = await Ht(t.client, {
+					limit: ep,
+					status: "ACTIVE",
+					sort_by: "name"
+				});
+				a.value = (e.data ?? []).map((e) => ({
+					id: e.id,
+					label: e.name
+				}));
+			} catch (e) {
+				a.value = [], t.notify("error", H(e, i("tasks_projects.time.projects_failed")));
+			}
+		}
+		async function x(e) {
+			try {
+				let n = await He(t.client, e);
+				Qe(n), typeof n.project_id == "number" && (l.value = n.project_id), await f(), j(T(n));
+			} catch {}
+		}
+		function T(e) {
+			return {
+				id: e.id,
+				label: typeof e.number == "number" ? `#${e.number} ${e.name}` : e.name,
+				name: e.name,
+				billable: e.billable !== !1
+			};
+		}
+		async function O(e) {
+			let n = (e ?? "").trim();
+			try {
+				let e = await Ve(t.client, n, {
+					projectId: l.value === Qf ? null : l.value,
+					invoiced: 0,
+					limit: tp
+				});
+				e.forEach(Qe);
+				let r = e.map(T);
+				return r.length === 0 && n !== "" && r.push({
+					id: $f,
+					label: i("tasks_projects.timer.create_and_start", { name: n }),
+					name: n,
+					billable: !0
+				}), r;
+			} catch (e) {
+				return t.notify("error", H(e, i("tasks_projects.time.tasks_failed"))), [];
+			}
+		}
+		function k(e) {
+			l.value = e?.id ?? Qf;
+		}
+		function j(e) {
+			u.value = e, m.value = e === null || e.billable;
+		}
+		function M() {
+			let e = u.value;
+			if (e === null) return;
+			let t = d.value.trim() || null, n = l.value === Qf ? null : l.value;
+			q.answerStart(e.id === $f ? {
+				create: {
+					name: e.name,
+					projectId: n
+				},
+				description: t,
+				billable: m.value
+			} : {
+				taskId: e.id,
+				description: t,
+				billable: m.value
+			});
+		}
+		function N() {
+			q.answerStart(null);
+		}
+		return (e, t) => {
+			let n = S("BaseIcon"), a = S("BaseMultiselect"), f = S("BaseInputGroup"), y = S("BaseTextarea"), b = S("BaseSwitch"), x = S("BaseButton"), T = S("BaseModal");
+			return v(), r(T, {
+				show: h.value,
+				onClose: N
+			}, {
+				header: D(() => [o("div", Yf, [o("span", null, C(w(i)("tasks_projects.timer.start_title")), 1), c(n, {
+					name: "XMarkIcon",
+					class: "h-6 w-6 cursor-pointer text-subtle hover:text-body",
+					onClick: N
+				})])]),
+				default: D(() => [o("form", { onSubmit: A(M, ["prevent"]) }, [o("div", Xf, [
+					c(f, { label: w(i)("tasks_projects.time.filters.project") }, {
+						default: D(() => [c(a, {
+							"model-value": _.value,
+							options: g.value,
+							"can-clear": !1,
+							"value-prop": "id",
+							"track-by": "label",
+							label: "label",
+							object: "",
+							searchable: "",
+							"onUpdate:modelValue": t[0] ||= (e) => k(e)
+						}, null, 8, ["model-value", "options"])]),
+						_: 1
+					}, 8, ["label"]),
+					c(f, {
+						label: w(i)("tasks_projects.time.fields.task"),
+						required: ""
+					}, {
+						default: D(() => [(v(), r(a, {
+							key: l.value,
+							"model-value": u.value,
+							options: O,
+							placeholder: w(i)("tasks_projects.timer.pick_task"),
+							"initial-search": u.value?.label ?? "",
+							"no-results-text": w(i)("tasks_projects.timer.no_matches"),
+							delay: 400,
+							"filter-results": !1,
+							"value-prop": "id",
+							"track-by": "label",
+							label: "label",
+							object: "",
+							searchable: "",
+							"preserve-search": "",
+							"resolve-on-load": "",
+							"onUpdate:modelValue": t[1] ||= (e) => j(e)
+						}, null, 8, [
+							"model-value",
+							"placeholder",
+							"initial-search",
+							"no-results-text"
+						]))]),
+						_: 1
+					}, 8, ["label"]),
+					c(f, { label: w(i)("tasks_projects.time.fields.description") }, {
+						default: D(() => [c(y, {
+							modelValue: d.value,
+							"onUpdate:modelValue": t[2] ||= (e) => d.value = e,
+							row: 3
+						}, null, 8, ["modelValue"])]),
+						_: 1
+					}, 8, ["label"]),
+					c(f, { label: w(i)("tasks_projects.time.fields.billable") }, {
+						default: D(() => [c(b, {
+							modelValue: m.value,
+							"onUpdate:modelValue": t[3] ||= (e) => m.value = e,
+							class: "flex"
+						}, null, 8, ["modelValue"])]),
+						_: 1
+					}, 8, ["label"])
+				]), o("div", Zf, [c(x, {
+					type: "button",
+					variant: "primary-outline",
+					onClick: N
+				}, {
+					default: D(() => [s(C(w(i)("tasks_projects.general.cancel")), 1)]),
+					_: 1
+				}), c(x, {
+					type: "submit",
+					variant: "primary",
+					disabled: u.value === null || w(q).busy,
+					loading: w(q).busy
+				}, {
+					left: D((e) => [c(n, {
+						name: "PlayIcon",
+						class: p(e.class)
+					}, null, 8, ["class"])]),
+					default: D(() => [s(" " + C(w(i)("tasks_projects.timer.start")), 1)]),
+					_: 1
+				}, 8, ["disabled", "loading"])])], 32)]),
+				_: 1
+			}, 8, ["show"]);
+		};
+	}
+}), rp = { class: "flex w-full items-center justify-between" }, ip = { class: "space-y-5 px-6 py-6" }, ap = { class: "truncate text-sm font-medium text-heading" }, op = { class: "mt-1 text-3xl font-semibold tabular-nums text-primary-500" }, sp = { class: "mt-1 text-xs text-muted" }, cp = { class: "border-t border-line-default px-6 py-4" }, lp = {
+	key: 0,
+	class: "flex flex-wrap items-center justify-between gap-3"
+}, up = { class: "text-sm text-body" }, dp = { class: "flex space-x-3" }, fp = {
+	key: 1,
+	class: "flex items-center justify-between"
+}, pp = { class: "flex space-x-3" }, mp = /* @__PURE__ */ l({
+	__name: "StopTimerModal",
+	setup(e) {
+		let t = B(), i = b(""), l = b(!0), u = b(!1), d = n(() => q.stopPrompt !== null), f = n(() => Ze(q.stopPrompt?.entry.task_id ?? null)), m = n(() => Ma(q.elapsedSeconds)), h = n(() => G.settings.rounding_minutes), g = n(() => Na(Fa(Math.round(q.elapsedSeconds / 60), h.value, G.settings.rounding_direction))), _ = n(() => h.value > 1 ? t("tasks_projects.timer.saved_as", {
+			duration: g.value,
+			increment: h.value
+		}) : t("tasks_projects.timer.saved_as_exact", { duration: g.value }));
+		E(() => q.stopPrompt, (e) => {
+			i.value = e?.entry.description ?? "", l.value = e?.entry.billable !== !1, u.value = !1;
+		});
+		function y() {
+			q.answerStop({
+				action: "save",
+				description: i.value.trim() || null,
+				billable: l.value
+			});
+		}
+		function x() {
+			q.answerStop({ action: "discard" });
+		}
+		function T() {
+			q.answerStop(null);
+		}
+		return (e, n) => {
+			let h = S("BaseIcon"), g = S("BaseTextarea"), b = S("BaseInputGroup"), E = S("BaseSwitch"), O = S("BaseButton"), k = S("BaseModal");
+			return v(), r(k, {
+				show: d.value,
+				onClose: T
+			}, {
+				header: D(() => [o("div", rp, [o("span", null, C(w(t)("tasks_projects.timer.stop_title")), 1), c(h, {
+					name: "XMarkIcon",
+					class: "h-6 w-6 cursor-pointer text-subtle hover:text-body",
+					onClick: T
+				})])]),
+				default: D(() => [o("form", { onSubmit: A(y, ["prevent"]) }, [o("div", ip, [
+					o("div", null, [
+						o("p", ap, C(f.value), 1),
+						o("p", op, C(m.value), 1),
+						o("p", sp, C(_.value), 1)
+					]),
+					c(b, { label: w(t)("tasks_projects.time.fields.description") }, {
+						default: D(() => [c(g, {
+							modelValue: i.value,
+							"onUpdate:modelValue": n[0] ||= (e) => i.value = e,
+							row: 3
+						}, null, 8, ["modelValue"])]),
+						_: 1
+					}, 8, ["label"]),
+					c(b, { label: w(t)("tasks_projects.time.fields.billable") }, {
+						default: D(() => [c(E, {
+							modelValue: l.value,
+							"onUpdate:modelValue": n[1] ||= (e) => l.value = e,
+							class: "flex"
+						}, null, 8, ["modelValue"])]),
+						_: 1
+					}, 8, ["label"])
+				]), o("div", cp, [u.value ? (v(), a("div", lp, [o("p", up, C(w(t)("tasks_projects.timer.discard_ask", { duration: m.value })), 1), o("div", dp, [c(O, {
+					type: "button",
+					variant: "primary-outline",
+					onClick: n[2] ||= (e) => u.value = !1
+				}, {
+					default: D(() => [s(C(w(t)("tasks_projects.general.cancel")), 1)]),
+					_: 1
+				}), c(O, {
+					type: "button",
+					variant: "danger",
+					disabled: w(q).busy,
+					onClick: x
+				}, {
+					default: D(() => [s(C(w(t)("tasks_projects.timer.discard")), 1)]),
+					_: 1
+				}, 8, ["disabled"])])])) : (v(), a("div", fp, [c(O, {
+					type: "button",
+					variant: "white",
+					disabled: w(q).busy,
+					onClick: n[3] ||= (e) => u.value = !0
+				}, {
+					default: D(() => [s(C(w(t)("tasks_projects.timer.discard")), 1)]),
+					_: 1
+				}, 8, ["disabled"]), o("div", pp, [c(O, {
+					type: "button",
+					variant: "primary-outline",
+					onClick: T
+				}, {
+					default: D(() => [s(C(w(t)("tasks_projects.general.cancel")), 1)]),
+					_: 1
+				}), c(O, {
+					type: "submit",
+					variant: "primary",
+					loading: w(q).busy,
+					disabled: w(q).busy
+				}, {
+					left: D((e) => [c(h, {
+						name: "StopIcon",
+						class: p(e.class)
+					}, null, 8, ["class"])]),
+					default: D(() => [s(" " + C(w(t)("tasks_projects.timer.save_and_stop")), 1)]),
+					_: 1
+				}, 8, ["loading", "disabled"])])]))])], 32)]),
+				_: 1
+			}, 8, ["show"]);
+		};
+	}
+}), hp = {
 	key: 0,
 	class: "relative float-left m-0 ml-2"
-}, ap = ["title"], op = ["aria-label", "title"], sp = { class: "font-medium tabular-nums" }, cp = [
+}, gp = ["title"], _p = ["aria-label", "title"], vp = { class: "font-medium tabular-nums" }, yp = [
 	"disabled",
 	"title",
 	"aria-label"
-], lp = /* @__PURE__ */ l({
+], bp = /* @__PURE__ */ l({
 	__name: "TimerChip",
 	props: {
 		client: { type: [Function, Object] },
@@ -8022,47 +8340,43 @@ var Nf = ["aria-label"], Pf = { class: "flex items-center justify-between border
 	},
 	emits: ["open"],
 	setup(e, { emit: t }) {
-		let r = e, s = t, l = B(), u = n(() => Ze(K.running?.task_id ?? null)), d = n(() => Na(K.elapsedSeconds));
-		async function f() {
-			let e = u.value, t = await K.stop(r.client, {
+		let r = e, s = t, l = B(), u = n(() => Ze(q.running?.task_id ?? null)), d = n(() => Ma(q.elapsedSeconds));
+		function f() {
+			q.stopWithPrompt(r.client, {
 				notify: r.notify,
 				t: l
 			});
-			t !== null && r.notify("success", l("tasks_projects.timer.stopped", {
-				name: e,
-				duration: Pa(t.duration_minutes)
-			}));
 		}
 		return (e, t) => {
-			let n = x("BaseIcon");
-			return C(K).running === null ? i("", !0) : (_(), a("li", ip, [o("div", {
+			let n = S("BaseIcon");
+			return w(q).running === null ? i("", !0) : (v(), a("li", hp, [o("div", {
 				class: "flex h-8 items-center gap-2 rounded-lg bg-white/20 px-2 text-sm text-white md:h-9 md:px-3",
-				title: C(l)("tasks_projects.timer.running")
+				title: w(l)("tasks_projects.timer.running")
 			}, [
 				t[1] ||= o("span", { class: "inline-block h-2 w-2 shrink-0 animate-pulse rounded-full bg-white" }, null, -1),
 				o("button", {
 					type: "button",
 					class: "hidden max-w-32 truncate hover:underline lg:block",
-					"aria-label": C(l)("tasks_projects.timer.open_task"),
-					title: C(l)("tasks_projects.timer.open_task"),
+					"aria-label": w(l)("tasks_projects.timer.open_task"),
+					title: w(l)("tasks_projects.timer.open_task"),
 					onClick: t[0] ||= (e) => s("open")
-				}, S(u.value), 9, op),
-				o("span", sp, S(d.value), 1),
+				}, C(u.value), 9, _p),
+				o("span", vp, C(d.value), 1),
 				o("button", {
 					type: "button",
 					class: "rounded p-1 hover:bg-white/20 disabled:opacity-50",
-					disabled: C(K).busy,
-					title: C(l)("tasks_projects.timer.stop"),
-					"aria-label": C(l)("tasks_projects.timer.stop"),
+					disabled: w(q).busy,
+					title: w(l)("tasks_projects.timer.stop"),
+					"aria-label": w(l)("tasks_projects.timer.stop"),
 					onClick: f
 				}, [c(n, {
 					name: "StopIcon",
 					class: "h-4 w-4 text-white"
-				})], 8, cp)
-			], 8, ap)]));
+				})], 8, yp)
+			], 8, gp)]));
 		};
 	}
-}), up = { en: { tasks_projects: {
+}), xp = { en: { tasks_projects: {
 	time: {
 		title: "Time",
 		my_time: "My time",
@@ -8160,6 +8474,16 @@ var Nf = ["aria-label"], Pf = { class: "flex items-center justify-between border
 		stopped: "Logged {duration} on {name}.",
 		discarded: "The running timer was discarded.",
 		discard_confirm: "Discard the running timer? The elapsed time is not saved.",
+		stop_title: "Save and stop",
+		save_and_stop: "Save and stop",
+		saved_as: "Saved as {duration} after rounding to {increment} min.",
+		saved_as_exact: "Saved as {duration}.",
+		discard_ask: "Discard {duration}? This cannot be undone.",
+		start_title: "Start a timer",
+		any_project: "Any project",
+		pick_task: "Search by task name or number",
+		create_and_start: "Create task \"{name}\" and start",
+		no_matches: "No tasks match that search. Keep typing to create one.",
 		already_running: "A timer is already running. It has been reloaded.",
 		start_failed: "Unable to start the timer.",
 		stop_failed: "Unable to stop the timer.",
@@ -8225,47 +8549,47 @@ var Nf = ["aria-label"], Pf = { class: "flex items-center justify-between border
 		reorder_failed: "Unable to save the new order.",
 		forbidden: "Your role does not allow managing the board columns."
 	}
-} } }, dp = {
+} } }, Sp = {
 	key: 0,
 	class: "text-sm text-muted"
-}, fp = { key: 1 }, pp = {
+}, Cp = { key: 1 }, wp = {
 	key: 0,
 	class: "flex items-center gap-2 text-sm text-muted"
-}, mp = {
+}, Tp = {
 	key: 1,
 	class: "text-sm text-muted"
-}, hp = {
+}, Ep = {
 	key: 2,
 	class: "divide-y divide-line-light"
-}, gp = {
+}, Dp = {
 	key: 0,
 	class: "space-y-3"
-}, _p = { class: "flex flex-wrap items-center gap-2" }, vp = ["aria-label", "onClick"], yp = { class: "flex flex-wrap items-center gap-6" }, bp = { class: "flex items-center gap-2 text-sm text-body" }, xp = { class: "flex items-center gap-2 text-sm text-body" }, Sp = { class: "flex gap-3" }, Cp = {
+}, Op = { class: "flex flex-wrap items-center gap-2" }, kp = ["aria-label", "onClick"], Ap = { class: "flex flex-wrap items-center gap-6" }, jp = { class: "flex items-center gap-2 text-sm text-body" }, Mp = { class: "flex items-center gap-2 text-sm text-body" }, Np = { class: "flex gap-3" }, Pp = {
 	key: 1,
 	class: "flex items-center gap-3"
-}, wp = { class: "min-w-0 flex-1 truncate text-sm font-medium text-heading" }, Tp = { class: "flex items-center gap-1" }, Ep = [
+}, Fp = { class: "min-w-0 flex-1 truncate text-sm font-medium text-heading" }, Ip = { class: "flex items-center gap-1" }, Lp = [
 	"disabled",
 	"title",
 	"aria-label",
 	"onClick"
-], Dp = [
+], Rp = [
 	"disabled",
 	"title",
 	"aria-label",
 	"onClick"
-], Op = [
+], zp = [
 	"title",
 	"aria-label",
 	"onClick"
-], kp = [
+], Bp = [
 	"disabled",
 	"title",
 	"aria-label",
 	"onClick"
-], Ap = {
+], Vp = {
 	key: 3,
 	class: "mt-4 space-y-3 rounded-lg border border-line-default p-3"
-}, jp = { class: "flex flex-wrap items-center gap-2" }, Mp = ["aria-label", "onClick"], Np = { class: "flex flex-wrap items-center gap-6" }, Pp = { class: "flex items-center gap-2 text-sm text-body" }, Fp = { class: "flex items-center gap-2 text-sm text-body" }, Ip = { class: "flex gap-3" }, Lp = /* @__PURE__ */ l({
+}, Hp = { class: "flex flex-wrap items-center gap-2" }, Up = ["aria-label", "onClick"], Wp = { class: "flex flex-wrap items-center gap-6" }, Gp = { class: "flex items-center gap-2 text-sm text-body" }, Kp = { class: "flex items-center gap-2 text-sm text-body" }, qp = { class: "flex gap-3" }, Jp = /* @__PURE__ */ l({
 	__name: "TaskStatusEditor",
 	props: {
 		client: { type: [Function, Object] },
@@ -8281,21 +8605,21 @@ var Nf = ["aria-label"], Pf = { class: "flex items-center justify-between border
 			"#a855f7",
 			"#0891b2",
 			"#64748b"
-		], d = B(), m = y([]), g = y(!0), w = y(!1), T = y(!1), E = y(null), O = y(!1), k = v({
+		], d = B(), f = b([]), h = b(!0), _ = b(!1), T = b(!1), E = b(null), O = b(!1), k = y({
 			name: "",
 			colour: "",
 			is_default: !1,
 			is_closed: !1
-		}), A = n(() => !g.value && m.value.length === 0);
-		h(() => void j());
+		}), A = n(() => !h.value && f.value.length === 0);
+		g(() => void j());
 		async function j() {
-			g.value = !0;
+			h.value = !0;
 			try {
-				m.value = await Ie(l.client), w.value = !1;
+				f.value = await Ie(l.client), _.value = !1;
 			} catch (e) {
-				m.value = [], w.value = vt(e), w.value || l.notify("error", H(e, d("tasks_projects.settings.load_failed")));
+				f.value = [], _.value = vt(e), _.value || l.notify("error", H(e, d("tasks_projects.settings.load_failed")));
 			} finally {
-				g.value = !1;
+				h.value = !1;
 			}
 		}
 		function M(e) {
@@ -8345,11 +8669,11 @@ var Nf = ["aria-label"], Pf = { class: "flex items-center justify-between border
 		}
 		async function R(e, t) {
 			let n = e + t;
-			if (T.value || n < 0 || n >= m.value.length) return;
-			let r = [...m.value];
-			r.splice(n, 0, ...r.splice(e, 1)), m.value = r, T.value = !0;
+			if (T.value || n < 0 || n >= f.value.length) return;
+			let r = [...f.value];
+			r.splice(n, 0, ...r.splice(e, 1)), f.value = r, T.value = !0;
 			try {
-				m.value = await Be(l.client, r.map((e) => e.id)), l.notify("success", d("tasks_projects.settings.status_reordered"));
+				f.value = await Be(l.client, r.map((e) => e.id)), l.notify("success", d("tasks_projects.settings.status_reordered"));
 			} catch (e) {
 				l.notify("error", H(e, d("tasks_projects.settings.reorder_failed"))), await j();
 			} finally {
@@ -8357,16 +8681,16 @@ var Nf = ["aria-label"], Pf = { class: "flex items-center justify-between border
 			}
 		}
 		return (t, n) => {
-			let l = x("BaseSpinner"), h = x("BaseInput"), v = x("BaseInputGroup"), y = x("BaseSwitch"), j = x("BaseButton"), F = x("BaseBadge"), z = x("BaseIcon");
-			return _(), a("div", null, [w.value ? (_(), a("p", dp, S(C(d)("tasks_projects.settings.forbidden")), 1)) : (_(), a("div", fp, [g.value ? (_(), a("div", pp, [c(l, { class: "h-4 w-4 text-primary-500" })])) : A.value ? (_(), a("p", mp, S(C(d)("tasks_projects.settings.no_statuses")), 1)) : (_(), a("ul", hp, [(_(!0), a(e, null, b(m.value, (t, l) => (_(), a("li", {
+			let l = S("BaseSpinner"), g = S("BaseInput"), y = S("BaseInputGroup"), b = S("BaseSwitch"), j = S("BaseButton"), F = S("BaseBadge"), z = S("BaseIcon");
+			return v(), a("div", null, [_.value ? (v(), a("p", Sp, C(w(d)("tasks_projects.settings.forbidden")), 1)) : (v(), a("div", Cp, [h.value ? (v(), a("div", wp, [c(l, { class: "h-4 w-4 text-primary-500" })])) : A.value ? (v(), a("p", Tp, C(w(d)("tasks_projects.settings.no_statuses")), 1)) : (v(), a("ul", Ep, [(v(!0), a(e, null, x(f.value, (t, l) => (v(), a("li", {
 				key: t.id,
 				class: "py-3"
-			}, [E.value === t.id ? (_(), a("div", gp, [
-				c(v, {
-					label: C(d)("tasks_projects.settings.status_name"),
+			}, [E.value === t.id ? (v(), a("div", Dp, [
+				c(y, {
+					label: w(d)("tasks_projects.settings.status_name"),
 					required: ""
 				}, {
-					default: D(() => [c(h, {
+					default: D(() => [c(g, {
 						modelValue: k.name,
 						"onUpdate:modelValue": n[0] ||= (e) => k.name = e,
 						type: "text",
@@ -8374,117 +8698,117 @@ var Nf = ["aria-label"], Pf = { class: "flex items-center justify-between border
 					}, null, 8, ["modelValue"])]),
 					_: 1
 				}, 8, ["label"]),
-				c(v, { label: C(d)("tasks_projects.settings.colour") }, {
-					default: D(() => [o("div", _p, [(_(), a(e, null, b(u, (e) => o("button", {
+				c(y, { label: w(d)("tasks_projects.settings.colour") }, {
+					default: D(() => [o("div", Op, [(v(), a(e, null, x(u, (e) => o("button", {
 						key: e,
 						type: "button",
-						class: f(["h-7 w-7 rounded-full border-2 transition", k.colour === e ? "border-heading" : "border-line-default"]),
-						style: p({ backgroundColor: e }),
+						class: p(["h-7 w-7 rounded-full border-2 transition", k.colour === e ? "border-heading" : "border-line-default"]),
+						style: m({ backgroundColor: e }),
 						"aria-label": e,
 						onClick: (t) => k.colour = e
-					}, null, 14, vp)), 64)), o("button", {
+					}, null, 14, kp)), 64)), o("button", {
 						type: "button",
 						class: "rounded-md border border-line-default px-2 py-1 text-xs text-muted hover:bg-hover",
 						onClick: n[1] ||= (e) => k.colour = ""
-					}, S(C(d)("tasks_projects.settings.colour_none")), 1)])]),
+					}, C(w(d)("tasks_projects.settings.colour_none")), 1)])]),
 					_: 1
 				}, 8, ["label"]),
-				o("div", yp, [o("label", bp, [c(y, {
+				o("div", Ap, [o("label", jp, [c(b, {
 					modelValue: k.is_default,
 					"onUpdate:modelValue": n[2] ||= (e) => k.is_default = e,
 					class: "flex"
-				}, null, 8, ["modelValue"]), s(" " + S(C(d)("tasks_projects.settings.is_default")), 1)]), o("label", xp, [c(y, {
+				}, null, 8, ["modelValue"]), s(" " + C(w(d)("tasks_projects.settings.is_default")), 1)]), o("label", Mp, [c(b, {
 					modelValue: k.is_closed,
 					"onUpdate:modelValue": n[3] ||= (e) => k.is_closed = e,
 					class: "flex"
-				}, null, 8, ["modelValue"]), s(" " + S(C(d)("tasks_projects.settings.is_closed")), 1)])]),
-				o("div", Sp, [c(j, {
+				}, null, 8, ["modelValue"]), s(" " + C(w(d)("tasks_projects.settings.is_closed")), 1)])]),
+				o("div", Np, [c(j, {
 					variant: "primary",
 					size: "sm",
 					disabled: T.value,
 					onClick: I
 				}, {
-					default: D(() => [s(S(C(d)("tasks_projects.general.save")), 1)]),
+					default: D(() => [s(C(w(d)("tasks_projects.general.save")), 1)]),
 					_: 1
 				}, 8, ["disabled"]), c(j, {
 					variant: "primary-outline",
 					size: "sm",
 					onClick: P
 				}, {
-					default: D(() => [s(S(C(d)("tasks_projects.general.cancel")), 1)]),
+					default: D(() => [s(C(w(d)("tasks_projects.general.cancel")), 1)]),
 					_: 1
 				})])
-			])) : (_(), a("div", Cp, [
+			])) : (v(), a("div", Pp, [
 				o("span", {
-					class: f(["inline-block h-3 w-3 shrink-0 rounded-full", t.colour ? "" : "bg-line-default"]),
-					style: p(t.colour ? { backgroundColor: t.colour } : void 0)
+					class: p(["inline-block h-3 w-3 shrink-0 rounded-full", t.colour ? "" : "bg-line-default"]),
+					style: m(t.colour ? { backgroundColor: t.colour } : void 0)
 				}, null, 6),
-				o("span", wp, S(t.name), 1),
-				t.is_default ? (_(), r(F, {
+				o("span", Fp, C(t.name), 1),
+				t.is_default ? (v(), r(F, {
 					key: 0,
 					class: "rounded-full bg-primary-50! text-primary-500!"
 				}, {
-					default: D(() => [s(S(C(d)("tasks_projects.settings.is_default")), 1)]),
+					default: D(() => [s(C(w(d)("tasks_projects.settings.is_default")), 1)]),
 					_: 1
 				})) : i("", !0),
-				t.is_closed ? (_(), r(F, {
+				t.is_closed ? (v(), r(F, {
 					key: 1,
 					class: "rounded-full bg-surface-tertiary! text-muted!"
 				}, {
-					default: D(() => [s(S(C(d)("tasks_projects.settings.is_closed")), 1)]),
+					default: D(() => [s(C(w(d)("tasks_projects.settings.is_closed")), 1)]),
 					_: 1
 				})) : i("", !0),
-				o("div", Tp, [
+				o("div", Ip, [
 					o("button", {
 						type: "button",
 						class: "rounded p-1 text-subtle hover:bg-hover hover:text-heading disabled:opacity-40",
 						disabled: T.value || l === 0,
-						title: C(d)("tasks_projects.settings.move_up"),
-						"aria-label": C(d)("tasks_projects.settings.move_up"),
+						title: w(d)("tasks_projects.settings.move_up"),
+						"aria-label": w(d)("tasks_projects.settings.move_up"),
 						onClick: (e) => R(l, -1)
 					}, [c(z, {
 						name: "ChevronUpIcon",
 						class: "h-4 w-4"
-					})], 8, Ep),
+					})], 8, Lp),
 					o("button", {
 						type: "button",
 						class: "rounded p-1 text-subtle hover:bg-hover hover:text-heading disabled:opacity-40",
-						disabled: T.value || l === m.value.length - 1,
-						title: C(d)("tasks_projects.settings.move_down"),
-						"aria-label": C(d)("tasks_projects.settings.move_down"),
+						disabled: T.value || l === f.value.length - 1,
+						title: w(d)("tasks_projects.settings.move_down"),
+						"aria-label": w(d)("tasks_projects.settings.move_down"),
 						onClick: (e) => R(l, 1)
 					}, [c(z, {
 						name: "ChevronDownIcon",
 						class: "h-4 w-4"
-					})], 8, Dp),
+					})], 8, Rp),
 					o("button", {
 						type: "button",
 						class: "rounded p-1 text-subtle hover:bg-hover hover:text-heading",
-						title: C(d)("tasks_projects.general.edit"),
-						"aria-label": C(d)("tasks_projects.general.edit"),
+						title: w(d)("tasks_projects.general.edit"),
+						"aria-label": w(d)("tasks_projects.general.edit"),
 						onClick: (e) => M(t)
 					}, [c(z, {
 						name: "PencilIcon",
 						class: "h-4 w-4"
-					})], 8, Op),
+					})], 8, zp),
 					o("button", {
 						type: "button",
 						class: "rounded p-1 text-subtle hover:bg-hover hover:text-alert-error-text",
 						disabled: T.value,
-						title: C(d)("tasks_projects.general.delete"),
-						"aria-label": C(d)("tasks_projects.general.delete"),
+						title: w(d)("tasks_projects.general.delete"),
+						"aria-label": w(d)("tasks_projects.general.delete"),
 						onClick: (e) => L(t)
 					}, [c(z, {
 						name: "TrashIcon",
 						class: "h-4 w-4"
-					})], 8, kp)
+					})], 8, Bp)
 				])
-			]))]))), 128))])), O.value ? (_(), a("div", Ap, [
-				c(v, {
-					label: C(d)("tasks_projects.settings.status_name"),
+			]))]))), 128))])), O.value ? (v(), a("div", Vp, [
+				c(y, {
+					label: w(d)("tasks_projects.settings.status_name"),
 					required: ""
 				}, {
-					default: D(() => [c(h, {
+					default: D(() => [c(g, {
 						modelValue: k.name,
 						"onUpdate:modelValue": n[4] ||= (e) => k.name = e,
 						type: "text",
@@ -8492,43 +8816,43 @@ var Nf = ["aria-label"], Pf = { class: "flex items-center justify-between border
 					}, null, 8, ["modelValue"])]),
 					_: 1
 				}, 8, ["label"]),
-				c(v, { label: C(d)("tasks_projects.settings.colour") }, {
-					default: D(() => [o("div", jp, [(_(), a(e, null, b(u, (e) => o("button", {
+				c(y, { label: w(d)("tasks_projects.settings.colour") }, {
+					default: D(() => [o("div", Hp, [(v(), a(e, null, x(u, (e) => o("button", {
 						key: e,
 						type: "button",
-						class: f(["h-7 w-7 rounded-full border-2 transition", k.colour === e ? "border-heading" : "border-line-default"]),
-						style: p({ backgroundColor: e }),
+						class: p(["h-7 w-7 rounded-full border-2 transition", k.colour === e ? "border-heading" : "border-line-default"]),
+						style: m({ backgroundColor: e }),
 						"aria-label": e,
 						onClick: (t) => k.colour = e
-					}, null, 14, Mp)), 64))])]),
+					}, null, 14, Up)), 64))])]),
 					_: 1
 				}, 8, ["label"]),
-				o("div", Np, [o("label", Pp, [c(y, {
+				o("div", Wp, [o("label", Gp, [c(b, {
 					modelValue: k.is_default,
 					"onUpdate:modelValue": n[5] ||= (e) => k.is_default = e,
 					class: "flex"
-				}, null, 8, ["modelValue"]), s(" " + S(C(d)("tasks_projects.settings.is_default")), 1)]), o("label", Fp, [c(y, {
+				}, null, 8, ["modelValue"]), s(" " + C(w(d)("tasks_projects.settings.is_default")), 1)]), o("label", Kp, [c(b, {
 					modelValue: k.is_closed,
 					"onUpdate:modelValue": n[6] ||= (e) => k.is_closed = e,
 					class: "flex"
-				}, null, 8, ["modelValue"]), s(" " + S(C(d)("tasks_projects.settings.is_closed")), 1)])]),
-				o("div", Ip, [c(j, {
+				}, null, 8, ["modelValue"]), s(" " + C(w(d)("tasks_projects.settings.is_closed")), 1)])]),
+				o("div", qp, [c(j, {
 					variant: "primary",
 					size: "sm",
 					disabled: T.value,
 					onClick: I
 				}, {
-					default: D(() => [s(S(C(d)("tasks_projects.general.save")), 1)]),
+					default: D(() => [s(C(w(d)("tasks_projects.general.save")), 1)]),
 					_: 1
 				}, 8, ["disabled"]), c(j, {
 					variant: "primary-outline",
 					size: "sm",
 					onClick: P
 				}, {
-					default: D(() => [s(S(C(d)("tasks_projects.general.cancel")), 1)]),
+					default: D(() => [s(C(w(d)("tasks_projects.general.cancel")), 1)]),
 					_: 1
 				})])
-			])) : g.value ? i("", !0) : (_(), r(j, {
+			])) : h.value ? i("", !0) : (v(), r(j, {
 				key: 4,
 				variant: "primary-outline",
 				size: "sm",
@@ -8537,14 +8861,14 @@ var Nf = ["aria-label"], Pf = { class: "flex items-center justify-between border
 			}, {
 				left: D((e) => [c(z, {
 					name: "PlusIcon",
-					class: f(e.class)
+					class: p(e.class)
 				}, null, 8, ["class"])]),
-				default: D(() => [s(" " + S(C(d)("tasks_projects.settings.add_status")), 1)]),
+				default: D(() => [s(" " + C(w(d)("tasks_projects.settings.add_status")), 1)]),
 				_: 1
 			}))]))]);
 		};
 	}
-}), Rp = { class: "space-y-6" }, zp = { class: "divide-y divide-line-light" }, Bp = { class: "text-sm text-muted" }, Vp = { class: "text-sm font-medium text-heading" }, Hp = { class: "divide-y divide-line-light" }, Up = { class: "text-sm text-muted" }, Wp = { class: "text-sm font-medium text-heading" }, Gp = { class: "divide-y divide-line-light" }, Kp = { class: "text-sm text-muted" }, qp = { class: "text-sm font-medium text-heading" }, Jp = /* @__PURE__ */ l({
+}), Yp = { class: "space-y-6" }, Xp = { class: "divide-y divide-line-light" }, Zp = { class: "text-sm text-muted" }, Qp = { class: "text-sm font-medium text-heading" }, $p = { class: "divide-y divide-line-light" }, em = { class: "text-sm text-muted" }, tm = { class: "text-sm font-medium text-heading" }, nm = { class: "divide-y divide-line-light" }, rm = { class: "text-sm text-muted" }, im = { class: "text-sm font-medium text-heading" }, am = /* @__PURE__ */ l({
 	__name: "TimeSettingsPage",
 	props: {
 		client: { type: [Function, Object] },
@@ -8552,7 +8876,7 @@ var Nf = ["aria-label"], Pf = { class: "flex items-center justify-between border
 		router: {}
 	},
 	setup(t) {
-		let r = B(), i = n(() => xa.settings);
+		let r = B(), i = n(() => G.settings);
 		function l(e) {
 			return r(e ? "tasks_projects.settings.on" : "tasks_projects.settings.off");
 		}
@@ -8598,7 +8922,7 @@ var Nf = ["aria-label"], Pf = { class: "flex items-center justify-between border
 				label: r("tasks_projects.settings.hide_invoiced_on_board"),
 				value: l(i.value.hide_invoiced_on_board)
 			}
-		]), p = n(() => [
+		]), f = n(() => [
 			"invoice_project_heading",
 			"invoice_task_description",
 			"invoice_entry_dates",
@@ -8611,57 +8935,57 @@ var Nf = ["aria-label"], Pf = { class: "flex items-center justify-between border
 			value: l(i.value[e])
 		})));
 		return (n, i) => {
-			let l = x("BaseIcon"), m = x("BaseButton"), h = x("router-link"), g = x("BaseSettingCard");
-			return _(), a("div", Rp, [
+			let l = S("BaseIcon"), m = S("BaseButton"), h = S("router-link"), g = S("BaseSettingCard");
+			return v(), a("div", Yp, [
 				c(g, {
-					title: C(r)("tasks_projects.settings.general_title"),
-					description: C(r)("tasks_projects.settings.general_description")
+					title: w(r)("tasks_projects.settings.general_title"),
+					description: w(r)("tasks_projects.settings.general_description")
 				}, {
-					action: D(() => [c(h, { to: C(W).settings }, {
+					action: D(() => [c(h, { to: w(W).settings }, {
 						default: D(() => [c(m, {
 							variant: "primary-outline",
 							size: "sm"
 						}, {
 							right: D((e) => [c(l, {
 								name: "ArrowTopRightOnSquareIcon",
-								class: f(e.class)
+								class: p(e.class)
 							}, null, 8, ["class"])]),
-							default: D(() => [s(" " + S(C(r)("tasks_projects.settings.open_module_settings")), 1)]),
+							default: D(() => [s(" " + C(w(r)("tasks_projects.settings.open_module_settings")), 1)]),
 							_: 1
 						})]),
 						_: 1
 					}, 8, ["to"])]),
-					default: D(() => [o("dl", zp, [(_(!0), a(e, null, b(u.value, (e) => (_(), a("div", {
+					default: D(() => [o("dl", Xp, [(v(!0), a(e, null, x(u.value, (e) => (v(), a("div", {
 						key: e.key,
 						class: "flex justify-between gap-4 py-2.5"
-					}, [o("dt", Bp, S(e.label), 1), o("dd", Vp, S(e.value), 1)]))), 128))])]),
+					}, [o("dt", Zp, C(e.label), 1), o("dd", Qp, C(e.value), 1)]))), 128))])]),
 					_: 1
 				}, 8, ["title", "description"]),
 				c(g, {
-					title: C(r)("tasks_projects.settings.behaviour_title"),
-					description: C(r)("tasks_projects.settings.behaviour_description")
+					title: w(r)("tasks_projects.settings.behaviour_title"),
+					description: w(r)("tasks_projects.settings.behaviour_description")
 				}, {
-					default: D(() => [o("dl", Hp, [(_(!0), a(e, null, b(d.value, (e) => (_(), a("div", {
+					default: D(() => [o("dl", $p, [(v(!0), a(e, null, x(d.value, (e) => (v(), a("div", {
 						key: e.key,
 						class: "flex justify-between gap-4 py-2.5"
-					}, [o("dt", Up, S(e.label), 1), o("dd", Wp, S(e.value), 1)]))), 128))])]),
+					}, [o("dt", em, C(e.label), 1), o("dd", tm, C(e.value), 1)]))), 128))])]),
 					_: 1
 				}, 8, ["title", "description"]),
 				c(g, {
-					title: C(r)("tasks_projects.settings.invoice_title"),
-					description: C(r)("tasks_projects.settings.invoice_description")
+					title: w(r)("tasks_projects.settings.invoice_title"),
+					description: w(r)("tasks_projects.settings.invoice_description")
 				}, {
-					default: D(() => [o("dl", Gp, [(_(!0), a(e, null, b(p.value, (e) => (_(), a("div", {
+					default: D(() => [o("dl", nm, [(v(!0), a(e, null, x(f.value, (e) => (v(), a("div", {
 						key: e.key,
 						class: "flex justify-between gap-4 py-2.5"
-					}, [o("dt", Kp, S(e.label), 1), o("dd", qp, S(e.value), 1)]))), 128))])]),
+					}, [o("dt", rm, C(e.label), 1), o("dd", im, C(e.value), 1)]))), 128))])]),
 					_: 1
 				}, 8, ["title", "description"]),
 				c(g, {
-					title: C(r)("tasks_projects.settings.statuses_title"),
-					description: C(r)("tasks_projects.settings.statuses_description")
+					title: w(r)("tasks_projects.settings.statuses_title"),
+					description: w(r)("tasks_projects.settings.statuses_description")
 				}, {
-					default: D(() => [c(Lp, {
+					default: D(() => [c(Jp, {
 						client: t.client,
 						notify: t.notify
 					}, null, 8, ["client", "notify"])]),
@@ -8673,34 +8997,42 @@ var Nf = ["aria-label"], Pf = { class: "flex items-center justify-between border
 });
 //#endregion
 //#region resources/js/registrations/time.ts
-function Yp(e) {
-	e.addMessages(up);
+function om(e) {
+	e.addMessages(xp);
 	let t = (t, n) => {
 		e.notify(t, n);
 	}, n = () => {
-		e.router.push(W.week);
-	}, r = () => {
-		let t = K.runningTaskId;
+		let t = q.runningTaskId;
 		e.router.push(t === null ? W.week : W.task(t));
 	};
 	e.registerHeaderAction({
 		id: `${U}.timer-chip`,
 		priority: 30,
-		visible: () => K.running !== null,
-		component: l({ setup: () => () => d(lp, {
+		visible: () => q.running !== null,
+		component: l({ setup: () => () => d(bp, {
 			client: e.client,
 			notify: t,
-			onOpen: r
+			onOpen: n
 		}) })
 	}), e.registerCompanyLayoutOverlay({
 		id: `${U}.quick-start`,
-		component: l({ setup: () => () => d(rp, {
-			key: xa.companySession,
+		component: l({ setup: () => () => d(Jf, {
+			key: G.companySession,
 			client: e.client,
 			notify: t,
-			enabled: !xa.adminMode,
+			enabled: !G.adminMode,
 			router: e.router,
-			onOpenWeek: n
+			onOpenTask: n
+		}) })
+	}), e.registerCompanyLayoutOverlay({
+		id: `${U}.stop-timer`,
+		component: l({ setup: () => () => d(mp, { key: G.companySession }) })
+	}), e.registerCompanyLayoutOverlay({
+		id: `${U}.start-timer`,
+		component: l({ setup: () => () => d(np, {
+			key: G.companySession,
+			client: e.client,
+			notify: t
 		}) })
 	}), e.registerCompanySettingsPage({
 		id: `${U}.settings`,
@@ -8708,28 +9040,28 @@ function Yp(e) {
 		icon: "ClockIcon",
 		path: U,
 		priority: 70,
-		component: sn(e, Jp)
+		component: sn(e, am)
 	}), e.on("bootstrap:completed", ({ adminMode: t }) => {
-		Xp(e, t);
+		sm(e, t);
 	}), e.on("company:changing", () => {
-		Zp();
+		cm();
 	}), e.on("company:changed", ({ companyId: t }) => {
-		Xp(e, t === null);
+		sm(e, t === null);
 	});
 }
-async function Xp(e, t) {
-	if (wa(t), t) {
-		Zp();
+async function sm(e, t) {
+	if (Ca(t), t) {
+		cm();
 		return;
 	}
-	await Sa(e.client), await K.refresh(e.client);
+	await xa(e.client), await q.refresh(e.client);
 }
-function Zp() {
-	K.reset(), rt(), Ca();
+function cm() {
+	q.reset(), rt(), Sa();
 }
 //#endregion
 //#region resources/js/init.ts
 window.InvoiceShelf.booting((e, t, n) => {
-	n.addMessages(j), jf(n), Xo(n), Yp(n), nr(n), Gs(n);
+	n.addMessages(j), Nf(n), Zo(n), om(n), nr(n), Ks(n);
 });
 //#endregion
