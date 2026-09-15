@@ -6,6 +6,7 @@ import { messages } from './messages'
 import ProjectsIndexPage from './pages/ProjectsIndexPage.vue'
 import { registerTimeTracking } from './registrations/time'
 import { registerBoardPages } from './registrations/board'
+import { registerReportPages } from './registrations/reports'
 
 const MODULE = 'tasks-projects'
 
@@ -25,6 +26,7 @@ window.InvoiceShelf.booting((_app, _router, extensions) => {
 
   registerTimeTracking(extensions)
   registerBoardPages(extensions)
+  registerReportPages(extensions)
 })
 
 /**
