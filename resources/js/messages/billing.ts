@@ -27,7 +27,8 @@ export const billingMessages = {
         pending_stamp:
           'Finish marking the last invoice as billed before creating another one.',
         created: 'Invoice {number} was created.',
-        stamped: '{count} time entries were marked as invoiced.',
+        stamped:
+          '{count} time entry was marked as invoiced. | {count} time entries were marked as invoiced.',
         stamp_failed: 'Unable to mark the time as invoiced.',
         stamp_failed_notice:
           'Invoice {number} was created, but its time is not marked as invoiced yet.',
@@ -56,7 +57,7 @@ export const billingMessages = {
         customer: {
           title: 'Who has time waiting?',
           description: 'Customers with billable time that has not reached an invoice yet.',
-          entries: '{count} entries',
+          entries: '{count} entry | {count} entries',
           empty_title: 'Nothing to invoice',
           empty_description:
             'Billable time appears here once it has been logged against a task that belongs to a customer.',

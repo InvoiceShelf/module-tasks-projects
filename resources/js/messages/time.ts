@@ -135,7 +135,7 @@ export const timeMessages = {
         rounding_direction_up: 'Up to the increment',
         rounding_direction_down: 'Down to the increment',
         rounding_increment: 'Increment',
-        rounding_increment_value: '{count} minutes',
+        rounding_increment_value: '{count} minute | {count} minutes',
         auto_start_tasks: 'Start the timer on a new task',
         lock_invoiced_tasks: 'Lock invoiced tasks',
         hide_invoiced_on_board: 'Hide invoiced tasks on the board',

@@ -74,10 +74,12 @@ export const taskMessages = {
           change_status: 'Move to',
           delete: 'Delete',
           invoice: 'Invoice',
-          delete_confirm: 'Delete {count} tasks? Their time entries go with them.',
-          applied: '{count} tasks were updated.',
-          deleted: '{count} tasks were deleted.',
-          partial: '{count} tasks were updated, {failed} were refused: {ids}.',
+          delete_confirm:
+            'Delete {count} task? Its time entries go with it. | Delete {count} tasks? Their time entries go with them.',
+          applied: '{count} task was updated. | {count} tasks were updated.',
+          deleted: '{count} task was deleted. | {count} tasks were deleted.',
+          partial:
+            '{count} task was updated, {failed} refused: {ids}. | {count} tasks were updated, {failed} refused: {ids}.',
           nothing: 'No task was changed.',
           failed: 'Unable to apply the change.',
         },
