@@ -2631,7 +2631,7 @@ var Ti = { class: "mt-4 flex flex-wrap items-end gap-3" }, Ei = {
 			let e = l.task;
 			f.name = e?.name ?? "", f.description = e?.description ?? "", f.estimateHours = he(e?.estimated_minutes ?? null), f.rate = pe(e?.rate ?? null), f.dueDate = e?.due_date ?? "", f.billable = e?.billable ?? !0;
 			let t = l.statuses.find((e) => e.is_default) ?? l.statuses[0], n = e?.task_status_id ?? l.defaults?.task_status_id ?? t?.id ?? null;
-			p.value = te(F.value, n), m.value = e?.project_id ?? l.defaults?.project_id ?? null, h.value = te(ee.value, e?.assignee_id ?? null), g.value = e?.priority ? I.value[Hi.indexOf(e.priority)] ?? null : null, b.value = e?.customer_id ?? null, w.value = {}, k.value = !1;
+			p.value = te(F.value, n), m.value = e?.project_id ?? l.defaults?.project_id ?? null, h.value = te(ee.value, e?.assignee_id ?? null), g.value = e?.priority ? I.value[Hi.indexOf(e.priority)] ?? null : null, b.value = e?.customer_id ?? null, w.value = {}, k.value = !1, b.value !== null && Qn(l.client);
 		}
 		function ne(e) {
 			f.dueDate = e ? ve(e) : "";
@@ -2747,7 +2747,7 @@ var Ti = { class: "mt-4 flex flex-wrap items-end gap-3" }, Ei = {
 								"help-text": C(d)("tasks_projects.tasks.fields.customer_help")
 							}, {
 								default: D(() => [c(m, {
-									"model-value": `#${b.value}`,
+									"model-value": C(Zn)(b.value),
 									type: "text",
 									disabled: ""
 								}, null, 8, ["model-value"])]),
