@@ -141,7 +141,7 @@ export async function bulkTasks(
 ): Promise<TaskBulkResult> {
   const { data } = await client.post<TaskBulkResult>(BOARD_API.bulkTasks, input)
 
-  return { updated: data?.updated ?? 0, failed: data?.failed ?? [] }
+  return { updated: data?.updated ?? [], failed: data?.failed ?? [] }
 }
 
 /**

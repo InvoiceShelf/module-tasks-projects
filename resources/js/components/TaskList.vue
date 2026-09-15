@@ -350,14 +350,18 @@ async function runBulk(
       props.notify(
         'warning',
         t('tasks_projects.tasks.bulk.partial', {
-          count: result.updated,
+          count: result.updated.length,
           failed: result.failed.length,
+          ids: result.failed.map((entry) => `#${entry.id}`).join(', '),
         }),
       )
-    } else if (result.updated === 0) {
+    } else if (result.updated.length === 0) {
       props.notify('warning', t('tasks_projects.tasks.bulk.nothing'))
     } else {
-      props.notify('success', t(`tasks_projects.tasks.bulk.${success}`, { count: result.updated }))
+      props.notify(
+        'success',
+        t(`tasks_projects.tasks.bulk.${success}`, { count: result.updated.length }),
+      )
     }
 
     clearSelection()

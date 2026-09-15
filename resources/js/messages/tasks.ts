@@ -77,7 +77,7 @@ export const taskMessages = {
           delete_confirm: 'Delete {count} tasks? Their time entries go with them.',
           applied: '{count} tasks were updated.',
           deleted: '{count} tasks were deleted.',
-          partial: '{count} tasks were updated, {failed} were refused.',
+          partial: '{count} tasks were updated, {failed} were refused: {ids}.',
           nothing: 'No task was changed.',
           failed: 'Unable to apply the change.',
         },

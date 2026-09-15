@@ -114,7 +114,8 @@ export interface TaskBulkFailure {
   reason: string
 }
 
+/** The ids the bulk endpoint actually changed. */
 export interface TaskBulkResult {
-  updated: number
+  updated: number[]
   failed: TaskBulkFailure[]
 }
