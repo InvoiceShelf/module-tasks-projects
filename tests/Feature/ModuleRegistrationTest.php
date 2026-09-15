@@ -36,7 +36,7 @@ final class ModuleRegistrationTest extends TestCase
             'title' => 'tasksprojects::menu.projects',
             'link' => '/admin/modules/tasks-projects/projects',
             'icon' => 'FolderIcon',
-        ], Registry::menuFor('tasks-projects'));
+        ], Registry::menuFor('tasks-projects.projects'));
 
         self::assertSame([
             'group' => 'main',
@@ -45,12 +45,12 @@ final class ModuleRegistrationTest extends TestCase
             'title' => 'tasksprojects::menu.tasks',
             'link' => '/admin/modules/tasks-projects',
             'icon' => 'ClipboardDocumentListIcon',
-        ], Registry::menuFor('tasks-projects.tasks'));
+        ], Registry::menuFor('tasks-projects'));
 
         // The primary slug still answers, which is what the host's module page
         // lookup uses; the second key only ever adds a row to the sidebar.
         self::assertSame(
-            ['tasks-projects', 'tasks-projects.tasks'],
+            ['tasks-projects.projects', 'tasks-projects'],
             array_keys(Registry::allMenu()),
         );
     }

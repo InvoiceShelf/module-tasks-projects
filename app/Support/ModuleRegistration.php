@@ -32,7 +32,7 @@ final class ModuleRegistration
      */
     private static function registerMenu(): void
     {
-        Registry::registerMenu('tasks-projects', [
+        Registry::registerMenu('tasks-projects.projects', [
             'title' => 'tasksprojects::menu.projects',
             'link' => '/admin/modules/tasks-projects/projects',
             'icon' => 'FolderIcon',
@@ -42,7 +42,7 @@ final class ModuleRegistration
             'priority' => 40,
         ]);
 
-        Registry::registerMenu('tasks-projects.tasks', [
+        Registry::registerMenu('tasks-projects', [
             'title' => 'tasksprojects::menu.tasks',
             'link' => '/admin/modules/tasks-projects',
             'icon' => 'ClipboardDocumentListIcon',
