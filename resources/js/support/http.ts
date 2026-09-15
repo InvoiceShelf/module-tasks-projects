@@ -16,6 +16,29 @@ export function errorStatus(error: unknown): number | null {
   return typeof status === 'number' ? status : null
 }
 
+/**
+ * The machine-readable `error` key of a failed request.
+ *
+ * Every module endpoint answers a refusal as `{ message, error }`, so the
+ * caller can tell `timer_already_running` from `timer_mismatch` without
+ * matching on the human sentence, which is translated and may change.
+ */
+export function errorCode(error: unknown): string | null {
+  if (typeof error !== 'object' || error === null) {
+    return null
+  }
+
+  const data = (error as { response?: { data?: unknown } }).response?.data
+
+  if (typeof data !== 'object' || data === null) {
+    return null
+  }
+
+  const code = (data as { error?: unknown }).error
+
+  return typeof code === 'string' && code !== '' ? code : null
+}
+
 /** A 409 from `timer/start`: someone else's tab already started the clock. */
 export function isConflict(error: unknown): boolean {
   return errorStatus(error) === 409

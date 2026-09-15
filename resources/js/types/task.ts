@@ -4,6 +4,33 @@ export const TASK_PRIORITIES = ['LOW', 'NORMAL', 'HIGH', 'URGENT'] as const
 
 export type TaskPriority = (typeof TASK_PRIORITIES)[number]
 
+/** Whether any of a task's billable time has reached an invoice. */
+export type TaskInvoiceState = 'none' | 'uninvoiced' | 'invoiced'
+
+/** One entry whose clock is running right now, whoever started it. */
+export interface TaskRunningEntry {
+  entry_id: number
+  user_id: number
+  started_at: string | null
+}
+
+/**
+ * The time summary the API attaches to a task.
+ *
+ * Every screen that shows a task shows its time, so the totals ride along with
+ * the row rather than costing a request each. An older server answers without
+ * the block, so every read of it is guarded.
+ */
+export interface TaskTime {
+  logged_minutes: number
+  billable_minutes: number
+  unbilled_minutes: number
+  /** Minor units, in the currency the entries were logged in. */
+  unbilled_amount: number
+  invoiced: TaskInvoiceState
+  running: TaskRunningEntry[]
+}
+
 export interface Task {
   id: number
   company_id: number
@@ -28,13 +55,15 @@ export interface Task {
   creator_id: number | null
   created_at: string | null
   updated_at: string | null
+  /** Absent on a server that predates the time summary. */
+  time?: TaskTime
 }
 
 /**
  * What the create and update endpoints accept.
  *
  * `task_status_id` is never null: the update rule takes an integer, and the
- * drawer always has a column selected.
+ * form always has a column selected.
  */
 export interface TaskInput {
   name: string
@@ -58,6 +87,8 @@ export interface TaskListParams {
   task_status_id?: number
   customer_id?: number
   search?: string
+  /** 1 for tasks already on an invoice, 0 for the ones still waiting. */
+  invoiced?: 0 | 1
 }
 
 /** Where a dragged card landed: its new column and the two tasks around it. */
@@ -65,4 +96,25 @@ export interface TaskMoveInput {
   task_status_id: number
   before_id: number | null
   after_id: number | null
+}
+
+/** What `POST tasks/bulk` does to the selection. */
+export type TaskBulkAction = 'status' | 'delete'
+
+export interface TaskBulkInput {
+  action: TaskBulkAction
+  ids: number[]
+  /** Required by the `status` action, ignored by the others. */
+  task_status_id?: number
+}
+
+/** A task the bulk endpoint refused, and why. */
+export interface TaskBulkFailure {
+  id: number
+  reason: string
+}
+
+export interface TaskBulkResult {
+  updated: number
+  failed: TaskBulkFailure[]
 }
