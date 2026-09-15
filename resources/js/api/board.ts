@@ -1,12 +1,18 @@
 import type { AxiosInstance } from 'axios'
-import { BASE, HOST_API, TASKS_PROJECTS_API } from '@/api'
-import type { Customer, Paginated, Wrapped } from '@/types/api'
+import { BASE, TASKS_PROJECTS_API } from '@/api'
+import type { SortParams } from '@/api'
+import type { Paginated, Wrapped } from '@/types/api'
 import type { BoardColumn, BoardParams } from '@/types/board'
 import type { Project } from '@/types/project'
 import type { ProjectMember, ProjectMemberInput } from '@/types/project-member'
 import type { Task, TaskInput, TaskListParams, TaskMoveInput } from '@/types/task'
 import type { TaskStatus } from '@/types/task-status'
 import type { TimeEntry, TimeEntryListParams } from '@/types/time-entry'
+
+/** The columns `GET tasks` orders by. Mirrors `TaskService::SORT_KEYS`. */
+export const TASK_SORT_KEYS = ['number', 'name', 'priority', 'due_date', 'created_at'] as const
+
+export type TaskSortKey = (typeof TASK_SORT_KEYS)[number]
 
 /** The endpoints the board, the task lists and the project detail read. */
 export const BOARD_API = {
@@ -40,7 +46,7 @@ export async function listTaskStatuses(client: AxiosInstance): Promise<TaskStatu
 
 export async function listTasks(
   client: AxiosInstance,
-  params: TaskListParams,
+  params: TaskListParams & SortParams<TaskSortKey>,
 ): Promise<Paginated<Task>> {
   const { data } = await client.get<Paginated<Task>>(BOARD_API.tasks, { params })
 
@@ -128,16 +134,4 @@ export async function listProjectTime(
   const { data } = await client.get<Paginated<TimeEntry>>(BOARD_API.timeEntries, { params })
 
   return data
-}
-
-/**
- * One host contact, for the name the project header shows.
- *
- * A project detail only ever knows the customer id, and the contact may have
- * been deleted since, so the caller falls back to `#id` on failure.
- */
-export async function fetchCustomer(client: AxiosInstance, id: number): Promise<Customer> {
-  const { data } = await client.get<Wrapped<Customer>>(`${HOST_API.customers}/${id}`)
-
-  return data.data
 }

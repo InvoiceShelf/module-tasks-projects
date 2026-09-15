@@ -2,8 +2,10 @@
 import { computed, onBeforeUnmount, reactive, ref, watch } from 'vue'
 import type { AxiosInstance } from 'axios'
 import type { Router } from 'vue-router'
-import { archiveProject, deleteProject, listProjects, unarchiveProject } from '@/api'
+import { archiveProject, deleteProject, listProjects, sortParams, unarchiveProject } from '@/api'
+import type { ProjectSortKey, SortParams, TableSort } from '@/api'
 import ProjectFormModal from '@/components/ProjectFormModal.vue'
+import { customerName, ensureLoaded } from '@/stores/customers'
 import { errorMessage } from '@/support/errors'
 import { formatDate } from '@/support/format'
 import { useTranslate } from '@/support/i18n'
@@ -39,6 +41,14 @@ const props = defineProps<{
 const PER_PAGE = 10
 const SEARCH_DEBOUNCE_MS = 350
 
+/** Which API sort key each sortable column asks the endpoint for. */
+const SORT_KEYS: Record<string, ProjectSortKey> = {
+  name: 'name',
+  status: 'status',
+  default_rate: 'default_rate',
+  due_date: 'due_date',
+}
+
 const t = useTranslate()
 
 const tableRef = ref<{ refresh: (preservePage?: boolean) => void } | null>(null)
@@ -72,11 +82,11 @@ const statusOption = computed<StatusOption>({
 })
 
 const columns = computed(() => [
-  { key: 'name', label: t('tasks_projects.projects.columns.name'), sortable: false, thClass: 'extra', tdClass: 'font-medium text-heading' },
-  { key: 'status', label: t('tasks_projects.projects.columns.status'), sortable: false },
+  { key: 'name', label: t('tasks_projects.projects.columns.name'), sortable: true, sortBy: 'name', thClass: 'extra', tdClass: 'font-medium text-heading' },
+  { key: 'status', label: t('tasks_projects.projects.columns.status'), sortable: true, sortBy: 'status' },
   { key: 'customer', label: t('tasks_projects.projects.columns.customer'), sortable: false },
-  { key: 'default_rate', label: t('tasks_projects.projects.columns.default_rate'), sortable: false },
-  { key: 'due_date', label: t('tasks_projects.projects.columns.due_date'), sortable: false },
+  { key: 'default_rate', label: t('tasks_projects.projects.columns.default_rate'), sortable: true, sortBy: 'default_rate' },
+  { key: 'due_date', label: t('tasks_projects.projects.columns.due_date'), sortable: true, sortBy: 'due_date' },
   { key: 'actions', label: t('tasks_projects.general.actions'), sortable: false, tdClass: 'text-right text-sm font-medium' },
 ])
 
@@ -98,8 +108,9 @@ watch(() => filters.status, () => refreshTable())
 
 onBeforeUnmount(() => clearTimeout(searchTimer))
 
-async function fetchProjects({ page }: { page: number }): Promise<TableResult> {
-  const params: ProjectListParams = { page, limit: PER_PAGE }
+async function fetchProjects({ page, sort }: { page: number; sort?: TableSort }): Promise<TableResult> {
+  const order: SortParams<ProjectSortKey> = sortParams(sort, SORT_KEYS)
+  const params: ProjectListParams & SortParams<ProjectSortKey> = { page, limit: PER_PAGE, ...order }
 
   if (filters.status !== 'ALL') {
     params.status = filters.status
@@ -115,6 +126,11 @@ async function fetchProjects({ page }: { page: number }): Promise<TableResult> {
     const response = await listProjects(props.client, params)
 
     totalCount.value = response.meta.total
+
+    // Only a page that shows a contact is worth one lookup of the address book.
+    if (response.data.some((project) => project.customer_id !== null)) {
+      void ensureLoaded(props.client)
+    }
 
     return {
       data: response.data,
@@ -249,6 +265,15 @@ function statusLabel(status: ProjectStatus): string {
             </BaseButton>
           </router-link>
 
+          <router-link to="/admin/modules/tasks-projects/reports">
+            <BaseButton variant="white">
+              <template #left="slotProps">
+                <BaseIcon name="ChartBarIcon" :class="slotProps.class" />
+              </template>
+              {{ t('tasks_projects.reports.title') }}
+            </BaseButton>
+          </router-link>
+
           <BaseButton variant="primary-outline" @click="toggleFilter">
             {{ t('tasks_projects.general.filter') }}
             <template #right="slotProps">
@@ -333,7 +358,7 @@ function statusLabel(status: ProjectStatus): string {
         </template>
 
         <template #cell-customer="{ row }">
-          <span v-if="row.data.customer_id">#{{ row.data.customer_id }}</span>
+          <span v-if="row.data.customer_id">{{ customerName(row.data.customer_id) }}</span>
           <span v-else class="text-subtle">{{ t('tasks_projects.projects.internal') }}</span>
         </template>
 
