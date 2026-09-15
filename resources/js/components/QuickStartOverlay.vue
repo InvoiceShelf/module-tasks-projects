@@ -1,6 +1,7 @@
 <script setup lang="ts">
-import { computed, onBeforeUnmount, ref, watch } from 'vue'
+import { computed, onBeforeUnmount, onMounted, ref, watch } from 'vue'
 import type { AxiosInstance } from 'axios'
+import type { Router } from 'vue-router'
 import { searchTasks } from '@/api/time'
 import { rememberTask, taskLabel } from '@/stores/tasks'
 import { timerStore } from '@/stores/timer'
@@ -11,11 +12,19 @@ import type { TaskSummary } from '@/types/task-summary'
 
 type NotifyType = 'success' | 'error' | 'warning' | 'info'
 
+/** The aria-label the AI assistant module puts on its own launcher button. */
+const AI_ASSISTANT_SELECTOR = '[aria-label="Open AI Assistant"]'
+
+/** Settings screens run long forms the launcher would sit on top of. */
+const HIDDEN_PATH_PREFIX = '/admin/settings'
+
 const props = defineProps<{
   client: AxiosInstance
   notify: (type: NotifyType, message: string) => void
   /** False in platform administration, where no company is active. */
   enabled: boolean
+  /** The host router: a module bundle cannot call `useRouter()`. */
+  router: Router
 }>()
 
 const emit = defineEmits<{
@@ -33,13 +42,35 @@ const searching = ref(false)
 const picked = ref<TaskSummary | null>(null)
 const description = ref('')
 
+/** The current path, read from the host router and kept up to date on every navigation. */
+const currentPath = ref(window.location.pathname)
+
+/** Whether the AI assistant's own launcher is on the page, found once at mount. */
+const aiAssistantPresent = ref(false)
+
 let searchTimer: ReturnType<typeof setTimeout> | undefined
+let stopWatchingRoute: (() => void) | undefined
 
 const feedback = computed(() => ({ notify: props.notify, t }))
 
 const runningLabel = computed<string>(() => taskLabel(timerStore.running?.task_id ?? null))
 
 const elapsed = computed<string>(() => formatClock(timerStore.elapsedSeconds))
+
+/**
+ * Long settings forms, such as the status editor, run the full height of the
+ * page: a fixed launcher sitting on top of them hides the last rows and the
+ * save button, so the launcher steps aside there rather than everywhere.
+ */
+const hiddenHere = computed<boolean>(() => currentPath.value.startsWith(HIDDEN_PATH_PREFIX))
+
+/**
+ * Clear the bottom of the AI assistant's own launcher when it shares the page,
+ * so the two floating buttons do not stack on top of each other.
+ */
+const wrapperClass = computed<string>(() =>
+  aiAssistantPresent.value ? 'bottom-36' : 'bottom-20',
+)
 
 watch(
   () => props.enabled,
@@ -49,6 +80,15 @@ watch(
     }
   },
 )
+
+onMounted(() => {
+  currentPath.value = props.router.currentRoute.value.path
+  stopWatchingRoute = props.router.afterEach((to) => {
+    currentPath.value = to.path
+  })
+
+  aiAssistantPresent.value = document.querySelector(AI_ASSISTANT_SELECTOR) !== null
+})
 
 watch(open, (isOpen) => {
   if (isOpen && timerStore.running === null) {
@@ -61,7 +101,10 @@ watch(search, () => {
   searchTimer = setTimeout(() => void runSearch(), SEARCH_DEBOUNCE_MS)
 })
 
-onBeforeUnmount(() => clearTimeout(searchTimer))
+onBeforeUnmount(() => {
+  clearTimeout(searchTimer)
+  stopWatchingRoute?.()
+})
 
 async function runSearch(): Promise<void> {
   searching.value = true
@@ -142,7 +185,11 @@ async function discard(): Promise<void> {
 
 <template>
   <Teleport to="body">
-    <div v-if="enabled" class="fixed right-6 bottom-20 z-40 flex flex-col items-end gap-3">
+    <div
+      v-if="enabled && !hiddenHere"
+      class="fixed right-6 z-40 flex flex-col items-end gap-3"
+      :class="wrapperClass"
+    >
       <section
         v-if="open"
         class="w-80 max-w-[calc(100vw-3rem)] rounded-xl border border-line-default bg-surface shadow-2xl"

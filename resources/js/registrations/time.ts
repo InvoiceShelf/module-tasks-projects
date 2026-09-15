@@ -66,11 +66,14 @@ export function registerTimeTracking(extensions: InvoiceShelfExtensionApi): void
       setup: () => () =>
         h(QuickStartOverlay, {
           // A company switch starts the launcher clean rather than carrying a
-          // half-typed search from the workspace the user just left.
+          // half-typed search from the workspace the user just left, and it
+          // remounts the component so the AI assistant's launcher is looked
+          // for again on the new company's layout.
           key: session.companySession,
           client: extensions.client,
           notify,
           enabled: !session.adminMode,
+          router: extensions.router,
           onOpenWeek: openWeek,
         }),
     }),
