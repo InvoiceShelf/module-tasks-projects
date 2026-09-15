@@ -68,7 +68,7 @@ const hiddenHere = computed<boolean>(
  * Clear the bottom of the AI assistant's own launcher when it floats in the
  * same corner, so the two buttons do not stack on top of each other.
  */
-const wrapperClass = computed<string>(() => (aiAssistantFloats.value ? 'bottom-36' : 'bottom-20'))
+const wrapperClass = computed<string>(() => (aiAssistantFloats.value ? 'bottom-24' : 'bottom-5'))
 
 /**
  * Look for a launcher that is actually in the way.
@@ -152,7 +152,7 @@ function openTask(): void {
   <Teleport to="body">
     <div
       v-if="enabled && !hiddenHere"
-      class="fixed right-6 z-40 flex flex-col items-end gap-3"
+      class="fixed right-5 z-40 flex flex-col items-end gap-3"
       :class="wrapperClass"
     >
       <!-- Running: what is on the clock, and the two ways out of it. -->
@@ -207,7 +207,8 @@ function openTask(): void {
 
       <button
         type="button"
-        class="flex items-center gap-2 rounded-full bg-btn-primary px-4 py-3 text-sm font-medium text-white shadow-lg hover:bg-btn-primary-hover"
+        class="flex items-center justify-center gap-2 rounded-full bg-btn-primary text-sm font-medium text-white shadow-lg hover:bg-btn-primary-hover"
+        :class="timerStore.running === null ? 'h-14 w-14 p-0' : 'h-14 px-5'"
         :title="t('tasks_projects.timer.quick_start')"
         :aria-label="t('tasks_projects.timer.quick_start')"
         @click="press"

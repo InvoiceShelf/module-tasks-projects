@@ -7950,7 +7950,7 @@ var Ff = ["aria-label"], If = { class: "flex items-center justify-between border
 		let u = e, d = l, f = B(), m = b(!1), _ = b(window.location.pathname), y = b(!1), x, T = n(() => ({
 			notify: u.notify,
 			t: f
-		})), O = n(() => Ze(q.running?.task_id ?? null)), A = n(() => Ma(q.elapsedSeconds)), j = n(() => q.stopPrompt !== null || q.startPrompt !== null), M = n(() => j.value || _.value.startsWith(qf)), N = n(() => y.value ? "bottom-36" : "bottom-20");
+		})), O = n(() => Ze(q.running?.task_id ?? null)), A = n(() => Ma(q.elapsedSeconds)), j = n(() => q.stopPrompt !== null || q.startPrompt !== null), M = n(() => j.value || _.value.startsWith(qf)), N = n(() => y.value ? "bottom-24" : "bottom-5");
 		function P() {
 			y.value = Array.from(document.querySelectorAll(Kf)).some((e) => window.getComputedStyle(e).position === "fixed");
 		}
@@ -7985,7 +7985,7 @@ var Ff = ["aria-label"], If = { class: "flex items-center justify-between border
 			let u = S("BaseIcon"), d = S("BaseButton");
 			return v(), r(t, { to: "body" }, [e.enabled && !M.value ? (v(), a("div", {
 				key: 0,
-				class: p(["fixed right-6 z-40 flex flex-col items-end gap-3", N.value])
+				class: p(["fixed right-5 z-40 flex flex-col items-end gap-3", N.value])
 			}, [m.value && w(q).running !== null ? (v(), a("section", {
 				key: 0,
 				class: "w-80 max-w-[calc(100vw-3rem)] rounded-xl border border-line-default bg-surface shadow-2xl",
@@ -8020,14 +8020,14 @@ var Ff = ["aria-label"], If = { class: "flex items-center justify-between border
 				_: 1
 			}, 8, ["disabled"])])])], 40, Ff)) : i("", !0), o("button", {
 				type: "button",
-				class: "flex items-center gap-2 rounded-full bg-btn-primary px-4 py-3 text-sm font-medium text-white shadow-lg hover:bg-btn-primary-hover",
+				class: p(["flex items-center justify-center gap-2 rounded-full bg-btn-primary text-sm font-medium text-white shadow-lg hover:bg-btn-primary-hover", w(q).running === null ? "h-14 w-14 p-0" : "h-14 px-5"]),
 				title: w(f)("tasks_projects.timer.quick_start"),
 				"aria-label": w(f)("tasks_projects.timer.quick_start"),
 				onClick: I
 			}, [c(u, {
 				name: w(q).running === null ? "ClockIcon" : "StopIcon",
 				class: "h-5 w-5 text-white"
-			}, null, 8, ["name"]), w(q).running === null ? i("", !0) : (v(), a("span", Gf, C(A.value), 1))], 8, Wf)], 2)) : i("", !0)]);
+			}, null, 8, ["name"]), w(q).running === null ? i("", !0) : (v(), a("span", Gf, C(A.value), 1))], 10, Wf)], 2)) : i("", !0)]);
 		};
 	}
 }), Yf = { class: "flex w-full items-center justify-between" }, Xf = { class: "space-y-5 px-6 py-6" }, Zf = { class: "flex justify-end space-x-3 border-t border-line-default px-6 py-4" }, Qf = 0, $f = -1, ep = 100, tp = 10, np = /* @__PURE__ */ l({
