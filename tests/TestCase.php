@@ -95,6 +95,18 @@ abstract class TestCase extends Orchestra
         ]);
     }
 
+    /**
+     * Load the module's own translations, the way its provider does in the host.
+     *
+     * The harness boots the modules SDK rather than the module's provider, so
+     * without this any module code that resolves a `tasksprojects::` line would
+     * answer with the key and a test would never notice.
+     */
+    protected function defineEnvironment($app): void
+    {
+        $app['translator']->addNamespace('tasksprojects', dirname(__DIR__).'/lang');
+    }
+
     protected function defineDatabaseMigrations(): void
     {
         $this->loadMigrationsFrom(dirname(__DIR__).'/database/migrations');

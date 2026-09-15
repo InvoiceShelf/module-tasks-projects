@@ -110,6 +110,35 @@ final class ModuleRegistrationTest extends TestCase
         }
     }
 
+    public function test_every_select_option_reaches_the_form_translated(): void
+    {
+        ModuleRegistration::register(dirname(__DIR__, 2));
+
+        $settings = Registry::settingsFor('tasks-projects');
+
+        self::assertNotNull($settings);
+
+        $fields = array_column($settings->fields(), null, 'key');
+
+        self::assertSame(
+            [Rounding::NEAREST => 'Nearest', Rounding::UP => 'Up', Rounding::DOWN => 'Down'],
+            $fields['rounding_direction']['options'],
+        );
+
+        // The host translates a field's label and a section's title and hands
+        // the options over as they were registered, so an option naming a key
+        // would reach the screen as the key.
+        foreach ($fields as $key => $field) {
+            foreach ($field['options'] ?? [] as $label) {
+                self::assertStringNotContainsString(
+                    '::',
+                    (string) $label,
+                    "Setting {$key} offers an option the reader would see as a translation key.",
+                );
+            }
+        }
+    }
+
     public function test_the_schema_and_the_cleanup_keys_never_drift_apart(): void
     {
         ModuleRegistration::register(dirname(__DIR__, 2));

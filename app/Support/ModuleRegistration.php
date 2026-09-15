@@ -87,11 +87,7 @@ final class ModuleRegistration
                             'type' => FieldType::Select->value,
                             'label' => 'tasksprojects::settings.rounding_direction',
                             'default' => ModuleSettings::DEFAULT_ROUNDING_DIRECTION,
-                            'options' => [
-                                Rounding::NEAREST => 'tasksprojects::settings.rounding_nearest',
-                                Rounding::UP => 'tasksprojects::settings.rounding_up',
-                                Rounding::DOWN => 'tasksprojects::settings.rounding_down',
-                            ],
+                            'options' => self::directionOptions(),
                         ],
                         [
                             'key' => 'week_start',
@@ -141,6 +137,24 @@ final class ModuleRegistration
             'type' => FieldType::Switch_->value,
             'label' => 'tasksprojects::settings.'.$key,
             'default' => ModuleSettings::FLAGS[$key],
+        ];
+    }
+
+    /**
+     * The rounding directions, already in the reader's language.
+     *
+     * The host translates a field's label and a section's title, but hands a
+     * select's options to the form as they were registered, so an option that
+     * named a translation key would reach the screen as the key itself.
+     *
+     * @return array<string, string>
+     */
+    private static function directionOptions(): array
+    {
+        return [
+            Rounding::NEAREST => __('tasksprojects::settings.rounding_nearest'),
+            Rounding::UP => __('tasksprojects::settings.rounding_up'),
+            Rounding::DOWN => __('tasksprojects::settings.rounding_down'),
         ];
     }
 
