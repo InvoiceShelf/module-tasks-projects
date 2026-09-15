@@ -35,6 +35,16 @@ const props = defineProps<{
   entry: TimeEntry | null
   /** The day a new entry lands on, as `Y-m-d`. */
   defaultDate?: string
+  /** The task a new entry is logged against, when the caller already knows it. */
+  defaultTask?: TaskSummary | null
+  /**
+   * Opened from a task's own time log, where the task is not a choice.
+   *
+   * The picker becomes a label: moving an entry to another task from inside
+   * that task's log is a way to lose it, and the log it would move to is one
+   * click away.
+   */
+  lockTask?: boolean
 }>()
 
 const emit = defineEmits<{
@@ -93,13 +103,13 @@ function reset(): void {
   const entry = props.entry
 
   errors.value = {}
-  task.value = null
+  task.value = entry === null ? (props.defaultTask ?? null) : null
   form.date = entry ? localDateOf(entry.started_at) : (props.defaultDate ?? formatLocalDate(new Date()))
   form.duration = entry ? formatDuration(entry.duration_minutes) : ''
   form.start = entry?.started_at ? localTimeOf(entry.started_at) : DEFAULT_START_TIME
   form.end = entry?.ended_at ? localTimeOf(entry.ended_at) : ''
   form.description = entry?.description ?? ''
-  form.billable = entry ? entry.billable : true
+  form.billable = entry ? entry.billable : (task.value?.billable ?? true)
   form.mode = entry !== null && matchesRange(entry) ? 'range' : 'duration'
 
   if (form.date === '') {
@@ -301,7 +311,10 @@ async function remove(): Promise<void> {
           :error="errors.task_id"
           required
         >
+          <BaseInput v-if="lockTask" :model-value="task?.name ?? ''" type="text" disabled />
+
           <BaseMultiselect
+            v-else
             :model-value="task"
             :options="loadTasks"
             :disabled="isStamped"

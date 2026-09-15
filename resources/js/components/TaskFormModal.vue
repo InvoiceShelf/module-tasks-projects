@@ -3,6 +3,7 @@ import { computed, reactive, ref, watch } from 'vue'
 import type { AxiosInstance } from 'axios'
 import { createTask, deleteTask, updateTask } from '@/api/board'
 import { errorMessage, fieldErrors } from '@/support/errors'
+import { errorCode } from '@/support/http'
 import {
   hoursToMinutes,
   majorToMinor,
@@ -37,6 +38,16 @@ const props = defineProps<{
   defaults?: TaskDefaults
   /** A project page fixes the project, so the picker is hidden. */
   lockProject?: boolean
+  /**
+   * Show the six fields a task is usually created with, and put the rest
+   * behind a disclosure.
+   *
+   * Creating a task should cost a name and a column; a description, an
+   * estimate and a rate override are things people come back to fill in, and
+   * asking for them up front is what made the old drawer read as a form to be
+   * completed rather than a box to be typed into.
+   */
+  compact?: boolean
 }>()
 
 const emit = defineEmits<{
@@ -66,6 +77,10 @@ const customerId = ref<number | null>(null)
 const errors = ref<Record<string, string>>({})
 const saving = ref(false)
 const removing = ref(false)
+const expanded = ref(false)
+
+/** Whether the fields behind the compact mode's disclosure are on show. */
+const showAllFields = computed<boolean>(() => !props.compact || expanded.value)
 
 /**
  * The picker binds an option, the payload wants an id.
@@ -140,6 +155,7 @@ function reset(): void {
     : null
   customerId.value = task?.customer_id ?? null
   errors.value = {}
+  expanded.value = false
 }
 
 function onDueDate(value: string | Date): void {
@@ -201,10 +217,23 @@ async function save(): Promise<void> {
     emit('saved', task)
   } catch (error: unknown) {
     errors.value = fieldErrors(error)
-    props.notify('error', errorMessage(error, t('tasks_projects.tasks.save_failed')))
+    props.notify('error', errorMessage(error, fallbackFor(error, 'save_failed')))
   } finally {
     saving.value = false
   }
+}
+
+/**
+ * What to say when the server did not.
+ *
+ * A locked task is refused for a reason worth naming rather than as a generic
+ * failure, so the caller understands that the invoice, not a bug, is in the
+ * way.
+ */
+function fallbackFor(error: unknown, key: 'save_failed' | 'delete_failed'): string {
+  return errorCode(error) === 'task_locked'
+    ? t('tasks_projects.tasks.locked')
+    : t(`tasks_projects.tasks.${key}`)
 }
 
 async function remove(): Promise<void> {
@@ -224,7 +253,7 @@ async function remove(): Promise<void> {
     await deleteTask(props.client, task.id)
     emit('deleted', task)
   } catch (error: unknown) {
-    props.notify('error', errorMessage(error, t('tasks_projects.tasks.delete_failed')))
+    props.notify('error', errorMessage(error, fallbackFor(error, 'delete_failed')))
   } finally {
     removing.value = false
   }
@@ -300,6 +329,7 @@ async function remove(): Promise<void> {
           </BaseInputGroup>
 
           <BaseInputGroup
+            v-if="showAllFields"
             :label="t('tasks_projects.tasks.fields.priority')"
             :error="errors.priority"
           >
@@ -319,6 +349,7 @@ async function remove(): Promise<void> {
           </BaseInputGroup>
 
           <BaseInputGroup
+            v-if="showAllFields"
             :label="t('tasks_projects.tasks.fields.estimate_hours')"
             :error="errors.estimated_minutes"
           >
@@ -332,6 +363,7 @@ async function remove(): Promise<void> {
           </BaseInputGroup>
 
           <BaseInputGroup
+            v-if="showAllFields"
             :label="t('tasks_projects.tasks.fields.rate')"
             :error="errors.rate"
             :help-text="t('tasks_projects.tasks.fields.rate_help')"
@@ -351,6 +383,7 @@ async function remove(): Promise<void> {
         </BaseInputGroup>
 
         <BaseInputGroup
+          v-if="showAllFields"
           :label="t('tasks_projects.tasks.fields.description')"
           :error="errors.description"
         >
@@ -360,6 +393,20 @@ async function remove(): Promise<void> {
             :invalid="Boolean(errors.description)"
           />
         </BaseInputGroup>
+
+        <button
+          v-if="compact"
+          type="button"
+          class="flex items-center gap-1 text-sm font-medium text-primary-500 hover:underline"
+          @click="expanded = !expanded"
+        >
+          <BaseIcon :name="expanded ? 'ChevronUpIcon' : 'ChevronDownIcon'" class="h-4 w-4" />
+          {{
+            expanded
+              ? t('tasks_projects.tasks.fewer_fields')
+              : t('tasks_projects.tasks.all_fields')
+          }}
+        </button>
       </div>
 
       <div class="flex items-center justify-between border-t border-line-default px-6 py-4">
