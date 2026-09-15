@@ -732,6 +732,24 @@ final class BillingServiceTest extends TestCase
         self::assertSame('2026-09-01  '.str_repeat('x', 60), $lines[0]);
     }
 
+    public function test_a_note_that_drops_exactly_one_entry_says_so_in_the_singular(): void
+    {
+        $this->noteSettings('invoice_entry_dates', 'invoice_entry_descriptions');
+        $entries = [
+            $this->entry($this->landing, 7, 60, '2026-09-01', ['description' => str_repeat('x', 990)]),
+            $this->entry($this->landing, 7, 60, '2026-09-02', ['description' => str_repeat('x', 990)]),
+        ];
+
+        $payload = $this->billing->prepare(self::COMPANY, BillingSelection::fromEntryIds($this->ids($entries)));
+        $description = (string) $payload['items'][0]['description'];
+        $lines = explode("\n", $description);
+
+        self::assertLessThanOrEqual(InvoiceLineComposer::MAX_LENGTH, mb_strlen($description));
+        self::assertCount(2, $lines);
+        self::assertSame('and 1 more entry', end($lines));
+        self::assertSame('2026-09-01  '.str_repeat('x', 990), $lines[0]);
+    }
+
     /**
      * Turn on exactly these line note settings, and nothing else.
      *

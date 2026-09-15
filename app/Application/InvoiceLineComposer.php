@@ -140,7 +140,8 @@ final class InvoiceLineComposer
         while ($kept !== []) {
             array_pop($kept);
             $dropped = count($lines) - count($kept);
-            $note = implode("\n", [...$heading, ...$kept, 'and '.$dropped.' more entries']);
+            $summary = 'and '.$dropped.' more '.($dropped === 1 ? 'entry' : 'entries');
+            $note = implode("\n", [...$heading, ...$kept, $summary]);
 
             if (mb_strlen($note) <= self::MAX_LENGTH) {
                 return $note;
