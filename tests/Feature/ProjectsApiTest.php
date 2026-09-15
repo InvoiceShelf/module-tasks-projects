@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Modules\TasksProjects\Tests\Feature;
 
+use Illuminate\Support\Carbon;
 use Modules\TasksProjects\Models\Project;
 use Modules\TasksProjects\Models\ProjectMember;
 use Modules\TasksProjects\Models\TimeEntry;
@@ -31,7 +32,8 @@ final class ProjectsApiTest extends TestCase
         $response->assertJsonPath('meta.total', 2);
         $response->assertJsonPath('meta.per_page', 1);
         $response->assertJsonCount(1, 'data');
-        $response->assertJsonPath('data.0.name', 'Alpha');
+        // The list opens newest first, so the second project leads the page.
+        $response->assertJsonPath('data.0.name', 'Beta');
     }
 
     public function test_the_list_filters_by_status_customer_member_and_text(): void
@@ -60,6 +62,56 @@ final class ProjectsApiTest extends TestCase
             ->getJson('/api/v1/tasks-projects/projects?search=tooling')
             ->assertJsonPath('meta.total', 1)
             ->assertJsonPath('data.0.name', 'Internal tooling');
+    }
+
+    public function test_the_list_opens_newest_first_and_sorts_by_every_supported_key(): void
+    {
+        $this->threeProjects();
+
+        self::assertSame(['Gamma', 'Beta', 'alpha'], $this->names(''));
+        self::assertSame(['alpha', 'Beta', 'Gamma'], $this->names('sort_by=created_at'));
+        self::assertSame(['alpha', 'Beta', 'Gamma'], $this->names('sort_by=name'));
+        self::assertSame(['Gamma', 'Beta', 'alpha'], $this->names('sort_by=name&sort_order=desc'));
+        self::assertSame(['alpha', 'Gamma', 'Beta'], $this->names('sort_by=status'));
+        self::assertSame(['Beta', 'alpha', 'Gamma'], $this->names('sort_by=due_date'));
+        self::assertSame(['alpha', 'Beta', 'Gamma'], $this->names('sort_by=due_date&sort_order=desc'));
+        self::assertSame(['alpha', 'Beta', 'Gamma'], $this->names('sort_by=default_rate'));
+        self::assertSame(['Beta', 'alpha', 'Gamma'], $this->names('sort_by=default_rate&sort_order=desc'));
+    }
+
+    public function test_a_project_without_the_sorted_value_lands_last_whichever_way_the_list_runs(): void
+    {
+        $this->threeProjects();
+
+        // Gamma has neither a due date nor a rate, so it never leads the page.
+        self::assertSame('Gamma', $this->names('sort_by=due_date')[2]);
+        self::assertSame('Gamma', $this->names('sort_by=due_date&sort_order=desc')[2]);
+        self::assertSame('Gamma', $this->names('sort_by=default_rate')[2]);
+        self::assertSame('Gamma', $this->names('sort_by=default_rate&sort_order=desc')[2]);
+    }
+
+    public function test_the_sort_survives_paging(): void
+    {
+        $this->threeProjects();
+
+        $this->asCompany(self::COMPANY)
+            ->getJson('/api/v1/tasks-projects/projects?sort_by=name&limit=2&page=2')
+            ->assertOk()
+            ->assertJsonCount(1, 'data')
+            ->assertJsonPath('data.0.name', 'Gamma');
+    }
+
+    public function test_the_list_refuses_a_sort_key_or_direction_it_does_not_know(): void
+    {
+        $this->asCompany(self::COMPANY)
+            ->getJson('/api/v1/tasks-projects/projects?sort_by=colour')
+            ->assertStatus(422)
+            ->assertJsonValidationErrors(['sort_by']);
+
+        $this->asCompany(self::COMPANY)
+            ->getJson('/api/v1/tasks-projects/projects?sort_by=name&sort_order=sideways')
+            ->assertStatus(422)
+            ->assertJsonValidationErrors(['sort_order']);
     }
 
     public function test_it_creates_a_project_for_the_header_company_and_stamps_the_creator(): void
@@ -262,5 +314,50 @@ final class ProjectsApiTest extends TestCase
             'ability' => 'tasks-projects:view-project',
             'resource' => null,
         ], $this->authorization->checks[0]);
+    }
+
+    /**
+     * Three projects that differ in every sortable column, created a day
+     * apart so `created_at` orders them without relying on the clock.
+     *
+     * The lowercase name is deliberate: a byte comparison would file it after
+     * the capitalised ones, and a person reading the list would not.
+     */
+    private function threeProjects(): void
+    {
+        Carbon::setTestNow('2026-09-01 09:00:00');
+        $this->makeProject(self::COMPANY, [
+            'name' => 'alpha',
+            'due_date' => '2026-12-31',
+            'default_rate' => 9000,
+        ]);
+
+        Carbon::setTestNow('2026-09-02 09:00:00');
+        $this->makeProject(self::COMPANY, [
+            'name' => 'Beta',
+            'status' => Project::STATUS_ARCHIVED,
+            'due_date' => '2026-01-31',
+            'default_rate' => 12000,
+        ]);
+
+        Carbon::setTestNow('2026-09-03 09:00:00');
+        $this->makeProject(self::COMPANY, ['name' => 'Gamma']);
+
+        Carbon::setTestNow();
+    }
+
+    /**
+     * The names the list answers with, in the order it answered them.
+     *
+     * @return list<string>
+     */
+    private function names(string $query): array
+    {
+        $response = $this->asCompany(self::COMPANY)
+            ->getJson('/api/v1/tasks-projects/projects?'.$query);
+
+        $response->assertOk();
+
+        return array_column((array) $response->json('data'), 'name');
     }
 }

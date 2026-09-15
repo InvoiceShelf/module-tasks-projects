@@ -37,6 +37,8 @@ final class TasksController extends Controller
             'due_before' => $filters['due_before'] ?? null,
             'due_after' => $filters['due_after'] ?? null,
             'search' => $filters['search'] ?? null,
+            'sort_by' => $filters['sort_by'] ?? null,
+            'sort_order' => $filters['sort_order'] ?? null,
         ], static fn (mixed $value): bool => $value !== null));
 
         return TaskResource::collection($this->paginate($tasks, $request));

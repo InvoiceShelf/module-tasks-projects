@@ -33,6 +33,8 @@ final class ProjectsController extends Controller
             'customer_id' => isset($filters['customer_id']) ? (int) $filters['customer_id'] : null,
             'user_id' => isset($filters['member_id']) ? (int) $filters['member_id'] : null,
             'search' => $filters['search'] ?? null,
+            'sort_by' => $filters['sort_by'] ?? null,
+            'sort_order' => $filters['sort_order'] ?? null,
         ], static fn (mixed $value): bool => $value !== null));
 
         return ProjectResource::collection($this->paginate($projects, $request));
