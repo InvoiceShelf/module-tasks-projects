@@ -19,13 +19,15 @@ use Modules\TasksProjects\Application\Exceptions\UnknownTimeEntries;
 use Modules\TasksProjects\Models\Project;
 use Modules\TasksProjects\Models\Task;
 use Modules\TasksProjects\Models\TimeEntry;
+use Modules\TasksProjects\Support\ModuleSettings;
 
 /**
  * Turning unbilled time into invoice lines.
  *
  * What to bill arrives as a BillingSelection, so the three ways a screen can
  * ask (these entries, these tasks, this project) meet in one place and produce
- * the same ordered list of entries.
+ * the same ordered list of entries, and each line's name and note are composed
+ * by InvoiceLineComposer from the company's own settings.
  *
  * The module never writes to the host invoice tables. `prepare()` returns the
  * exact body the host invoice endpoint expects, the browser posts it with the
@@ -45,7 +47,11 @@ final class BillingService
     /** The grouping a selection falls back to when the caller names none. */
     public const DEFAULT_GROUPING = 'task';
 
-    public function __construct(private readonly CompanyDataReader $companyData) {}
+    public function __construct(
+        private readonly CompanyDataReader $companyData,
+        private readonly ModuleSettings $settings,
+        private readonly InvoiceLineComposer $composer,
+    ) {}
 
     /**
      * Billable, unbilled time for one customer, grouped four ways.
@@ -177,19 +183,33 @@ final class BillingService
         $currencyId = $this->singleCurrencyFor($entries);
 
         $labels = $this->labelsFor($companyId, $entries, $tasks);
+        $options = $this->settings->invoiceLineOptions($companyId);
+        $byId = $entries->keyBy(static fn (TimeEntry $entry): int => (int) $entry->id);
 
         $items = [];
         $groups = [];
         $subTotal = 0;
 
         foreach ($this->group($entries, $grouping, $labels, false) as $row) {
+            /** @var list<TimeEntry> $rowEntries */
+            $rowEntries = array_values(array_map(
+                static fn (int $entryId): TimeEntry => $byId->get($entryId),
+                $row['entry_ids'],
+            ));
+            $task = $grouping === 'task' ? $tasks->get($row['key']) : null;
+
             $quantity = round($row['minutes'] / 60, 2);
             $price = $row['rate'] ?? ($quantity > 0.0 ? (int) round($row['amount'] / $quantity) : 0);
             $total = (int) round($quantity * $price);
 
             $items[] = [
-                'name' => $row['label'],
-                'description' => $row['description'],
+                'name' => $this->composer->name((string) $row['label'], $task),
+                'description' => $this->composer->description(
+                    $rowEntries,
+                    $options,
+                    $this->projectNameFor($grouping, $row, $rowEntries, $task, $labels),
+                    $task?->description === null ? null : (string) $task->description,
+                ),
                 'quantity' => $quantity,
                 'price' => $price,
                 'discount_type' => 'fixed',
@@ -533,6 +553,47 @@ final class BillingService
             ->keyBy('id');
 
         return $tasks;
+    }
+
+    /**
+     * The project a line's note may head itself with.
+     *
+     * A task line follows its own task, a project line is the project, and a
+     * line that collapses several projects only gets a heading when all of its
+     * work happens to sit in one of them.
+     *
+     * @param  array{key: int|null, label: string, currency_id: int|null, rate: int|null, entry_ids: list<int>, minutes: int, amount: int, description: string|null}  $row
+     * @param  list<TimeEntry>  $entries
+     * @param  array{task: array<int, string>, project: array<int, string>, member: array<int, string>}  $labels
+     */
+    private function projectNameFor(string $grouping, array $row, array $entries, ?Task $task, array $labels): ?string
+    {
+        $projectId = match ($grouping) {
+            'task' => $task?->project_id === null ? null : (int) $task->project_id,
+            'project' => $row['key'],
+            default => self::singleProjectId($entries),
+        };
+
+        return $projectId === null ? null : ($labels['project'][$projectId] ?? null);
+    }
+
+    /**
+     * The one project these entries share, or null when they span several.
+     *
+     * @param  list<TimeEntry>  $entries
+     */
+    private static function singleProjectId(array $entries): ?int
+    {
+        $projectIds = [];
+        foreach ($entries as $entry) {
+            if ($entry->project_id === null) {
+                return null;
+            }
+
+            $projectIds[(int) $entry->project_id] = true;
+        }
+
+        return count($projectIds) === 1 ? (int) array_key_first($projectIds) : null;
     }
 
     /**
