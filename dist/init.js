@@ -7872,20 +7872,23 @@ var Nf = ["aria-label"], Pf = { class: "flex items-center justify-between border
 			notify: d.notify,
 			t: g
 		})), z = n(() => Ze(K.running?.task_id ?? null)), ee = n(() => Na(K.elapsedSeconds)), te = n(() => P.value.startsWith(tp)), ne = n(() => F.value ? "bottom-36" : "bottom-20");
+		function re() {
+			F.value = Array.from(document.querySelectorAll(ep)).some((e) => window.getComputedStyle(e).position === "fixed");
+		}
 		E(() => d.enabled, (e) => {
-			e || ae();
+			e || oe();
 		}), h(() => {
 			P.value = d.router.currentRoute.value.path, L = d.router.afterEach((e) => {
-				P.value = e.path;
-			}), F.value = document.querySelector(ep) !== null;
+				P.value = e.path, re();
+			}), re();
 		}), E(v, (e) => {
-			e && K.running === null && re();
+			e && K.running === null && ie();
 		}), E(T, () => {
-			clearTimeout(I), I = setTimeout(() => void re(), np);
+			clearTimeout(I), I = setTimeout(() => void ie(), np);
 		}), m(() => {
 			clearTimeout(I), L?.();
 		});
-		async function re() {
+		async function ie() {
 			j.value = !0;
 			try {
 				let e = await Ve(d.client, T.value);
@@ -7896,25 +7899,25 @@ var Nf = ["aria-label"], Pf = { class: "flex items-center justify-between border
 				j.value = !1;
 			}
 		}
-		function ie(e) {
+		function ae(e) {
 			M.value = e, Qe(e);
 		}
-		function ae() {
+		function oe() {
 			v.value = !1, T.value = "", A.value = [], M.value = null, N.value = "";
 		}
-		async function oe() {
-			let e = M.value;
-			e !== null && await K.start(d.client, e.id, N.value.trim() || null, R.value) !== null && (d.notify("success", g("tasks_projects.timer.started", { name: e.name })), ae());
-		}
 		async function se() {
+			let e = M.value;
+			e !== null && await K.start(d.client, e.id, N.value.trim() || null, R.value) !== null && (d.notify("success", g("tasks_projects.timer.started", { name: e.name })), oe());
+		}
+		async function ce() {
 			let e = z.value, t = await K.stop(d.client, R.value);
 			t !== null && (d.notify("success", g("tasks_projects.timer.stopped", {
 				name: e,
 				duration: Pa(t.duration_minutes)
-			})), ae());
+			})), oe());
 		}
-		async function ce() {
-			window.confirm(g("tasks_projects.timer.discard_confirm")) && await K.discard(d.client, R.value) && (d.notify("success", g("tasks_projects.timer.discarded")), ae());
+		async function le() {
+			window.confirm(g("tasks_projects.timer.discard_confirm")) && await K.discard(d.client, R.value) && (d.notify("success", g("tasks_projects.timer.discarded")), oe());
 		}
 		return (n, u) => {
 			let d = x("BaseIcon"), m = x("BaseButton");
@@ -7925,12 +7928,12 @@ var Nf = ["aria-label"], Pf = { class: "flex items-center justify-between border
 				key: 0,
 				class: "w-80 max-w-[calc(100vw-3rem)] rounded-xl border border-line-default bg-surface shadow-2xl",
 				"aria-label": C(g)("tasks_projects.timer.panel_title"),
-				onKeydown: k(ae, ["esc"])
+				onKeydown: k(oe, ["esc"])
 			}, [o("header", Pf, [o("h2", Ff, S(C(g)("tasks_projects.timer.panel_title")), 1), o("button", {
 				type: "button",
 				class: "rounded p-1 text-subtle hover:bg-hover hover:text-heading",
 				"aria-label": C(g)("tasks_projects.timer.close"),
-				onClick: ae
+				onClick: oe
 			}, [c(d, {
 				name: "XMarkIcon",
 				class: "h-5 w-5"
@@ -7945,7 +7948,7 @@ var Nf = ["aria-label"], Pf = { class: "flex items-center justify-between border
 				j.value ? (_(), a("p", Kf, S(C(g)("tasks_projects.general.search")), 1)) : A.value.length > 0 ? (_(), a("ul", qf, [(_(!0), a(e, null, b(A.value, (e) => (_(), a("li", { key: e.id }, [o("button", {
 					type: "button",
 					class: f(["w-full truncate rounded-md px-2 py-2 text-left text-sm hover:bg-hover", M.value?.id === e.id ? "bg-hover-strong font-medium text-heading" : "text-body"]),
-					onClick: (t) => ie(e)
+					onClick: (t) => ae(e)
 				}, S(e.name), 11, Jf)]))), 128))])) : (_(), a("p", Yf, S(C(g)("tasks_projects.timer.no_tasks")), 1)),
 				O(o("input", {
 					"onUpdate:modelValue": u[1] ||= (e) => N.value = e,
@@ -7961,7 +7964,7 @@ var Nf = ["aria-label"], Pf = { class: "flex items-center justify-between border
 				}, S(C(g)("tasks_projects.timer.open_timesheet")), 1), c(m, {
 					variant: "primary",
 					disabled: M.value === null || C(K).busy,
-					onClick: oe
+					onClick: se
 				}, {
 					left: D((e) => [c(d, {
 						name: "PlayIcon",
@@ -7977,7 +7980,7 @@ var Nf = ["aria-label"], Pf = { class: "flex items-center justify-between border
 			]), o("div", Vf, [c(m, {
 				variant: "primary",
 				disabled: C(K).busy,
-				onClick: se
+				onClick: ce
 			}, {
 				left: D((e) => [c(d, {
 					name: "StopIcon",
@@ -7988,7 +7991,7 @@ var Nf = ["aria-label"], Pf = { class: "flex items-center justify-between border
 			}, 8, ["disabled"]), c(m, {
 				variant: "primary-outline",
 				disabled: C(K).busy,
-				onClick: ce
+				onClick: le
 			}, {
 				default: D(() => [s(S(C(g)("tasks_projects.timer.discard")), 1)]),
 				_: 1

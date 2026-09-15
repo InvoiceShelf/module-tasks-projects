@@ -45,8 +45,8 @@ const description = ref('')
 /** The current path, read from the host router and kept up to date on every navigation. */
 const currentPath = ref(window.location.pathname)
 
-/** Whether the AI assistant's own launcher is on the page, found once at mount. */
-const aiAssistantPresent = ref(false)
+/** Whether the AI assistant's launcher floats in the same corner as this one. */
+const aiAssistantFloats = ref(false)
 
 let searchTimer: ReturnType<typeof setTimeout> | undefined
 let stopWatchingRoute: (() => void) | undefined
@@ -65,12 +65,25 @@ const elapsed = computed<string>(() => formatClock(timerStore.elapsedSeconds))
 const hiddenHere = computed<boolean>(() => currentPath.value.startsWith(HIDDEN_PATH_PREFIX))
 
 /**
- * Clear the bottom of the AI assistant's own launcher when it shares the page,
- * so the two floating buttons do not stack on top of each other.
+ * Clear the bottom of the AI assistant's own launcher when it floats in the
+ * same corner, so the two buttons do not stack on top of each other.
  */
-const wrapperClass = computed<string>(() =>
-  aiAssistantPresent.value ? 'bottom-36' : 'bottom-20',
-)
+const wrapperClass = computed<string>(() => (aiAssistantFloats.value ? 'bottom-36' : 'bottom-20'))
+
+/**
+ * Look for a launcher that is actually in the way.
+ *
+ * The assistant ships its launcher either in the page header or as a bubble of
+ * its own, and only the second one shares this corner, so the layout is asked
+ * rather than the selector believed. The look is repeated on every navigation
+ * because a module registers its header action from a script the host loads
+ * alongside this one, which a single look at mount time can miss.
+ */
+function probeAiAssistant(): void {
+  aiAssistantFloats.value = Array.from(document.querySelectorAll(AI_ASSISTANT_SELECTOR)).some(
+    (launcher) => window.getComputedStyle(launcher).position === 'fixed',
+  )
+}
 
 watch(
   () => props.enabled,
@@ -85,9 +98,10 @@ onMounted(() => {
   currentPath.value = props.router.currentRoute.value.path
   stopWatchingRoute = props.router.afterEach((to) => {
     currentPath.value = to.path
+    probeAiAssistant()
   })
 
-  aiAssistantPresent.value = document.querySelector(AI_ASSISTANT_SELECTOR) !== null
+  probeAiAssistant()
 })
 
 watch(open, (isOpen) => {
