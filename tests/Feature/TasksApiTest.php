@@ -5,10 +5,12 @@ declare(strict_types=1);
 namespace Modules\TasksProjects\Tests\Feature;
 
 use Illuminate\Support\Carbon;
+use Illuminate\Support\Facades\DB;
 use Modules\TasksProjects\Models\Task;
 use Modules\TasksProjects\Models\TaskStatus;
 use Modules\TasksProjects\Support\Abilities;
 use Modules\TasksProjects\Support\Authorizes;
+use Modules\TasksProjects\Support\ModuleSettings;
 use Modules\TasksProjects\Tests\TestCase;
 
 final class TasksApiTest extends TestCase
@@ -308,6 +310,394 @@ final class TasksApiTest extends TestCase
             'task_status_id' => $task->task_status_id,
         ])->assertForbidden();
         $this->asCompany(self::COMPANY)->getJson('/api/v1/tasks-projects/board')->assertForbidden();
+    }
+
+    public function test_a_task_carries_the_time_logged_against_it(): void
+    {
+        $task = $this->makeTask(self::COMPANY);
+        $this->makeEntry(self::COMPANY, (int) $task->id, ['duration_minutes' => 60, 'amount' => 10000]);
+        $this->makeEntry(self::COMPANY, (int) $task->id, ['duration_minutes' => 30, 'billable' => false, 'amount' => 0]);
+        $this->makeEntry(self::COMPANY, (int) $task->id, [
+            'duration_minutes' => 45,
+            'amount' => 7500,
+            'invoice_id' => 77,
+            'invoice_item_id' => 88,
+        ]);
+        $running = $this->makeEntry(self::COMPANY, (int) $task->id, [
+            'running_user_id' => self::DEFAULT_USER,
+            'ended_at' => null,
+            'duration_minutes' => 0,
+            'started_at' => Carbon::parse('2026-09-15 09:00:00'),
+        ]);
+
+        $response = $this->asCompany(self::COMPANY)->getJson('/api/v1/tasks-projects/tasks/'.$task->id);
+
+        $response->assertOk();
+        // The running entry has no duration yet, so it is outside every total.
+        $response->assertJsonPath('data.time.logged_minutes', 135);
+        $response->assertJsonPath('data.time.billable_minutes', 105);
+        $response->assertJsonPath('data.time.unbilled_minutes', 60);
+        $response->assertJsonPath('data.time.unbilled_amount', 10000);
+        $response->assertJsonPath('data.time.invoiced', 'uninvoiced');
+        $response->assertJsonCount(1, 'data.time.running');
+        $response->assertJsonPath('data.time.running.0.entry_id', (int) $running->id);
+        $response->assertJsonPath('data.time.running.0.user_id', self::DEFAULT_USER);
+        $response->assertJsonPath('data.time.running.0.started_at', $running->started_at->toIso8601String());
+    }
+
+    public function test_the_time_block_costs_three_reads_however_long_the_list_is(): void
+    {
+        $status = $this->makeStatus(self::COMPANY);
+
+        foreach (range(1, 5) as $index) {
+            $task = $this->makeTask(self::COMPANY, ['task_status_id' => $status->id, 'name' => 'Task '.$index]);
+            $this->makeEntry(self::COMPANY, (int) $task->id);
+        }
+
+        DB::flushQueryLog();
+        DB::enableQueryLog();
+
+        $this->asCompany(self::COMPANY)->getJson('/api/v1/tasks-projects/tasks')->assertOk();
+
+        $reads = array_filter(
+            DB::getQueryLog(),
+            static fn (array $query): bool => str_contains((string) $query['query'], 'tp_time_entries'),
+        );
+
+        DB::disableQueryLog();
+
+        self::assertCount(3, $reads, 'The summary must stay three grouped reads, whatever the page holds.');
+    }
+
+    public function test_the_invoiced_state_runs_none_then_uninvoiced_then_invoiced(): void
+    {
+        $untouched = $this->makeTask(self::COMPANY, ['name' => 'Untouched']);
+        $unpaidWork = $this->makeTask(self::COMPANY, ['name' => 'Free']);
+        $this->makeEntry(self::COMPANY, (int) $unpaidWork->id, ['billable' => false, 'amount' => 0]);
+
+        $partly = $this->makeTask(self::COMPANY, ['name' => 'Partly']);
+        $this->makeEntry(self::COMPANY, (int) $partly->id, ['invoice_id' => 77]);
+        $this->makeEntry(self::COMPANY, (int) $partly->id);
+
+        $billed = $this->makeTask(self::COMPANY, ['name' => 'Billed']);
+        $this->makeEntry(self::COMPANY, (int) $billed->id, ['invoice_id' => 77]);
+        $this->makeEntry(self::COMPANY, (int) $billed->id, ['invoice_id' => 78]);
+        $this->makeEntry(self::COMPANY, (int) $billed->id, ['billable' => false, 'amount' => 0]);
+
+        self::assertSame('none', $this->timeOf((int) $untouched->id)['invoiced']);
+        self::assertSame('none', $this->timeOf((int) $unpaidWork->id)['invoiced']);
+        self::assertSame('uninvoiced', $this->timeOf((int) $partly->id)['invoiced']);
+        self::assertSame('invoiced', $this->timeOf((int) $billed->id)['invoiced']);
+
+        // Time nobody may bill still counts as logged time.
+        self::assertSame(60, $this->timeOf((int) $unpaidWork->id)['logged_minutes']);
+        self::assertSame(0, $this->timeOf((int) $unpaidWork->id)['billable_minutes']);
+    }
+
+    public function test_every_task_response_carries_the_time_block(): void
+    {
+        $status = $this->makeStatus(self::COMPANY);
+        $task = $this->makeTask(self::COMPANY, ['task_status_id' => $status->id]);
+        $this->makeEntry(self::COMPANY, (int) $task->id, ['duration_minutes' => 90, 'amount' => 15000]);
+
+        $this->asCompany(self::COMPANY)
+            ->getJson('/api/v1/tasks-projects/tasks')
+            ->assertOk()
+            ->assertJsonPath('data.0.time.logged_minutes', 90)
+            ->assertJsonPath('data.0.time.unbilled_amount', 15000);
+
+        $this->asCompany(self::COMPANY)
+            ->getJson('/api/v1/tasks-projects/board')
+            ->assertOk()
+            ->assertJsonPath('data.0.tasks.0.time.logged_minutes', 90);
+
+        $this->asCompany(self::COMPANY)
+            ->putJson('/api/v1/tasks-projects/tasks/'.$task->id, ['name' => 'Renamed'])
+            ->assertOk()
+            ->assertJsonPath('data.time.logged_minutes', 90);
+
+        $this->asCompany(self::COMPANY)
+            ->postJson('/api/v1/tasks-projects/tasks', ['name' => 'Brand new'])
+            ->assertCreated()
+            ->assertJsonPath('data.time.logged_minutes', 0)
+            ->assertJsonPath('data.time.invoiced', 'none')
+            ->assertJsonPath('data.time.running', []);
+    }
+
+    public function test_a_tasks_time_never_counts_another_companys_entries(): void
+    {
+        $mine = $this->makeTask(self::COMPANY);
+        $theirs = $this->makeTask(self::OTHER_COMPANY);
+
+        $this->makeEntry(self::COMPANY, (int) $mine->id, ['duration_minutes' => 60]);
+        $this->makeEntry(self::OTHER_COMPANY, (int) $theirs->id, ['duration_minutes' => 300]);
+
+        self::assertSame(60, $this->timeOf((int) $mine->id)['logged_minutes']);
+    }
+
+    public function test_the_invoiced_filter_splits_billed_tasks_from_unbilled_ones(): void
+    {
+        $status = $this->makeStatus(self::COMPANY);
+        $untouched = $this->makeTask(self::COMPANY, ['task_status_id' => $status->id, 'name' => 'Untouched']);
+
+        $unbilled = $this->makeTask(self::COMPANY, ['task_status_id' => $status->id, 'name' => 'Unbilled']);
+        $this->makeEntry(self::COMPANY, (int) $unbilled->id);
+
+        $partly = $this->makeTask(self::COMPANY, ['task_status_id' => $status->id, 'name' => 'Partly']);
+        $this->makeEntry(self::COMPANY, (int) $partly->id, ['invoice_id' => 77]);
+        $this->makeEntry(self::COMPANY, (int) $partly->id);
+
+        $billed = $this->makeTask(self::COMPANY, ['task_status_id' => $status->id, 'name' => 'Billed']);
+        $this->makeEntry(self::COMPANY, (int) $billed->id, ['invoice_id' => 77]);
+
+        $this->assertListReturns([$unbilled->id, $partly->id], '?invoiced=0');
+        $this->assertListReturns([$billed->id], '?invoiced=1');
+        $this->assertListReturns(
+            [$untouched->id, $unbilled->id, $partly->id, $billed->id],
+            '',
+        );
+    }
+
+    public function test_a_running_clock_alone_does_not_make_a_task_uninvoiced(): void
+    {
+        $task = $this->makeTask(self::COMPANY);
+        $this->makeEntry(self::COMPANY, (int) $task->id, [
+            'running_user_id' => self::DEFAULT_USER,
+            'ended_at' => null,
+            'duration_minutes' => 0,
+        ]);
+
+        self::assertSame('none', $this->timeOf((int) $task->id)['invoiced']);
+        $this->assertListReturns([], '?invoiced=0');
+    }
+
+    public function test_auto_start_runs_the_creators_clock_on_the_new_task(): void
+    {
+        $this->settings->putCompany(self::COMPANY, ModuleSettings::PREFIX.'auto_start_tasks', true);
+
+        $response = $this->asCompany(self::COMPANY)
+            ->postJson('/api/v1/tasks-projects/tasks', ['name' => 'Start me']);
+
+        $response->assertCreated();
+        $response->assertJsonCount(1, 'data.time.running');
+        $response->assertJsonPath('data.time.running.0.user_id', self::DEFAULT_USER);
+
+        $this->asCompany(self::COMPANY)
+            ->getJson('/api/v1/tasks-projects/timer')
+            ->assertJsonPath('data.task_id', $response->json('data.id'));
+    }
+
+    public function test_auto_start_leaves_a_timer_that_is_already_running_alone(): void
+    {
+        $this->settings->putCompany(self::COMPANY, ModuleSettings::PREFIX.'auto_start_tasks', true);
+        $busy = $this->makeTask(self::COMPANY, ['name' => 'Busy']);
+
+        $this->asCompany(self::COMPANY)
+            ->postJson('/api/v1/tasks-projects/timer/start', ['task_id' => $busy->id])
+            ->assertCreated();
+
+        $this->asCompany(self::COMPANY)
+            ->postJson('/api/v1/tasks-projects/tasks', ['name' => 'Later'])
+            ->assertCreated()
+            ->assertJsonPath('data.time.running', []);
+
+        $this->asCompany(self::COMPANY)
+            ->getJson('/api/v1/tasks-projects/timer')
+            ->assertJsonPath('data.task_id', (int) $busy->id);
+    }
+
+    public function test_without_the_setting_a_new_task_starts_no_clock(): void
+    {
+        $this->asCompany(self::COMPANY)
+            ->postJson('/api/v1/tasks-projects/tasks', ['name' => 'Quiet'])
+            ->assertCreated()
+            ->assertJsonPath('data.time.running', []);
+
+        $this->asCompany(self::COMPANY)
+            ->getJson('/api/v1/tasks-projects/timer')
+            ->assertExactJson(['data' => null]);
+    }
+
+    public function test_the_lock_refuses_to_edit_move_or_delete_an_invoiced_task(): void
+    {
+        $this->settings->putCompany(self::COMPANY, ModuleSettings::PREFIX.'lock_invoiced_tasks', true);
+
+        $status = $this->makeStatus(self::COMPANY);
+        $target = $this->makeStatus(self::COMPANY, ['name' => 'Done', 'position' => 2, 'is_default' => false]);
+        $task = $this->makeTask(self::COMPANY, ['task_status_id' => $status->id]);
+        $this->makeEntry(self::COMPANY, (int) $task->id, ['invoice_id' => 77, 'invoice_item_id' => 88]);
+
+        $this->asCompany(self::COMPANY)
+            ->putJson('/api/v1/tasks-projects/tasks/'.$task->id, ['name' => 'Renamed'])
+            ->assertStatus(422)
+            ->assertJsonPath('error', 'task_locked');
+
+        $this->asCompany(self::COMPANY)
+            ->postJson('/api/v1/tasks-projects/tasks/'.$task->id.'/move', ['task_status_id' => $target->id])
+            ->assertStatus(422)
+            ->assertJsonPath('error', 'task_locked');
+
+        $this->asCompany(self::COMPANY)
+            ->deleteJson('/api/v1/tasks-projects/tasks/'.$task->id)
+            ->assertStatus(422)
+            ->assertJsonPath('error', 'task_locked');
+
+        self::assertSame('Build the landing page', (string) Task::query()->findOrFail($task->id)->name);
+    }
+
+    public function test_the_lock_leaves_a_task_that_is_only_partly_invoiced_editable(): void
+    {
+        $this->settings->putCompany(self::COMPANY, ModuleSettings::PREFIX.'lock_invoiced_tasks', true);
+
+        $task = $this->makeTask(self::COMPANY);
+        $this->makeEntry(self::COMPANY, (int) $task->id, ['invoice_id' => 77]);
+        $this->makeEntry(self::COMPANY, (int) $task->id);
+
+        $this->asCompany(self::COMPANY)
+            ->putJson('/api/v1/tasks-projects/tasks/'.$task->id, ['name' => 'Still moving'])
+            ->assertOk()
+            ->assertJsonPath('data.name', 'Still moving');
+    }
+
+    public function test_an_invoiced_task_is_editable_while_the_lock_is_off(): void
+    {
+        $task = $this->makeTask(self::COMPANY);
+        $this->makeEntry(self::COMPANY, (int) $task->id, ['invoice_id' => 77]);
+
+        $this->asCompany(self::COMPANY)
+            ->putJson('/api/v1/tasks-projects/tasks/'.$task->id, ['name' => 'Renamed'])
+            ->assertOk()
+            ->assertJsonPath('data.name', 'Renamed');
+    }
+
+    public function test_a_bulk_status_change_moves_what_it_can_and_reports_what_it_cannot(): void
+    {
+        $this->settings->putCompany(self::COMPANY, ModuleSettings::PREFIX.'lock_invoiced_tasks', true);
+
+        $backlog = $this->makeStatus(self::COMPANY);
+        $done = $this->makeStatus(self::COMPANY, ['name' => 'Done', 'position' => 2, 'is_default' => false, 'is_closed' => true]);
+
+        $first = $this->makeTask(self::COMPANY, ['task_status_id' => $backlog->id]);
+        $second = $this->makeTask(self::COMPANY, ['task_status_id' => $backlog->id]);
+        $locked = $this->makeTask(self::COMPANY, ['task_status_id' => $backlog->id]);
+        $this->makeEntry(self::COMPANY, (int) $locked->id, ['invoice_id' => 77]);
+        $foreign = $this->makeTask(self::OTHER_COMPANY);
+
+        $response = $this->asCompany(self::COMPANY)->postJson('/api/v1/tasks-projects/tasks/bulk', [
+            'action' => 'status',
+            'task_status_id' => $done->id,
+            'ids' => [$first->id, $second->id, $locked->id, $foreign->id],
+        ]);
+
+        $response->assertOk();
+        $response->assertExactJson([
+            'updated' => [(int) $first->id, (int) $second->id],
+            'failed' => [
+                ['id' => (int) $locked->id, 'reason' => 'task_locked'],
+                ['id' => (int) $foreign->id, 'reason' => 'not_found'],
+            ],
+        ]);
+
+        self::assertSame((int) $done->id, (int) Task::query()->findOrFail($first->id)->task_status_id);
+        self::assertNotNull(Task::query()->findOrFail($second->id)->closed_at);
+        self::assertSame((int) $backlog->id, (int) Task::query()->findOrFail($locked->id)->task_status_id);
+    }
+
+    public function test_a_bulk_delete_keeps_the_tasks_it_may_not_delete(): void
+    {
+        $status = $this->makeStatus(self::COMPANY);
+        $gone = $this->makeTask(self::COMPANY, ['task_status_id' => $status->id]);
+        $invoiced = $this->makeTask(self::COMPANY, ['task_status_id' => $status->id]);
+        $this->makeEntry(self::COMPANY, (int) $invoiced->id, ['invoice_id' => 77, 'invoice_item_id' => 88]);
+
+        $response = $this->asCompany(self::COMPANY)->postJson('/api/v1/tasks-projects/tasks/bulk', [
+            'action' => 'delete',
+            'ids' => [$gone->id, $invoiced->id],
+        ]);
+
+        $response->assertOk();
+        $response->assertExactJson([
+            'updated' => [(int) $gone->id],
+            'failed' => [['id' => (int) $invoiced->id, 'reason' => 'entries_already_invoiced']],
+        ]);
+
+        self::assertNull(Task::query()->find($gone->id));
+        self::assertNotNull(Task::query()->find($invoiced->id));
+    }
+
+    public function test_a_bulk_request_is_checked_before_anything_moves(): void
+    {
+        $task = $this->makeTask(self::COMPANY);
+
+        $this->asCompany(self::COMPANY)
+            ->postJson('/api/v1/tasks-projects/tasks/bulk', ['action' => 'archive', 'ids' => [$task->id]])
+            ->assertStatus(422)
+            ->assertJsonValidationErrors(['action']);
+
+        $this->asCompany(self::COMPANY)
+            ->postJson('/api/v1/tasks-projects/tasks/bulk', ['action' => 'status', 'ids' => [$task->id]])
+            ->assertStatus(422)
+            ->assertJsonValidationErrors(['task_status_id']);
+
+        $this->asCompany(self::COMPANY)
+            ->postJson('/api/v1/tasks-projects/tasks/bulk', ['action' => 'delete', 'ids' => []])
+            ->assertStatus(422)
+            ->assertJsonValidationErrors(['ids']);
+
+        // Deleting is not a status change with an extra field attached.
+        $this->asCompany(self::COMPANY)
+            ->postJson('/api/v1/tasks-projects/tasks/bulk', [
+                'action' => 'delete',
+                'ids' => [$task->id],
+                'task_status_id' => $task->task_status_id,
+            ])
+            ->assertStatus(422)
+            ->assertJsonValidationErrors(['task_status_id']);
+
+        self::assertNotNull(Task::query()->find($task->id));
+    }
+
+    public function test_each_bulk_action_checks_its_own_ability(): void
+    {
+        $task = $this->makeTask(self::COMPANY);
+
+        $this->authorization->deny(Authorizes::id(Abilities::DELETE_TASK));
+
+        $this->asCompany(self::COMPANY)
+            ->postJson('/api/v1/tasks-projects/tasks/bulk', ['action' => 'delete', 'ids' => [$task->id]])
+            ->assertForbidden();
+
+        $this->asCompany(self::COMPANY)
+            ->postJson('/api/v1/tasks-projects/tasks/bulk', [
+                'action' => 'status',
+                'task_status_id' => $task->task_status_id,
+                'ids' => [$task->id],
+            ])
+            ->assertOk();
+
+        $this->authorization->deny(Authorizes::id(Abilities::EDIT_TASK));
+
+        $this->asCompany(self::COMPANY)
+            ->postJson('/api/v1/tasks-projects/tasks/bulk', [
+                'action' => 'status',
+                'task_status_id' => $task->task_status_id,
+                'ids' => [$task->id],
+            ])
+            ->assertForbidden();
+    }
+
+    /**
+     * The time block of one task, as the API answers it.
+     *
+     * @return array<string, mixed>
+     */
+    private function timeOf(int $taskId): array
+    {
+        $response = $this->asCompany(self::COMPANY)->getJson('/api/v1/tasks-projects/tasks/'.$taskId);
+
+        $response->assertOk();
+
+        return (array) $response->json('data.time');
     }
 
     /** @param list<int> $expected */
