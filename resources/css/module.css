@@ -1,5 +1,13 @@
 @reference "tailwindcss/theme.css";
-@import "tailwindcss/utilities" layer(utilities);
+
+/*
+ * `source(none)` turns off Tailwind's automatic content detection, which would
+ * otherwise scan the whole repository and scrape utility-looking words out of
+ * PHP, Markdown and config files. Only the module's own components feed the
+ * scanner, so the compiled stylesheet depends on the frontend alone and a
+ * backend change can never move dist/style.css.
+ */
+@import "tailwindcss/utilities" layer(utilities) source(none);
 
 @source "../js/**/*.vue";
 @source "../js/**/*.ts";
