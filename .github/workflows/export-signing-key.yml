@@ -1,0 +1,43 @@
+# One-off: hands the maintainer a backup of the module signing secret, encrypted
+# to their age key, as a run artifact. Nothing readable leaves the runner. This
+# file is removed again once the export has been downloaded.
+name: Export signing key (one-off)
+
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  export:
+    runs-on: ubuntu-latest
+    environment: module-release
+    steps:
+      - name: Install sops
+        run: |
+          set -euo pipefail
+          curl -fsSL -o sops "https://github.com/getsops/sops/releases/download/v3.13.3/sops-v3.13.3.linux.amd64"
+          echo "e5bec3346a873ae91d871550f3e698c1aad962aff462a080e40f25fde17fef6b  sops" | sha256sum -c -
+          sudo install -m 0755 sops /usr/local/bin/sops
+
+      - name: Encrypt the secret to the maintainer's age recipient
+        env:
+          KEY: ${{ secrets.MODULE_SIGNING_SECRET_KEY_B64 }}
+          KEY_ID: ${{ vars.MODULE_SIGNING_KEY_ID }}
+          RECIPIENT: age1knr8e789m2g3scwg3g60fppyhvkmjyp8zuf8zqfr8m90j63mgpss26zlcc
+        run: |
+          set -euo pipefail
+          test -n "$KEY"
+          jq -n --arg key_id "$KEY_ID" --arg secret_key_b64 "$KEY" '{key_id: $key_id, secret_key_b64: $secret_key_b64}' > plain.json
+          sops --encrypt --age "$RECIPIENT" --input-type json --output-type json plain.json > "$KEY_ID.sops.json"
+          shred -u plain.json
+          test "$(jq -r '.secret_key_b64' "$KEY_ID.sops.json" | cut -c1-4)" = "ENC["
+          echo "encrypted export ready: $KEY_ID.sops.json"
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: signing-key-export
+          path: '*.sops.json'
+          retention-days: 1
+          if-no-files-found: error
