@@ -5,42 +5,50 @@ declare(strict_types=1);
 namespace Modules\TasksProjects\Support;
 
 /**
- * Namespaced ability identifiers for the Tasks and Projects module.
+ * Ability names the Tasks and Projects module contributes to the host catalogue.
  *
- * These are not yet registered with the host's ability catalogue: v1 gates
- * through `InvoiceShelf\Modules\Contracts\Host\ModuleAuthorization` against
- * existing host abilities (`view`/`create` on `customer` and `invoice`).
- * These constants document the intended catalogue for when
- * `Registry::registerAbility()` lands. See module-tasks-projects.md
- * "Authorization".
+ * The constants hold the bare, un-namespaced names: `Registry::registerAbility()`
+ * namespaces every module ability as `{slug}:{ability}` at registration time and
+ * rejects a name that already carries a colon. Build the stored id with
+ * `Registry::abilityId(Abilities::SLUG, Abilities::VIEW_PROJECT)` wherever the
+ * namespaced form is needed, such as a frontend route's `meta.ability`.
+ *
+ * See specs/tasks-projects.md "Authorization" for the dependency table.
  */
 final class Abilities
 {
     public const SLUG = 'tasks-projects';
 
-    public const VIEW_PROJECT = 'tasks-projects:view-project';
+    public const VIEW_PROJECT = 'view-project';
 
-    public const CREATE_PROJECT = 'tasks-projects:create-project';
+    public const CREATE_PROJECT = 'create-project';
 
-    public const EDIT_PROJECT = 'tasks-projects:edit-project';
+    public const EDIT_PROJECT = 'edit-project';
 
-    public const DELETE_PROJECT = 'tasks-projects:delete-project';
+    public const DELETE_PROJECT = 'delete-project';
 
-    public const VIEW_TASK = 'tasks-projects:view-task';
+    public const VIEW_TASK = 'view-task';
 
-    public const CREATE_TASK = 'tasks-projects:create-task';
+    public const CREATE_TASK = 'create-task';
 
-    public const EDIT_TASK = 'tasks-projects:edit-task';
+    public const EDIT_TASK = 'edit-task';
 
-    public const DELETE_TASK = 'tasks-projects:delete-task';
+    public const DELETE_TASK = 'delete-task';
 
-    public const MANAGE_TASK_STATUS = 'tasks-projects:manage-task-status';
+    public const MANAGE_TASK_STATUS = 'manage-task-status';
 
-    public const VIEW_OWN_TIME = 'tasks-projects:view-own-time';
+    public const VIEW_OWN_TIME = 'view-own-time';
 
-    public const VIEW_ALL_TIME = 'tasks-projects:view-all-time';
+    public const VIEW_ALL_TIME = 'view-all-time';
 
-    public const EDIT_ALL_TIME = 'tasks-projects:edit-all-time';
+    public const EDIT_ALL_TIME = 'edit-all-time';
 
-    public const INVOICE_TASKS = 'tasks-projects:invoice-tasks';
+    public const INVOICE_TASKS = 'invoice-tasks';
+
+    /** Host abilities the module's own abilities depend on. */
+    public const HOST_VIEW_CUSTOMER = 'view-customer';
+
+    public const HOST_CREATE_INVOICE = 'create-invoice';
+
+    public const HOST_EDIT_INVOICE = 'edit-invoice';
 }
