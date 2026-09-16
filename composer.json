@@ -11,7 +11,7 @@
     "require": {
         "php": "^8.4",
         "ext-json": "*",
-        "invoiceshelf/modules": "^3.3"
+        "invoiceshelf/modules": "^3.4.0"
     },
     "require-dev": {
         "laravel/pint": "^1.26",
@@ -42,8 +42,38 @@
     "prefer-stable": true,
     "repositories": {
         "invoiceshelf-modules": {
-            "type": "vcs",
-            "url": "https://github.com/InvoiceShelf/modules.git"
+            "type": "package",
+            "package": {
+                "name": "invoiceshelf/modules",
+                "version": "3.4.0",
+                "type": "library",
+                "license": "MIT",
+                "source": {
+                    "type": "git",
+                    "url": "https://github.com/InvoiceShelf/modules.git",
+                    "reference": "fb7b62961153a42a7c12aabed795cd4107e4ad0d"
+                },
+                "require": {
+                    "php": "^8.3",
+                    "nikic/php-parser": "^5.0",
+                    "nwidart/laravel-modules": "^13.0"
+                },
+                "autoload": {
+                    "psr-4": {
+                        "InvoiceShelf\\Modules\\": "src/"
+                    }
+                },
+                "bin": [
+                    "bin/invoiceshelf-module"
+                ],
+                "extra": {
+                    "laravel": {
+                        "providers": [
+                            "InvoiceShelf\\Modules\\InvoiceShelfModulesServiceProvider"
+                        ]
+                    }
+                }
+            }
         }
     }
 }
