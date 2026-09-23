@@ -19,7 +19,9 @@ the InvoiceShelf 3.x `AGENTS.md` before making changes.
   `drop*`, `rename*`, `raw`, or `statement` calls in `up()`.
 - Run `composer run lint`, `composer run test`, `pnpm run build`, and package validation before
   release.
-- `composer.json` pins `invoiceshelf/modules` 3.4.0 to an unreleased SDK commit through an inline
-  `package` repository, because `registerAbility`, `registerPage` and the `CompanyDataReader`
-  member and invoice readers are not tagged yet. Replace the whole `repositories` block with the
-  plain `vcs` entry once the SDK tags 3.4.0; the `^3.4.0` constraint already matches.
+- `composer.json` takes `invoiceshelf/modules` `^3.4` from the SDK's GitHub repository through a
+  plain `vcs` entry.
+- The module must run on every host its `module.json` compatibility range admits, so it uses only
+  Base* components and props that exist on the oldest of them. Name icon-only controls with
+  `aria-label`, and write layout classes in their logical form (`ms-`, `pe-`, `start-`,
+  `text-end`) so right-to-left languages mirror; `pnpm run lint` checks accessibility.

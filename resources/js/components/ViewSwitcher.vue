@@ -63,13 +63,13 @@ function select(view: View): void {
 <template>
   <nav
     class="inline-flex overflow-hidden rounded-lg border border-line-default"
-    :aria-label="t('tasks_projects.tasks.title')"
+    :aria-label="t('tasks_projects.tasks.views.title')"
   >
     <button
       v-for="view in views"
       :key="view.id"
       type="button"
-      class="flex items-center gap-1.5 border-r border-line-default px-3 py-1.5 text-sm font-medium last:border-r-0"
+      class="flex items-center gap-1.5 border-e border-line-default px-3 py-1.5 text-sm font-medium last:border-e-0"
       :class="
         isActive(view)
           ? 'bg-primary-50 text-primary-500'
@@ -79,7 +79,7 @@ function select(view: View): void {
       @click="select(view)"
     >
       <BaseIcon :name="view.icon" class="h-4 w-4" />
-      <span class="max-sm:hidden">{{ view.label }}</span>
+      <span class="max-sm:sr-only">{{ view.label }}</span>
     </button>
   </nav>
 </template>

@@ -36,7 +36,7 @@ function stop(): void {
 </script>
 
 <template>
-  <li v-if="timerStore.running !== null" class="relative float-left m-0 ml-2">
+  <li v-if="timerStore.running !== null" class="relative float-start m-0 ms-2">
     <div
       class="flex h-8 items-center gap-2 rounded-lg bg-white/20 px-2 text-sm text-white md:h-9 md:px-3"
       :title="t('tasks_projects.timer.running')"

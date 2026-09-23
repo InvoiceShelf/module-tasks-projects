@@ -151,6 +151,7 @@ function thisWeek(): void {
           variant="white"
           size="sm"
           :title="t('tasks_projects.time.previous_week')"
+          :aria-label="t('tasks_projects.time.previous_week')"
           @click="move(-1)"
         >
           <BaseIcon name="ChevronLeftIcon" class="h-4 w-4" />
@@ -164,12 +165,13 @@ function thisWeek(): void {
           variant="white"
           size="sm"
           :title="t('tasks_projects.time.next_week')"
+          :aria-label="t('tasks_projects.time.next_week')"
           @click="move(1)"
         >
           <BaseIcon name="ChevronRightIcon" class="h-4 w-4" />
         </BaseButton>
 
-        <span class="ml-1 text-sm text-muted">{{ rangeLabel }}</span>
+        <span class="ms-1 text-sm text-muted">{{ rangeLabel }}</span>
       </div>
 
       <div class="flex items-center gap-2 text-sm">
@@ -209,7 +211,7 @@ function thisWeek(): void {
           <li v-for="entry in column.entries" :key="entry.id">
             <button
               type="button"
-              class="w-full rounded-md border border-line-light px-2 py-2 text-left hover:bg-hover"
+              class="w-full rounded-md border border-line-light px-2 py-2 text-start hover:bg-hover"
               @click="emit('edit', entry)"
             >
               <span class="flex items-center justify-between gap-2">

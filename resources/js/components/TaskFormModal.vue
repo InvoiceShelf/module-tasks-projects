@@ -276,13 +276,16 @@ async function remove(): Promise<void> {
       <div class="flex w-full items-center justify-between">
         <span>
           {{ title }}
-          <span v-if="task" class="ml-2 text-sm font-normal text-muted">#{{ task.number }}</span>
+          <span v-if="task" class="ms-2 text-sm font-normal text-muted">#{{ task.number }}</span>
         </span>
-        <BaseIcon
-          name="XMarkIcon"
-          class="h-6 w-6 cursor-pointer text-subtle hover:text-body"
+        <button
+          type="button"
+          class="-m-1.5 rounded-lg p-1.5 text-subtle hover:text-body focus:outline-hidden focus-visible:ring-2 focus-visible:ring-primary-500"
+          :aria-label="t('tasks_projects.general.close')"
           @click="emit('close')"
-        />
+        >
+          <BaseIcon name="XMarkIcon" class="h-6 w-6" />
+        </button>
       </div>
     </template>
 

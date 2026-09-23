@@ -335,7 +335,7 @@ async function createInvoice(): Promise<void> {
           v-for="row in customers"
           :key="`${row.customer_id}-${row.currency_id ?? 'none'}`"
           type="button"
-          class="rounded-xl border border-line-default bg-surface p-5 text-left transition hover:border-primary-500"
+          class="rounded-xl border border-line-default bg-surface p-5 text-start transition hover:border-primary-500"
           @click="openCustomer(row)"
         >
           <p class="text-sm font-semibold text-heading">{{ label(row.customer_id) }}</p>
@@ -432,22 +432,22 @@ async function createInvoice(): Promise<void> {
               <thead class="bg-surface text-xs tracking-wider text-muted uppercase">
                 <tr>
                   <th class="w-10" />
-                  <th class="px-4 py-2 text-left font-medium">
+                  <th class="px-4 py-2 text-start font-medium">
                     {{ t('tasks_projects.billing.entries.columns.date') }}
                   </th>
-                  <th class="px-4 py-2 text-left font-medium">
+                  <th class="px-4 py-2 text-start font-medium">
                     {{ t('tasks_projects.billing.entries.columns.task') }}
                   </th>
-                  <th class="px-4 py-2 text-left font-medium">
+                  <th class="px-4 py-2 text-start font-medium">
                     {{ t('tasks_projects.billing.entries.columns.project') }}
                   </th>
-                  <th class="px-4 py-2 text-left font-medium">
+                  <th class="px-4 py-2 text-start font-medium">
                     {{ t('tasks_projects.billing.entries.columns.member') }}
                   </th>
-                  <th class="px-4 py-2 text-right font-medium">
+                  <th class="px-4 py-2 text-end font-medium">
                     {{ t('tasks_projects.billing.entries.columns.duration') }}
                   </th>
-                  <th class="px-4 py-2 text-right font-medium">
+                  <th class="px-4 py-2 text-end font-medium">
                     {{ t('tasks_projects.billing.entries.columns.amount') }}
                   </th>
                 </tr>
@@ -455,10 +455,11 @@ async function createInvoice(): Promise<void> {
 
               <tbody class="divide-y divide-line-default bg-surface text-sm">
                 <tr v-for="entry in groupEntries(group)" :key="entry.id">
-                  <td class="pl-4">
+                  <td class="ps-4">
                     <input
                       type="checkbox"
                       class="h-4 w-4 cursor-pointer rounded border-line-strong"
+                      :aria-label="t('tasks_projects.general.select_named', { name: entry.description || formatDate(entry.date) })"
                       :checked="isSelected(entry.id)"
                       @change="toggleEntry(entry.id)"
                     >
@@ -476,10 +477,10 @@ async function createInvoice(): Promise<void> {
                   </td>
                   <td class="px-4 py-2 text-muted">{{ entry.project_name ?? '-' }}</td>
                   <td class="px-4 py-2 text-muted">{{ entry.user_name }}</td>
-                  <td class="px-4 py-2 text-right whitespace-nowrap text-muted">
+                  <td class="px-4 py-2 text-end whitespace-nowrap text-muted">
                     {{ formatMinutes(entry.minutes) }}
                   </td>
-                  <td class="px-4 py-2 text-right whitespace-nowrap text-heading">
+                  <td class="px-4 py-2 text-end whitespace-nowrap text-heading">
                     <BaseFormatMoney :amount="entry.amount" />
                   </td>
                 </tr>

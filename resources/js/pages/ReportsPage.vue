@@ -360,21 +360,21 @@ function clearRange(): void {
 
           <div class="mt-3 flex flex-wrap gap-6 text-sm">
             <span class="inline-flex items-center text-body">
-              <span class="mr-2 inline-block h-2.5 w-2.5 rounded-full bg-primary-500" />
+              <span class="me-2 inline-block h-2.5 w-2.5 rounded-full bg-primary-500" />
               {{ t('tasks_projects.reports.split.billable') }}:
-              <span class="ml-1 font-medium text-heading">
+              <span class="ms-1 font-medium text-heading">
                 {{ formatDuration(billableMinutes) }}
               </span>
-              <span class="ml-1 text-muted">({{ billableShare }}%)</span>
+              <span class="ms-1 text-muted">({{ billableShare }}%)</span>
             </span>
 
             <span class="inline-flex items-center text-body">
-              <span class="mr-2 inline-block h-2.5 w-2.5 rounded-full bg-surface-tertiary" />
+              <span class="me-2 inline-block h-2.5 w-2.5 rounded-full bg-surface-tertiary" />
               {{ t('tasks_projects.reports.split.non_billable') }}:
-              <span class="ml-1 font-medium text-heading">
+              <span class="ms-1 font-medium text-heading">
                 {{ formatDuration(nonBillableMinutes) }}
               </span>
-              <span class="ml-1 text-muted">({{ 100 - billableShare }}%)</span>
+              <span class="ms-1 text-muted">({{ 100 - billableShare }}%)</span>
             </span>
           </div>
         </template>

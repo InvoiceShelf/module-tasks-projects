@@ -68,7 +68,7 @@ const columns = computed(() => [
     key: 'actions',
     label: t('tasks_projects.general.actions'),
     sortable: false,
-    tdClass: 'text-right text-sm font-medium',
+    tdClass: 'text-end text-sm font-medium',
   },
 ])
 
@@ -248,18 +248,18 @@ async function remove(entry: TimeEntry): Promise<void> {
             {{ t('tasks_projects.project.time.running') }}
           </span>
 
-          <BaseDropdown v-else>
+          <BaseDropdown v-else :label="t('tasks_projects.general.actions')">
             <template #activator>
               <BaseIcon name="EllipsisHorizontalIcon" class="h-5 text-muted" />
             </template>
 
             <BaseDropdownItem @click="openEdit(row.data)">
-              <BaseIcon name="PencilIcon" class="mr-3 h-5 w-5 text-subtle group-hover:text-muted" />
+              <BaseIcon name="PencilIcon" class="me-3 h-5 w-5 text-subtle group-hover:text-muted" />
               {{ t('tasks_projects.general.edit') }}
             </BaseDropdownItem>
 
             <BaseDropdownItem v-if="row.data.invoice_id === null" @click="remove(row.data)">
-              <BaseIcon name="TrashIcon" class="mr-3 h-5 w-5 text-subtle group-hover:text-muted" />
+              <BaseIcon name="TrashIcon" class="me-3 h-5 w-5 text-subtle group-hover:text-muted" />
               {{ t('tasks_projects.general.delete') }}
             </BaseDropdownItem>
           </BaseDropdown>

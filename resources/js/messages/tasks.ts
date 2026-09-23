@@ -40,6 +40,7 @@ export const taskMessages = {
         nothing_to_invoice: 'No unbilled billable time on this task.',
         locked: 'This task is on an invoice and cannot be changed.',
         views: {
+          title: 'View',
           list: 'List',
           board: 'Board',
           week: 'Week',

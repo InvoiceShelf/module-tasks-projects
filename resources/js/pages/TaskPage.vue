@@ -399,12 +399,13 @@ async function remove(): Promise<void> {
     <template v-else-if="task">
       <div class="mt-6 grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
         <div class="rounded-xl border border-line-default bg-surface p-5">
-          <p class="text-xs font-medium tracking-wider text-muted uppercase">
+          <p id="task-status-label" class="text-xs font-medium tracking-wider text-muted uppercase">
             {{ t('tasks_projects.tasks.detail.status') }}
           </p>
           <div class="mt-2">
             <BaseSelectInput
               v-model="statusOption"
+              aria-labelledby="task-status-label"
               :options="statusOptions"
               :disabled="savingStatus"
               label-key="label"

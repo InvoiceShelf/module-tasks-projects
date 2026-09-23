@@ -60,6 +60,7 @@ watch(status, (option) => {
         :options="statusOptions"
         :disabled="busy"
         :placeholder="t('tasks_projects.tasks.bulk.change_status')"
+        :aria-label="t('tasks_projects.tasks.bulk.change_status')"
         label-key="label"
       />
     </div>
@@ -87,7 +88,7 @@ watch(status, (option) => {
 
     <button
       type="button"
-      class="ml-auto text-sm font-medium text-primary-600 hover:underline"
+      class="ms-auto text-sm font-medium text-primary-600 hover:underline"
       @click="emit('select-page')"
     >
       {{ t('tasks_projects.tasks.bulk.select_page') }}

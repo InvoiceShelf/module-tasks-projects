@@ -88,12 +88,22 @@ function priorityLabel(priority: TaskPriority): string {
 </script>
 
 <template>
+  <!-- A click anywhere opens the card; the keyboard's way in is the title button -->
+  <!-- eslint-disable-next-line vuejs-accessibility/click-events-have-key-events, vuejs-accessibility/no-static-element-interactions -->
   <article
     class="cursor-pointer rounded-lg border border-line-default bg-surface p-3 shadow-sm hover:bg-hover"
     @click="emit('open', task)"
   >
     <div class="flex items-start justify-between gap-2">
-      <p class="text-sm font-medium text-heading">{{ task.name }}</p>
+      <p class="text-sm font-medium text-heading">
+        <button
+          type="button"
+          class="rounded-sm text-start focus:outline-hidden focus-visible:ring-2 focus-visible:ring-primary-500"
+          @click.stop="emit('open', task)"
+        >
+          {{ task.name }}
+        </button>
+      </p>
       <span
         v-if="task.priority"
         class="shrink-0 rounded-full px-2 py-0.5 text-[11px] font-medium"

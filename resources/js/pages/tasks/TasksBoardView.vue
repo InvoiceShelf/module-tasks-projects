@@ -333,12 +333,12 @@ defineExpose({ openCreate: () => openCreate(null) })
         <header class="flex items-center justify-between border-b border-line-light px-3 py-2.5">
           <div class="flex items-center">
             <span
-              class="mr-2 inline-block h-2.5 w-2.5 shrink-0 rounded-full"
+              class="me-2 inline-block h-2.5 w-2.5 shrink-0 rounded-full"
               :class="column.status.colour ? '' : 'bg-line-default'"
               :style="column.status.colour ? { backgroundColor: column.status.colour } : undefined"
             />
             <h3 class="text-sm font-semibold text-heading">{{ column.status.name }}</h3>
-            <span class="ml-2 text-xs text-muted">{{ cardsOf(column).length }}</span>
+            <span class="ms-2 text-xs text-muted">{{ cardsOf(column).length }}</span>
           </div>
 
           <button
