@@ -1356,6 +1356,7 @@ var dn = { class: "mt-2 text-sm text-muted" }, fn = { class: "flex flex-wrap ite
 							o("p", Sn, [c(I, { amount: e.amount }, null, 8, ["amount"])])
 						], 8, yn))), 128))])) : (v(), r(B, {
 							key: 1,
+							ghost: 3,
 							title: w(d)("tasks_projects.billing.customer.empty_title"),
 							description: w(d)("tasks_projects.billing.customer.empty_description")
 						}, {
@@ -1443,6 +1444,7 @@ var dn = { class: "mt-2 text-sm text-muted" }, fn = { class: "flex flex-wrap ite
 						}, 8, ["loading", "disabled"])])])
 					], 64)) : (v(), r(B, {
 						key: 2,
+						ghost: 5,
 						title: w(d)("tasks_projects.billing.entries.empty_title"),
 						description: w(d)("tasks_projects.billing.entries.empty_description")
 					}, {
@@ -2421,6 +2423,7 @@ var Dr = { class: "flex w-full items-center justify-between" }, Or = ["aria-labe
 						_: 1
 					}, 8, ["show"]),
 					O(c(B, {
+						ghost: 5,
 						title: w(u)("tasks_projects.projects.empty_title"),
 						description: w(u)("tasks_projects.projects.empty_description")
 					}, {
@@ -4109,6 +4112,7 @@ var q = {
 					"can-invoice"
 				]),
 				O(c(f, {
+					ghost: 6,
 					title: w(g)("tasks_projects.tasks.empty_title"),
 					description: w(g)("tasks_projects.tasks.empty_description")
 				}, {
@@ -5373,6 +5377,7 @@ var Es = {
 						])
 					], 64)) : (v(), r(ae, {
 						key: 1,
+						ghost: 4,
 						title: w(u)("tasks_projects.reports.empty_title"),
 						description: w(u)("tasks_projects.reports.empty_description")
 					}, {

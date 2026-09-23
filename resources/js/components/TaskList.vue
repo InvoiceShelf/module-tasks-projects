@@ -416,6 +416,7 @@ defineExpose({ openCreate, refresh })
 
     <BaseEmptyPlaceholder
       v-show="showEmptyScreen"
+      :ghost="6"
       :title="t('tasks_projects.tasks.empty_title')"
       :description="t('tasks_projects.tasks.empty_description')"
     >

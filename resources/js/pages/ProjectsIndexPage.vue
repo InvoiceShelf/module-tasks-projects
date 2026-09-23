@@ -321,6 +321,7 @@ function statusLabel(status: ProjectStatus): string {
 
     <BaseEmptyPlaceholder
       v-show="showEmptyScreen"
+      :ghost="5"
       :title="t('tasks_projects.projects.empty_title')"
       :description="t('tasks_projects.projects.empty_description')"
     >
