@@ -11,6 +11,7 @@ import {
   toDateString,
 } from '@/support/format'
 import { useTranslate } from '@/support/i18n'
+import { colourNameKey } from '@/support/colours'
 import type { Customer } from '@/types/api'
 import type { Project, ProjectInput } from '@/types/project'
 
@@ -164,11 +165,14 @@ async function save(): Promise<void> {
     <template #header>
       <div class="flex w-full items-center justify-between">
         <span>{{ title }}</span>
-        <BaseIcon
-          name="XMarkIcon"
-          class="h-6 w-6 cursor-pointer text-subtle hover:text-body"
+        <button
+          type="button"
+          class="-m-1.5 rounded-lg p-1.5 text-subtle hover:text-body focus:outline-hidden focus-visible:ring-2 focus-visible:ring-primary-500"
+          :aria-label="t('tasks_projects.general.close')"
           @click="emit('close')"
-        />
+        >
+          <BaseIcon name="XMarkIcon" class="h-6 w-6" />
+        </button>
       </div>
     </template>
 
@@ -250,7 +254,8 @@ async function save(): Promise<void> {
               class="h-7 w-7 rounded-full border-2 transition"
               :class="form.colour === option ? 'border-heading' : 'border-line-default'"
               :style="{ backgroundColor: option }"
-              :aria-label="option"
+              :aria-label="t(colourNameKey(option))"
+              :aria-pressed="form.colour === option"
               @click="form.colour = form.colour === option ? '' : option"
             />
             <button

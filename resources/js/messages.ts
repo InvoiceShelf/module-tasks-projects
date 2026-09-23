@@ -10,6 +10,23 @@ export const messages = {
     tasks_projects: {
       general: {
         home: 'Home',
+        close: 'Close',
+        actions_for: 'Actions for {name}',
+        select_named: 'Select {name}',
+        colours: {
+          light_grey: 'Light grey',
+          grey: 'Grey',
+          blue: 'Blue',
+          teal: 'Teal',
+          green: 'Green',
+          yellow: 'Yellow',
+          amber: 'Amber',
+          orange: 'Orange',
+          red: 'Red',
+          purple: 'Purple',
+          violet: 'Violet',
+          custom: 'Custom colour',
+        },
         filter: 'Filter',
         search: 'Search',
         actions: 'Actions',

@@ -11,6 +11,7 @@ import {
 import { errorMessage } from '@/support/errors'
 import { isForbidden } from '@/support/http'
 import { useTranslate } from '@/support/i18n'
+import { colourNameKey } from '@/support/colours'
 import type { TaskStatus, TaskStatusInput } from '@/types/task-status'
 
 type NotifyType = 'success' | 'error' | 'warning' | 'info'
@@ -207,7 +208,8 @@ async function move(index: number, delta: number): Promise<void> {
                   class="h-7 w-7 rounded-full border-2 transition"
                   :class="draft.colour === option ? 'border-heading' : 'border-line-default'"
                   :style="{ backgroundColor: option }"
-                  :aria-label="option"
+                  :aria-label="t(colourNameKey(option))"
+                  :aria-pressed="draft.colour === option"
                   @click="draft.colour = option"
                 />
                 <button
@@ -325,7 +327,8 @@ async function move(index: number, delta: number): Promise<void> {
               class="h-7 w-7 rounded-full border-2 transition"
               :class="draft.colour === option ? 'border-heading' : 'border-line-default'"
               :style="{ backgroundColor: option }"
-              :aria-label="option"
+              :aria-label="t(colourNameKey(option))"
+              :aria-pressed="draft.colour === option"
               @click="draft.colour = option"
             />
           </div>

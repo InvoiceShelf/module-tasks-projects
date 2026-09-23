@@ -80,7 +80,7 @@ const SORT_KEYS: Record<string, TaskSortKey> = {
  * columns on the page and leaves the rows just as readable.
  */
 const TH_CLASS =
-  'whitespace-nowrap px-3 py-3 text-left text-xs font-medium text-muted uppercase tracking-wider'
+  'whitespace-nowrap px-3 py-3 text-start text-xs font-medium text-muted uppercase tracking-wider'
 
 const TD_CLASS = 'px-3 py-4 text-sm text-muted whitespace-nowrap'
 
@@ -134,7 +134,7 @@ const columns = computed(() =>
     { key: 'unbilled', label: t('tasks_projects.tasks.columns.unbilled'), sortable: false },
     { key: 'invoiced', label: t('tasks_projects.tasks.columns.invoiced'), sortable: false },
     { key: 'timer', label: t('tasks_projects.tasks.columns.timer'), sortable: false },
-    { key: 'actions', label: t('tasks_projects.general.actions'), sortable: false, tdClass: 'text-right text-sm font-medium' },
+    { key: 'actions', label: t('tasks_projects.general.actions'), sortable: false, tdClass: 'text-end text-sm font-medium' },
   ].map((column) => ({ defaultThClass: TH_CLASS, defaultTdClass: TD_CLASS, ...column })),
 )
 
@@ -463,7 +463,7 @@ defineExpose({ openCreate, refresh })
         <template #cell-status="{ row }">
           <span class="inline-flex items-center whitespace-nowrap">
             <span
-              class="mr-2 inline-block h-2.5 w-2.5 shrink-0 rounded-full"
+              class="me-2 inline-block h-2.5 w-2.5 shrink-0 rounded-full"
               :class="statusFor(row.data)?.colour ? '' : 'bg-line-default'"
               :style="
                 statusFor(row.data)?.colour
@@ -507,13 +507,16 @@ defineExpose({ openCreate, refresh })
         </template>
 
         <template #cell-actions="{ row }">
-          <BaseDropdown :content-loading="busyId === row.data.id">
+          <BaseDropdown
+            :content-loading="busyId === row.data.id"
+            :label="t('tasks_projects.general.actions_for', { name: row.data.name })"
+          >
             <template #activator>
               <BaseIcon name="EllipsisHorizontalIcon" class="h-5 text-muted" />
             </template>
 
             <BaseDropdownItem @click="openEdit(row.data)">
-              <BaseIcon name="PencilIcon" class="mr-3 h-5 w-5 text-subtle group-hover:text-muted" />
+              <BaseIcon name="PencilIcon" class="me-3 h-5 w-5 text-subtle group-hover:text-muted" />
               {{ t('tasks_projects.general.edit') }}
             </BaseDropdownItem>
 
@@ -524,7 +527,7 @@ defineExpose({ openCreate, refresh })
               >
                 <BaseIcon
                   name="BanknotesIcon"
-                  class="mr-3 h-5 w-5 text-subtle group-hover:text-muted"
+                  class="me-3 h-5 w-5 text-subtle group-hover:text-muted"
                 />
                 {{ t('tasks_projects.tasks.invoice_task') }}
               </BaseDropdownItem>
@@ -534,13 +537,13 @@ defineExpose({ openCreate, refresh })
                 class="group flex cursor-not-allowed items-center px-4 py-2 text-sm font-normal text-subtle"
                 :title="invoicing ? t('tasks_projects.billing.busy') : invoiceHint(row.data)"
               >
-                <BaseIcon name="BanknotesIcon" class="mr-3 h-5 w-5 text-subtle" />
+                <BaseIcon name="BanknotesIcon" class="me-3 h-5 w-5 text-subtle" />
                 {{ t('tasks_projects.tasks.invoice_task') }}
               </div>
             </template>
 
             <BaseDropdownItem @click="onDelete(row.data)">
-              <BaseIcon name="TrashIcon" class="mr-3 h-5 w-5 text-subtle group-hover:text-muted" />
+              <BaseIcon name="TrashIcon" class="me-3 h-5 w-5 text-subtle group-hover:text-muted" />
               {{ t('tasks_projects.general.delete') }}
             </BaseDropdownItem>
           </BaseDropdown>

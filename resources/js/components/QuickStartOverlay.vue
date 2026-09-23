@@ -152,10 +152,11 @@ function openTask(): void {
   <Teleport to="body">
     <div
       v-if="enabled && !hiddenHere"
-      class="fixed right-5 z-40 flex flex-col items-end gap-3"
+      class="fixed end-5 z-40 flex flex-col items-end gap-3"
       :class="wrapperClass"
     >
-      <!-- Running: what is on the clock, and the two ways out of it. -->
+      <!-- Running: what is on the clock, and the two ways out of it. Escape closes it. -->
+      <!-- eslint-disable-next-line vuejs-accessibility/no-static-element-interactions -->
       <section
         v-if="open && timerStore.running !== null"
         class="w-80 max-w-[calc(100vw-3rem)] rounded-xl border border-line-default bg-surface shadow-2xl"

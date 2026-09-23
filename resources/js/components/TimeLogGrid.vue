@@ -170,7 +170,7 @@ async function remove(entry: TimeEntry): Promise<void> {
     <header class="flex items-center justify-between border-b border-line-light px-5 py-3">
       <h2 class="text-sm font-semibold text-heading">
         {{ t('tasks_projects.tasks.time_log.title') }}
-        <BaseSpinner v-if="loading" class="ml-2 inline-block h-4 w-4 text-primary-500" />
+        <BaseSpinner v-if="loading" class="ms-2 inline-block h-4 w-4 text-primary-500" />
       </h2>
 
       <span :title="addDisabled ? t('tasks_projects.tasks.time_log.add_disabled') : undefined">
@@ -187,37 +187,39 @@ async function remove(entry: TimeEntry): Promise<void> {
       <table class="min-w-full text-sm">
         <thead class="bg-surface-secondary text-xs tracking-wide text-muted uppercase">
           <tr>
-            <th class="px-4 py-2 text-left font-medium">
+            <th class="px-4 py-2 text-start font-medium">
               {{ t('tasks_projects.tasks.time_log.columns.start_date') }}
             </th>
-            <th class="px-4 py-2 text-left font-medium">
+            <th class="px-4 py-2 text-start font-medium">
               {{ t('tasks_projects.tasks.time_log.columns.start_time') }}
             </th>
-            <th class="px-4 py-2 text-left font-medium">
+            <th class="px-4 py-2 text-start font-medium">
               {{ t('tasks_projects.tasks.time_log.columns.end_date') }}
             </th>
-            <th class="px-4 py-2 text-left font-medium">
+            <th class="px-4 py-2 text-start font-medium">
               {{ t('tasks_projects.tasks.time_log.columns.end_time') }}
             </th>
-            <th class="px-4 py-2 text-left font-medium">
+            <th class="px-4 py-2 text-start font-medium">
               {{ t('tasks_projects.tasks.time_log.columns.duration') }}
             </th>
-            <th class="px-4 py-2 text-left font-medium">
+            <th class="px-4 py-2 text-start font-medium">
               {{ t('tasks_projects.tasks.time_log.columns.description') }}
             </th>
-            <th class="px-4 py-2 text-left font-medium">
+            <th class="px-4 py-2 text-start font-medium">
               {{ t('tasks_projects.tasks.time_log.columns.billable') }}
             </th>
-            <th class="px-4 py-2 text-left font-medium">
+            <th class="px-4 py-2 text-start font-medium">
               {{ t('tasks_projects.tasks.time_log.columns.member') }}
             </th>
-            <th class="px-4 py-2 text-right font-medium">
+            <th class="px-4 py-2 text-end font-medium">
               {{ t('tasks_projects.general.actions') }}
             </th>
           </tr>
         </thead>
 
         <tbody>
+          <!-- A click on the row edits it; the keyboard's way in is the row's Edit menu item -->
+          <!-- eslint-disable-next-line vuejs-accessibility/click-events-have-key-events, vuejs-accessibility/no-static-element-interactions -->
           <tr
             v-for="entry in entries"
             :key="entry.id"
@@ -255,7 +257,7 @@ async function remove(entry: TimeEntry): Promise<void> {
               <span v-else class="text-subtle">-</span>
             </td>
             <td class="px-4 py-2.5 whitespace-nowrap">{{ memberName(entry.user_id) }}</td>
-            <td class="px-4 py-2.5 text-right whitespace-nowrap" @click.stop>
+            <td class="px-4 py-2.5 text-end whitespace-nowrap" @click.stop>
               <span
                 v-if="isStamped(entry)"
                 class="text-xs text-muted"
@@ -264,7 +266,7 @@ async function remove(entry: TimeEntry): Promise<void> {
                 {{ t('tasks_projects.tasks.time_log.stamped') }}
               </span>
 
-              <BaseDropdown v-else-if="!entry.is_running">
+              <BaseDropdown v-else-if="!entry.is_running" :label="t('tasks_projects.general.actions')">
                 <template #activator>
                   <BaseIcon name="EllipsisHorizontalIcon" class="h-5 text-muted" />
                 </template>
@@ -272,7 +274,7 @@ async function remove(entry: TimeEntry): Promise<void> {
                 <BaseDropdownItem @click="openEdit(entry)">
                   <BaseIcon
                     name="PencilIcon"
-                    class="mr-3 h-5 w-5 text-subtle group-hover:text-muted"
+                    class="me-3 h-5 w-5 text-subtle group-hover:text-muted"
                   />
                   {{ t('tasks_projects.general.edit') }}
                 </BaseDropdownItem>
@@ -280,7 +282,7 @@ async function remove(entry: TimeEntry): Promise<void> {
                 <BaseDropdownItem @click="remove(entry)">
                   <BaseIcon
                     name="TrashIcon"
-                    class="mr-3 h-5 w-5 text-subtle group-hover:text-muted"
+                    class="me-3 h-5 w-5 text-subtle group-hover:text-muted"
                   />
                   {{ t('tasks_projects.general.delete') }}
                 </BaseDropdownItem>

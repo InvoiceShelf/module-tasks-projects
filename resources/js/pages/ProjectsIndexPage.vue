@@ -88,7 +88,7 @@ const columns = computed(() => [
   { key: 'customer', label: t('tasks_projects.projects.columns.customer'), sortable: false },
   { key: 'default_rate', label: t('tasks_projects.projects.columns.default_rate'), sortable: true, sortBy: 'default_rate' },
   { key: 'due_date', label: t('tasks_projects.projects.columns.due_date'), sortable: true, sortBy: 'due_date' },
-  { key: 'actions', label: t('tasks_projects.general.actions'), sortable: false, tdClass: 'text-right text-sm font-medium' },
+  { key: 'actions', label: t('tasks_projects.general.actions'), sortable: false, tdClass: 'text-end text-sm font-medium' },
 ])
 
 const hasFilters = computed(() => filters.search.trim() !== '' || filters.status !== 'ACTIVE')
@@ -340,7 +340,7 @@ function statusLabel(status: ProjectStatus): string {
         <template #cell-name="{ row }">
           <div class="flex items-center">
             <span
-              class="mr-3 inline-block h-2.5 w-2.5 shrink-0 rounded-full"
+              class="me-3 inline-block h-2.5 w-2.5 shrink-0 rounded-full"
               :class="row.data.colour ? '' : 'bg-line-default'"
               :style="row.data.colour ? { backgroundColor: row.data.colour } : undefined"
             />
@@ -380,20 +380,23 @@ function statusLabel(status: ProjectStatus): string {
         </template>
 
         <template #cell-actions="{ row }">
-          <BaseDropdown :content-loading="busyId === row.data.id">
+          <BaseDropdown
+            :content-loading="busyId === row.data.id"
+            :label="t('tasks_projects.general.actions_for', { name: row.data.name })"
+          >
             <template #activator>
               <BaseIcon name="EllipsisHorizontalIcon" class="h-5 text-muted" />
             </template>
 
             <BaseDropdownItem @click="openEdit(row.data)">
-              <BaseIcon name="PencilIcon" class="mr-3 h-5 w-5 text-subtle group-hover:text-muted" />
+              <BaseIcon name="PencilIcon" class="me-3 h-5 w-5 text-subtle group-hover:text-muted" />
               {{ t('tasks_projects.general.edit') }}
             </BaseDropdownItem>
 
             <BaseDropdownItem @click="onArchive(row.data)">
               <BaseIcon
                 :name="row.data.status === 'ARCHIVED' ? 'ArrowPathIcon' : 'ArchiveBoxIcon'"
-                class="mr-3 h-5 w-5 text-subtle group-hover:text-muted"
+                class="me-3 h-5 w-5 text-subtle group-hover:text-muted"
               />
               {{
                 row.data.status === 'ARCHIVED'
@@ -403,7 +406,7 @@ function statusLabel(status: ProjectStatus): string {
             </BaseDropdownItem>
 
             <BaseDropdownItem @click="onDelete(row.data)">
-              <BaseIcon name="TrashIcon" class="mr-3 h-5 w-5 text-subtle group-hover:text-muted" />
+              <BaseIcon name="TrashIcon" class="me-3 h-5 w-5 text-subtle group-hover:text-muted" />
               {{ t('tasks_projects.general.delete') }}
             </BaseDropdownItem>
           </BaseDropdown>
