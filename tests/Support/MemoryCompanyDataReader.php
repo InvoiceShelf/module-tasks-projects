@@ -12,8 +12,8 @@ use InvoiceShelf\Modules\Contracts\Host\CompanyDataReader;
  * Only the surfaces this module actually uses carry state: the invoice ids
  * that still exist, which decide whether a stamped entry counts as billed, the
  * company member list, which supplies names for the member grouping, and the
- * customers, which lend a new project its currency. The rest satisfy the
- * contract and return nothing.
+ * customers, which lend a new project its currency and give the demo seeder
+ * its projects. The rest satisfy the contract and return nothing.
  */
 final class MemoryCompanyDataReader implements CompanyDataReader
 {
@@ -77,7 +77,10 @@ final class MemoryCompanyDataReader implements CompanyDataReader
     /** @return array<string, mixed> */
     public function searchCustomers(int $companyId, ?string $query, int $limit): array
     {
-        return [];
+        $customers = array_values($this->customers[$companyId] ?? []);
+        usort($customers, fn (array $a, array $b): int => [$a['name'], $a['id']] <=> [$b['name'], $b['id']]);
+
+        return array_slice($customers, 0, $limit);
     }
 
     /** @return array<string, mixed> */
