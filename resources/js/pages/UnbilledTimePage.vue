@@ -353,6 +353,7 @@ async function createInvoice(): Promise<void> {
 
       <BaseEmptyPlaceholder
         v-else
+        :ghost="3"
         :title="t('tasks_projects.billing.customer.empty_title')"
         :description="t('tasks_projects.billing.customer.empty_description')"
       >
@@ -523,6 +524,7 @@ async function createInvoice(): Promise<void> {
 
       <BaseEmptyPlaceholder
         v-else
+        :ghost="5"
         :title="t('tasks_projects.billing.entries.empty_title')"
         :description="t('tasks_projects.billing.entries.empty_description')"
       >

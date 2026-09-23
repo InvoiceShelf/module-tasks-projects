@@ -294,6 +294,7 @@ function clearRange(): void {
 
     <BaseEmptyPlaceholder
       v-else-if="!hasData"
+      :ghost="4"
       :title="t('tasks_projects.reports.empty_title')"
       :description="t('tasks_projects.reports.empty_description')"
     >

@@ -22,6 +22,8 @@ the InvoiceShelf 3.x `AGENTS.md` before making changes.
 - `composer.json` takes `invoiceshelf/modules` `^3.4` from the SDK's GitHub repository through a
   plain `vcs` entry.
 - The module must run on every host its `module.json` compatibility range admits, so it uses only
-  Base* components and props that exist on the oldest of them. Name icon-only controls with
-  `aria-label`, and write layout classes in their logical form (`ms-`, `pe-`, `start-`,
-  `text-end`) so right-to-left languages mirror; `pnpm run lint` checks accessibility.
+  Base* components and props that exist on the oldest of them. A newer prop is allowed only when
+  an older host that ignores it still renders correctly: the empty placeholder's `ghost` rows
+  (host 3.0.0-alpha.4) show on newer hosts and are simply absent on older ones. Name icon-only
+  controls with `aria-label`, and write layout classes in their logical form (`ms-`, `pe-`,
+  `start-`, `text-end`) so right-to-left languages mirror; `pnpm run lint` checks accessibility.
