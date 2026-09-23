@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import EmptyArt from '@/components/EmptyArt.vue'
 import { computed, onMounted, reactive, ref, watch } from 'vue'
 import type { AxiosInstance } from 'axios'
 import type { Router } from 'vue-router'
@@ -355,7 +356,7 @@ async function createInvoice(): Promise<void> {
         :title="t('tasks_projects.billing.customer.empty_title')"
         :description="t('tasks_projects.billing.customer.empty_description')"
       >
-        <BaseIcon name="BanknotesIcon" class="mt-5 mb-4 h-16 w-16 text-subtle" />
+        <EmptyArt name="time" />
       </BaseEmptyPlaceholder>
     </section>
 
@@ -525,7 +526,7 @@ async function createInvoice(): Promise<void> {
         :title="t('tasks_projects.billing.entries.empty_title')"
         :description="t('tasks_projects.billing.entries.empty_description')"
       >
-        <BaseIcon name="ClockIcon" class="mt-5 mb-4 h-16 w-16 text-subtle" />
+        <EmptyArt name="time" />
 
         <template #actions>
           <BaseButton variant="primary" @click="back">

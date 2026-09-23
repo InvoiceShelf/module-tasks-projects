@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import EmptyArt from '@/components/EmptyArt.vue'
 import { computed, ref, watch } from 'vue'
 import type { AxiosInstance } from 'axios'
 import type { Router } from 'vue-router'
@@ -418,7 +419,7 @@ defineExpose({ openCreate, refresh })
       :title="t('tasks_projects.tasks.empty_title')"
       :description="t('tasks_projects.tasks.empty_description')"
     >
-      <BaseIcon name="ClipboardDocumentListIcon" class="mt-5 mb-4 h-16 w-16 text-subtle" />
+      <EmptyArt name="tasks" />
 
       <template #actions>
         <BaseButton variant="primary" @click="openCreate">
