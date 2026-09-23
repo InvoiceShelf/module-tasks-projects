@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import EmptyArt from '@/components/EmptyArt.vue'
 import { computed, onMounted, ref } from 'vue'
 import type { AxiosInstance } from 'axios'
 import type { Router } from 'vue-router'
@@ -296,7 +297,7 @@ function clearRange(): void {
       :title="t('tasks_projects.reports.empty_title')"
       :description="t('tasks_projects.reports.empty_description')"
     >
-      <BaseIcon name="ChartBarIcon" class="mt-5 mb-4 h-16 w-16 text-subtle" />
+      <EmptyArt name="report" />
     </BaseEmptyPlaceholder>
 
     <template v-else>

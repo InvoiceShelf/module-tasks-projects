@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import EmptyArt from '@/components/EmptyArt.vue'
 import { computed, onBeforeUnmount, reactive, ref, watch } from 'vue'
 import type { AxiosInstance } from 'axios'
 import type { Router } from 'vue-router'
@@ -323,7 +324,7 @@ function statusLabel(status: ProjectStatus): string {
       :title="t('tasks_projects.projects.empty_title')"
       :description="t('tasks_projects.projects.empty_description')"
     >
-      <BaseIcon name="FolderIcon" class="mt-5 mb-4 h-16 w-16 text-subtle" />
+      <EmptyArt name="project" />
 
       <template #actions>
         <BaseButton variant="primary" @click="openCreate">

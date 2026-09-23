@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import EmptyArt from '@/components/EmptyArt.vue'
 import { computed, onBeforeUnmount, ref, watch } from 'vue'
 import type { AxiosInstance } from 'axios'
 import Sortable from 'sortablejs'
@@ -318,7 +319,7 @@ defineExpose({ openCreate: () => openCreate(null) })
       :title="t('tasks_projects.task_statuses.none')"
       :description="t('tasks_projects.tasks.empty_description')"
     >
-      <BaseIcon name="ViewColumnsIcon" class="mt-5 mb-4 h-16 w-16 text-subtle" />
+      <EmptyArt name="board" />
     </BaseEmptyPlaceholder>
 
     <!-- A board with many statuses scrolls sideways, but the four a company
