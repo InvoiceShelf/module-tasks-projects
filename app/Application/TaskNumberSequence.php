@@ -10,8 +10,9 @@ use Modules\TasksProjects\Models\Task;
 /**
  * Per-company task numbering.
  *
- * The number is `max(number) + 1` inside a transaction, which is portable
- * across MySQL, PostgreSQL and SQLite. Two concurrent writers can still agree
+ * The number is the highest one plus one, read inside a transaction. The row
+ * holding it is read and locked rather than `max()` taken, because PostgreSQL
+ * refuses FOR UPDATE on an aggregate. Two concurrent writers can still agree
  * on the same number; the unique index on `(company_id, number)` catches that
  * and TaskService retries once.
  */
@@ -22,8 +23,9 @@ class TaskNumberSequence
         return DB::transaction(static function () use ($companyId): int {
             $highest = Task::query()
                 ->forCompany($companyId)
+                ->orderByDesc('number')
                 ->lockForUpdate()
-                ->max('number');
+                ->value('number');
 
             return (int) $highest + 1;
         });
