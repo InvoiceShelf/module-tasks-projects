@@ -87,12 +87,27 @@ abstract class TestCase extends Orchestra
     {
         $app['config']->set('app.key', 'base64:'.base64_encode(str_repeat('a', 32)));
         $app['config']->set('database.default', 'testing');
-        $app['config']->set('database.connections.testing', [
-            'driver' => 'sqlite',
-            'database' => ':memory:',
-            'prefix' => '',
-            'foreign_key_constraints' => true,
-        ]);
+        // SQLite in memory by default; CI also runs the suite on PostgreSQL,
+        // which refuses SQL that SQLite lets through (DB_CONNECTION=pgsql).
+        $app['config']->set('database.connections.testing', getenv('DB_CONNECTION') === 'pgsql'
+            ? [
+                'driver' => 'pgsql',
+                'host' => getenv('DB_HOST') ?: '127.0.0.1',
+                'port' => (int) (getenv('DB_PORT') ?: 5432),
+                'database' => getenv('DB_DATABASE') ?: 'testing',
+                'username' => getenv('DB_USERNAME') ?: 'postgres',
+                'password' => getenv('DB_PASSWORD') ?: '',
+                'charset' => 'utf8',
+                'prefix' => '',
+                'schema' => 'public',
+                'sslmode' => 'prefer',
+            ]
+            : [
+                'driver' => 'sqlite',
+                'database' => ':memory:',
+                'prefix' => '',
+                'foreign_key_constraints' => true,
+            ]);
     }
 
     /**
