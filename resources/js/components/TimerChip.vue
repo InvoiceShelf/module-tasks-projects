@@ -38,14 +38,14 @@ function stop(): void {
 <template>
   <li v-if="timerStore.running !== null" class="relative float-start m-0 ms-2">
     <div
-      class="flex h-8 items-center gap-2 rounded-lg bg-white/20 px-2 text-sm text-white md:h-9 md:px-3"
+      class="flex items-center gap-2 rounded-lg bg-white/20 text-sm text-white max-md:h-8 max-md:px-2 md:h-9 md:px-3"
       :title="t('tasks_projects.timer.running')"
     >
       <span class="inline-block h-2 w-2 shrink-0 animate-pulse rounded-full bg-white" />
 
       <button
         type="button"
-        class="hidden max-w-32 truncate hover:underline lg:block"
+        class="max-w-32 truncate hover:underline max-lg:hidden lg:block"
         :aria-label="t('tasks_projects.timer.open_task')"
         :title="t('tasks_projects.timer.open_task')"
         @click="emit('open')"

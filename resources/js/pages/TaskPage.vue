@@ -397,7 +397,7 @@ async function remove(): Promise<void> {
     </div>
 
     <template v-else-if="task">
-      <div class="mt-6 grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
+      <div class="mt-6 grid gap-4 max-sm:grid-cols-1 sm:max-lg:grid-cols-2 lg:grid-cols-4">
         <div class="rounded-xl border border-line-default bg-surface p-5">
           <p id="task-status-label" class="text-xs font-medium tracking-wider text-muted uppercase">
             {{ t('tasks_projects.tasks.detail.status') }}

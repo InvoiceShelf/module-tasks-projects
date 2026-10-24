@@ -311,7 +311,7 @@ function clearRange(): void {
           {{ currencyLabel(row.currency_id) }}
         </p>
 
-        <div class="grid grid-cols-2 gap-4 sm:grid-cols-4" :class="showCurrency ? 'mt-3' : ''">
+        <div class="grid gap-4 max-sm:grid-cols-2 sm:grid-cols-4" :class="showCurrency ? 'mt-3' : ''">
           <div>
             <p class="text-xs font-medium tracking-wider text-muted uppercase">
               {{ t('tasks_projects.reports.summary.logged') }}

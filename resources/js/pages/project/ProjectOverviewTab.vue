@@ -89,7 +89,7 @@ async function invoice(): Promise<void> {
 
 <template>
   <div v-if="project && totals" class="py-6">
-    <div class="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
+    <div class="grid gap-4 max-sm:grid-cols-1 sm:max-lg:grid-cols-2 lg:grid-cols-4">
       <div class="rounded-xl border border-line-default bg-surface p-5">
         <p class="text-xs font-medium tracking-wider text-muted uppercase">
           {{ t('tasks_projects.project.overview.tasks') }}
