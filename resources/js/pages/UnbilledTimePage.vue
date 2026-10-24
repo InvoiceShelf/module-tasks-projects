@@ -298,13 +298,17 @@ async function createInvoice(): Promise<void> {
     <InvoiceRetryBanner :client="client" :notify="notify" />
 
     <div class="mt-4 flex flex-wrap items-end gap-4">
-      <BaseInputGroup :label="t('tasks_projects.billing.customer.from')" class="w-full sm:w-48">
-        <BaseDatePicker :model-value="range.from" @update:model-value="onFrom" />
-      </BaseInputGroup>
+      <div class="max-sm:w-full sm:w-48">
+        <BaseInputGroup :label="t('tasks_projects.billing.customer.from')">
+          <BaseDatePicker :model-value="range.from" @update:model-value="onFrom" />
+        </BaseInputGroup>
+      </div>
 
-      <BaseInputGroup :label="t('tasks_projects.billing.customer.to')" class="w-full sm:w-48">
-        <BaseDatePicker :model-value="range.to" @update:model-value="onTo" />
-      </BaseInputGroup>
+      <div class="max-sm:w-full sm:w-48">
+        <BaseInputGroup :label="t('tasks_projects.billing.customer.to')">
+          <BaseDatePicker :model-value="range.to" @update:model-value="onTo" />
+        </BaseInputGroup>
+      </div>
 
       <BaseButton
         v-if="range.from !== '' || range.to !== ''"
@@ -330,7 +334,7 @@ async function createInvoice(): Promise<void> {
 
       <div
         v-if="customers.length > 0"
-        class="mt-5 grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3"
+        class="mt-5 grid gap-4 max-sm:grid-cols-1 sm:max-lg:grid-cols-2 lg:grid-cols-3"
       >
         <button
           v-for="row in customers"
@@ -371,9 +375,11 @@ async function createInvoice(): Promise<void> {
           <p class="mt-1 text-sm text-muted">{{ label(chosen.customer_id) }}</p>
         </div>
 
-        <BaseInputGroup :label="t('tasks_projects.billing.entries.grouping')" class="w-full sm:w-56">
-          <BaseSelectInput v-model="groupingOption" :options="groupingOptions" label-key="label" />
-        </BaseInputGroup>
+        <div class="max-sm:w-full sm:w-56">
+          <BaseInputGroup :label="t('tasks_projects.billing.entries.grouping')">
+            <BaseSelectInput v-model="groupingOption" :options="groupingOptions" label-key="label" />
+          </BaseInputGroup>
+        </div>
       </div>
 
       <div v-if="loadingEntries" class="flex justify-center py-16">

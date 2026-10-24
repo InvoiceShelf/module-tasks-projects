@@ -121,7 +121,7 @@ async function detach(member: ProjectMember): Promise<void> {
 <template>
   <div class="py-4">
     <div class="rounded-xl border border-line-default bg-surface p-5">
-      <div class="flex flex-col gap-4 lg:flex-row lg:items-end">
+      <div class="flex gap-4 max-lg:flex-col lg:items-end">
         <BaseInputGroup
           :label="t('tasks_projects.project.members.member')"
           :error="errors.user_id"
